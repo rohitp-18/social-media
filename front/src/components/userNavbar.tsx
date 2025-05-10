@@ -6,6 +6,7 @@ import {
   Home,
   Moon,
   Newspaper,
+  Search,
   Sun,
   User2,
   Users,
@@ -29,17 +30,45 @@ const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { setTheme, theme } = useTheme();
   const [drop, setDrop] = useState(false);
+  const [search, setSearch] = useState("");
+  const [searchDrop, setSearchDrop] = useState(false);
 
   const router = useRouter();
 
   return (
-    <nav className="sticky top-0 z-50 left-0 w-full border text-card-foreground bg-opacity-20 backdrop-blur-md shadow-md p-4 flex justify-between items-center bg-background/40 dark:shadow-lg">
+    <nav className="sticky top-0 z-50 left-0 w-full border text-card-foreground bg-opacity-20 backdrop-blur-md shadow-md p-4 flex flex-col justify-between items-center bg-background/40 dark:shadow-lg">
       <section className="max-w-6xl mx-auto flex items-center justify-between w-full space-x-4">
-        <div className="flex gap-2">
-          <h2 className="text-xl font-bold italic">TS</h2>
-          <div className="md:block hidden">
-            <Input type="search" />
+        <div className="flex gap-4 items-center">
+          <h2 className="text-2xl font-bold italic">TS</h2>
+          <div className="md:flex hidden items-center relative max-w-xs">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 w-full"
+              onKeyDown={(e) =>
+                e.key === "Enter" &&
+                search.trim() &&
+                router.push(`/search?q=${encodeURIComponent(search.trim())}`)
+              }
+            />
+            {search && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 h-7 w-7 p-0"
+                onClick={() => setSearch("")}
+              >
+                ×
+              </Button>
+            )}
           </div>
+          <Search
+            onClick={() => setSearchDrop(!searchDrop)}
+            className="md:hidden block w-5 h-5 cursor-pointer"
+          />
         </div>
         <div className="flex gap-3 space-x-4">
           <a
@@ -150,6 +179,24 @@ const Navbar: React.FC = () => {
           </Button>
         </div>
       </section>
+      <div className="md:hidden block w-full">
+        {searchDrop && (
+          <div className="absolute top-16 left-0 w-full z-50 bg-background backdrop-blur-md shadow-md p-4">
+            <Input
+              type="search"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 w-full"
+              onKeyDown={(e) =>
+                e.key === "Enter" &&
+                search.trim() &&
+                router.push(`/search?q=${encodeURIComponent(search.trim())}`)
+              }
+            />
+          </div>
+        )}
+      </div>
     </nav>
   );
 };

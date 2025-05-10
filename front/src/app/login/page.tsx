@@ -4,9 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AppDispatch, RootState } from "@/store/store";
+import { loginUser, resetLogin } from "@/store/user/userSlice";
 import { Eye, EyeOffIcon, Facebook } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 
 function Page() {
   const [checkbox, setCheckbox] = useState(true);
@@ -14,16 +19,49 @@ function Page() {
   const [email, setEmail] = useState("");
   const [passworValue, setPasswordValue] = useState("");
 
+  const { user, loading, error, login } = useSelector(
+    (state: RootState) => state.user
+  );
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
   function submitHandler(e: React.FormEvent): void {
     e.preventDefault();
 
     if (!email || !passworValue) {
-      return alert("Please fill all fields");
+      toast.error("Please fill all required fields", {
+        position: "top-center",
+      });
+      return;
     }
+    dispatch(loginUser({ email, password: passworValue }));
   }
 
+  useEffect(() => {
+    if (!loading && user && login) {
+      // Redirect to home page or any other page
+      toast.success("Login successful", {
+        position: "top-center",
+      });
+      router.push(`/u/${user.username}`);
+      dispatch(resetLogin());
+    }
+    if (!loading && user) {
+      router.push(`/u/${user.username}`);
+    }
+    if (!loading && error) {
+      toast.error(error, {
+        position: "top-center",
+      });
+
+      setEmail("");
+      setPasswordValue("");
+      setCheckbox(false);
+    }
+  }, [loading, user, error]);
+
   return (
-    <main className="min-h-screen bg-backgrouund/70">
+    <main className="min-h-screen bg-background/70">
       <h3>LOGO</h3>
       <section className="w-full flex justify-center items-center h-screen">
         <div className="min-w-[320px] max-w-full md:min-w-96 shadow-2xl dark:bg-zinc-800 bg-white rounded-lg p-6">

@@ -16,7 +16,7 @@ function Page() {
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container max-w-[1170px] mx-auto">
           {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}
-          <section className="md:grid network hidden mx-auto max-w-7xl min-h-screen gap-3">
+          <section className="md:grid network mx-auto max-w-7xl min-h-screen gap-3">
             <aside className="md:flex flex-col gap-3 w-full shrink hidden h-min">
               {/* <Card className="bg-background w-full rounded-lg">
                 <CardHeader className="p-0 rounded-2xl pb-3 flex flex-row justify-between items-center gap-2">

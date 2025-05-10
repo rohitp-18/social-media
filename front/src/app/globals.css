@@ -71,11 +71,9 @@
 }
 
 .feed {
-  display: grid;
   grid-template-columns: 256px 1fr 300px;
 }
 
 .network {
-  display: grid;
   grid-template-columns: 300px 1fr;
 }

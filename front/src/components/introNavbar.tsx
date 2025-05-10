@@ -8,16 +8,21 @@ import {
   Newspaper,
   Plus,
   Sun,
+  User2,
   Users,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { Button } from "./ui/button";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { setTheme, theme } = useTheme();
+
+  const { user, loading } = useSelector((state: RootState) => state.user);
 
   return (
     <nav className="sticky top-0 z-50 left-0 w-full bg-opacity-20 backdrop-blur-md shadow-md p-4 flex justify-between items-center bg-background/40 dark:shadow-lg">
@@ -56,14 +61,25 @@ const Navbar: React.FC = () => {
           >
             <BriefcaseBusiness className="w-[1rem] h-[1rem]" /> Jobs
           </a>
-          <div className="flex gap-4">
-            <a href="/register?back=/" className="no-underline">
-              <Button variant={"outline"}>Join with Us</Button>
+          {user ? (
+            <a
+              href={`/u/${user.username}/`}
+              className={` no-underline hover:underline flex flex-col items-center ${
+                pathname === `/u/${user.username}/` ? "font-bold" : ""
+              }`}
+            >
+              <User2 className="w-[1rem] h-[1rem]" /> Account
             </a>
-            <a href="/login?back=/" className="no-underline">
-              <Button>Sign In</Button>
-            </a>
-          </div>
+          ) : (
+            <div className="flex gap-4">
+              <a href="/register?back=/" className="no-underline">
+                <Button variant={"outline"}>Join with Us</Button>
+              </a>
+              <a href="/login?back=/" className="no-underline">
+                <Button>Sign In</Button>
+              </a>
+            </div>
+          )}
           <Button
             variant={"outline"}
             size={"icon"}

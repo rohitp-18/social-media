@@ -7,9 +7,11 @@ const error = (
   res: Response,
   next: NextFunction
 ) => {
-  res.status(err.status).json({
+  let status = err.status || 500;
+  let message = err.message || "Internal Server Error";
+  res.status(status).json({
     success: false,
-    message: err.message,
+    message,
     stack: err.stack,
   });
 };

@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 function Friend() {
   return (
     <>
-      <Card className="w-[186px] rounded-2xl p-0">
+      <Card className="max-w-[186px] w-[48%] rounded-2xl p-0">
         <CardHeader className="p-0 rounded-2xl flex flex-row justify-between items-center gap-2">
           <div className="flex flex-col relative w-full h-32">
             <Image
@@ -45,12 +45,13 @@ function Friend() {
             <p className="text-sm text-center opacity-70">4 mutual followers</p>
           </CardDescription>
         </CardContent>
-        <CardFooter className="pb-2">
+        <CardFooter className="pb-2 justify-center">
           <Button
-            className="w-full hover:bg-transparent hover:border hover:text-foreground hover:scale-105"
+            className="flex items-center w-min mt-2 px-7 min-w-[100px] py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
             variant={"outline"}
+            size={"sm"}
           >
-            <UserPlus2 height={20} width={20} /> Add Friend
+            Follow
           </Button>
         </CardFooter>
       </Card>

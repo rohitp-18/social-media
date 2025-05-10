@@ -1,29 +1,32 @@
 "use client";
 
 import store from "@/store/store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Provider } from "react-redux";
+import { usePathname, useRouter } from "next/navigation";
+import { Toaster } from "@/components/ui/sonner";
+import { getUser } from "@/store/user/userSlice";
 
 interface MiddlewareProps {
   children: React.ReactNode;
 }
 
 const Middleware: React.FC<MiddlewareProps> = ({ children }) => {
-  // const history = useHistory();
-
-  // useEffect(() => {
-  //   // Example middleware logic
-  //   const isAuthenticated = false; // Replace with actual authentication logic
-
-  //   if (!isAuthenticated) {
-  //     history.push('/login');
-  //   }
-  // }, [history]);
+  const [path, setPath] = useState("");
+  const pathname = usePathname();
+  const router = useRouter();
   useEffect(() => {
-    store.dispatch({ type: "user/getUser" });
-  }, []);
+    store.dispatch(getUser());
 
-  return <Provider store={store}>{children}</Provider>;
+    return () => {};
+  }, []); // Empty dependency array to run only once
+
+  return (
+    <Provider store={store}>
+      <Toaster />
+      {children}
+    </Provider>
+  );
 };
 
 export default Middleware;

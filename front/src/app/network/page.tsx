@@ -27,7 +27,7 @@ function Page() {
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container max-w-[1170px] mx-auto">
           {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}
-          <section className="md:grid network hidden mx-auto max-w-7xl min-h-screen gap-2">
+          <section className="md:grid network mx-auto max-w-7xl min-h-screen gap-2">
             <aside className="md:flex flex-col gap-3 w-full shrink hidden h-min">
               <Card className="bg-background w-full rounded-lg">
                 <CardHeader className="flex gap-3">
@@ -115,52 +115,41 @@ function Page() {
                 <Card className="p-3">
                   <Tabs value={type} onValueChange={(val) => setType(val)}>
                     <TabsList className="flex gap-3 bg-transparent items-center justify-start">
-                      <TabsTrigger style={{ boxShadow: "none" }} value="all">
-                        <Button
-                          variant={type === "all" ? "default" : "outline"}
-                          className="rounded-full"
-                        >
-                          All
-                        </Button>
-                      </TabsTrigger>
-                      <TabsTrigger style={{ boxShadow: "none" }} value="job">
-                        <Button
-                          variant={type === "job" ? "default" : "outline"}
-                          className="rounded-full"
-                        >
-                          Job Change
-                        </Button>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        style={{ boxShadow: "none" }}
-                        value="birthday"
+                      <Button
+                        variant={type === "all" ? "default" : "outline"}
+                        className="rounded-full"
+                        onClick={() => setType("all")}
                       >
-                        <Button
-                          variant={type === "birthday" ? "default" : "outline"}
-                          className="rounded-full"
-                        >
-                          Birthdays
-                        </Button>
-                      </TabsTrigger>
-                      <TabsTrigger style={{ boxShadow: "none" }} value="work">
-                        <Button
-                          variant={type === "work" ? "default" : "outline"}
-                          className="rounded-full"
-                        >
-                          Work anniversaries
-                        </Button>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        style={{ boxShadow: "none" }}
-                        value="education"
+                        All
+                      </Button>
+                      <Button
+                        variant={type === "job" ? "default" : "outline"}
+                        className="rounded-full"
+                        onClick={() => setType("job")}
                       >
-                        <Button
-                          variant={type === "education" ? "default" : "outline"}
-                          className="rounded-full"
-                        >
-                          Education
-                        </Button>
-                      </TabsTrigger>
+                        Job Change
+                      </Button>
+                      <Button
+                        variant={type === "birthday" ? "default" : "outline"}
+                        className="rounded-full"
+                        onClick={() => setType("birthday")}
+                      >
+                        Birthdays
+                      </Button>
+                      <Button
+                        variant={type === "work" ? "default" : "outline"}
+                        className="rounded-full"
+                        onClick={() => setType("work")}
+                      >
+                        Work anniversaries
+                      </Button>
+                      <Button
+                        variant={type === "education" ? "default" : "outline"}
+                        className="rounded-full"
+                        onClick={() => setType("education")}
+                      >
+                        Education
+                      </Button>
                     </TabsList>
                     <TabsContent value="all">
                       <div className="flex p-3 flex-col gap-3">
@@ -213,19 +202,12 @@ function Page() {
                     See All
                   </Button>
                 </CardHeader>
-                <div className="flex flex-wrap w-full justify-center items-center gap-4">
-                  <Friend />
-                  <Friend />
-                  <Friend />
-                  <Friend />
-                  <Friend />
-                  <Friend />
-                  <Friend />
-                  <Friend />
-                  <Friend />
-                  <Friend />
-                  <Friend />
-                  <Friend />
+                <div className="flex flex-wrap w-full justify-evenly items-center md:gap-4 gap-2">
+                  {[0, 2, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(
+                    (i) => (
+                      <Friend key={i} />
+                    )
+                  )}
                 </div>
               </Card>
             </section>

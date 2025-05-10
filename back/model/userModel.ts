@@ -2,18 +2,55 @@ import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
 interface IUser extends Document {
-  _id: string;
+  _id: mongoose.Types.ObjectId;
   name: string;
+  usernmae: string; // Note: This appears to be misspelled in schema
+  deactivated: boolean;
+  deleted: boolean;
+  about: string;
+  about2: string;
+  gender: string;
+  location: {
+    country: {
+      type: String;
+    };
+    state: {
+      type: String;
+    };
+    city: {
+      type: String;
+    };
+  };
+  followers: Array<{ _id: mongoose.Types.ObjectId }>;
+  following: Array<{ _id: mongoose.Types.ObjectId }>;
+  skills: Array<{
+    _id: mongoose.Types.ObjectId;
+    from: "user" | "company" | "school";
+    accessedFrom: mongoose.Types.ObjectId;
+  }>;
   email: string;
   password: string;
+  projects: Array<{ _id: mongoose.Types.ObjectId }>;
+  experience: Array<{ _id: mongoose.Types.ObjectId }>;
+  topVoice: Array<{ _id: mongoose.Types.ObjectId }>;
+  companies: Array<{ _id: mongoose.Types.ObjectId }>;
+  groups: Array<{ _id: mongoose.Types.ObjectId }>;
+  newsLetter: Array<{ _id: mongoose.Types.ObjectId }>;
+  eduction: Array<{ _id: mongoose.Types.ObjectId }>;
+  totalFollowers: number;
+  totalFollowing: number;
+  avatar: { public_id: string; url: string };
+  bannerImage: { public_id: string; url: string };
   createdAt: Date;
   updatedAt: Date[];
+  website: { link: string; text: string };
+  comparePassword(password: string): Promise<boolean>;
 }
 
 const UserSchema: Schema = new Schema(
   {
     name: { type: String, required: true },
-    usernmae: { type: String, required: true },
+    username: { type: String, required: true, unique: true },
     deactivated: { type: Boolean, default: false },
     deleted: { type: Boolean, default: false },
     about2: {
@@ -25,17 +62,11 @@ const UserSchema: Schema = new Schema(
     gender: {
       type: String,
     },
-
-    location: {
-      type: String,
-    },
     followers: [
       {
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "user",
-          unique: true,
-          required: true,
         },
       },
     ],
@@ -44,8 +75,6 @@ const UserSchema: Schema = new Schema(
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "user",
-          unique: true,
-          required: true,
         },
       },
     ],
@@ -54,39 +83,39 @@ const UserSchema: Schema = new Schema(
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           require: true,
-          unique: true,
           ref: "skill",
+        },
+        from: {
+          type: String,
+          enum: ["user", "company", "school"],
+          required: true,
+        },
+        accessedFrom: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          refPath: "skills.from",
         },
       },
     ],
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    posts: [
-      {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true,
-          unique: true,
-          ref: "post",
-        },
-        type: {
-          type: String,
-        },
+    location: {
+      country: {
+        type: String,
       },
-    ],
-    comments: [
+      state: {
+        type: String,
+      },
+      city: {
+        type: String,
+      },
+    },
+    experience: [
       {
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
-          unique: true,
-          ref: "post",
-        },
-        comment: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true,
-          unique: true,
-          ref: "comment",
+          ref: "experience",
         },
       },
     ],
@@ -96,17 +125,6 @@ const UserSchema: Schema = new Schema(
           type: mongoose.Schema.Types.ObjectId,
           required: true,
           ref: "project",
-          unique: true,
-        },
-      },
-    ],
-    experience: [
-      {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true,
-          ref: "experiences",
-          unique: true,
         },
       },
     ],
@@ -115,8 +133,6 @@ const UserSchema: Schema = new Schema(
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "user",
-          unique: true,
-          required: true,
         },
       },
     ],
@@ -125,8 +141,6 @@ const UserSchema: Schema = new Schema(
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "company",
-          unique: true,
-          required: true,
         },
       },
     ],
@@ -135,8 +149,6 @@ const UserSchema: Schema = new Schema(
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "group",
-          unique: true,
-          required: true,
         },
       },
     ],
@@ -145,21 +157,18 @@ const UserSchema: Schema = new Schema(
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "newsLetter",
-          unique: true,
-          required: true,
         },
       },
     ],
-    schools: [
-      {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "school",
-          unique: true,
-          required: true,
-        },
+    eduction: [{ type: String }],
+    website: {
+      link: {
+        type: String,
       },
-    ],
+      text: {
+        type: String,
+      },
+    },
     totalFollowers: { type: Number, default: 0 },
     totalFollowing: { type: Number, default: 0 },
     avatar: { public_id: { type: String }, url: { type: String } },
@@ -174,7 +183,7 @@ const UserSchema: Schema = new Schema(
 
 UserSchema.pre("save", async function (this: any) {
   if (this.isModified("password")) {
-    this.password = bcrypt.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password, 10);
   }
 });
 

@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
   {
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
       required: true,
@@ -11,11 +11,6 @@ const postSchema = new mongoose.Schema(
       type: String,
       enum: ["public", "friends", "private"],
       default: "public",
-    },
-    postType: {
-      type: String,
-      enum: ["regular", "story"],
-      default: "regular",
     },
     content: {
       type: String,
@@ -68,6 +63,14 @@ const postSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    savedCount: {
+      type: Number,
+      default: 0,
+    },
+    likeCount: {
+      type: Number,
+      default: 0,
+    },
     savedBy: [
       {
         userId: {
@@ -84,52 +87,6 @@ const postSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    editedContent: {
-      type: String,
-    },
-    editedImages: [{ public_id: { type: String }, url: String }],
-    editedVideo: {
-      public_id: { type: String },
-      url: String,
-    },
-    editedExternalLinks: [
-      {
-        url: { type: String },
-        previewData: { type: String },
-      },
-    ],
-    editedTags: [
-      {
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-        },
-      },
-    ],
-    editedHashtags: [
-      {
-        type: String,
-      },
-    ],
-    editedLocation: {
-      type: { type: String, enum: ["Point"] },
-      coordinates: { type: [Number], index: "2dsphere" },
-    },
-    editedReactions: [
-      {
-        type: String,
-        enum: ["like", "love", "angry", "sad"],
-        default: "like",
-      },
-    ],
-    editedSavedBy: [
-      {
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-        },
-      },
-    ],
     repost: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "post",
@@ -155,6 +112,30 @@ const postSchema = new mongoose.Schema(
     images: [
       { public_id: { type: String }, url: String, order: { type: Number } },
     ],
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: { type: Date },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
+    },
+    postType: {
+      type: String,
+      // check post is group post, comapny post or user post
+      enum: ["group", "company", "user"],
+      default: "user",
+    },
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "group",
+    },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "company",
+    },
+
     createdAt: { type: Date, default: new Date(Date.now()) },
     updatedAt: [{ type: Date, default: new Date(Date.now()) }],
   },

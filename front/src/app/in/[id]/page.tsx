@@ -67,7 +67,7 @@ function Page() {
                 <CardContent className="flex flex-col gap-1 px-4 pt-0 pb-3">
                   <h3 className="md:text-2xl text-xl pb-2 font-semibold">
                     Professional Profile
-                    <span className="text-xs pl-2 opacity-70">(He/His)</span>
+                    <span className="text-xs pl-2 opacity-70">(He/Him)</span>
                   </h3>
                   <span className="text-sm">
                     MERN FULL STACK WEB DEVELOPER || React || Node.js || MongoDB
@@ -144,35 +144,30 @@ function Page() {
                     value={activity}
                   >
                     <TabsList className="flex gap-3 bg-transparent items-center justify-start">
-                      <TabsTrigger style={{ boxShadow: "none" }} value="post">
-                        <Button
-                          variant={activity === "post" ? "default" : "outline"}
-                          className="rounded-full"
-                        >
-                          Posts
-                        </Button>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        style={{ boxShadow: "none" }}
+                      <Button
+                        variant={activity === "post" ? "default" : "outline"}
+                        onClick={() => setActivity("post")}
+                        className="rounded-full"
+                        value="post"
+                      >
+                        All Posts
+                      </Button>
+                      <Button
+                        variant={activity === "comment" ? "default" : "outline"}
+                        onClick={() => setActivity("comment")}
+                        className="rounded-full"
                         value="comment"
                       >
-                        <Button
-                          variant={
-                            activity === "comment" ? "default" : "outline"
-                          }
-                          className="rounded-full"
-                        >
-                          Comments
-                        </Button>
-                      </TabsTrigger>
-                      <TabsTrigger style={{ boxShadow: "none" }} value="image">
-                        <Button
-                          variant={activity === "image" ? "default" : "outline"}
-                          className="rounded-full"
-                        >
-                          Images
-                        </Button>
-                      </TabsTrigger>
+                        Comments
+                      </Button>
+                      <Button
+                        variant={activity === "image" ? "default" : "outline"}
+                        onClick={() => setActivity("image")}
+                        className="rounded-full"
+                        value="image"
+                      >
+                        Images
+                      </Button>
                     </TabsList>
                     <TabsContent value="post">
                       <Carousel

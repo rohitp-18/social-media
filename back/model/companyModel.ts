@@ -24,6 +24,8 @@ const comapnySchema = new mongoose.Schema(
         },
       },
     ],
+    postsCount: { type: Number, default: 0 },
+    membersCount: { type: Number, default: 0 },
     followers: [
       {
         _id: {
@@ -34,9 +36,15 @@ const comapnySchema = new mongoose.Schema(
         },
       },
     ],
-    location: {
-      type: String,
-    },
+    address: [
+      {
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        country: { type: String, required: true },
+        pincode: { type: Number, required: true },
+        address: { type: String, required: true },
+      },
+    ],
     admin: [
       {
         _id: {
@@ -47,6 +55,16 @@ const comapnySchema = new mongoose.Schema(
         },
       },
     ],
+    phone: {
+      type: String,
+      require: true,
+    },
+    website: {
+      type: String,
+    },
+    description: {
+      type: String,
+    },
     members: [
       {
         _id: {
@@ -67,6 +85,8 @@ const comapnySchema = new mongoose.Schema(
         },
       },
     ],
+    isDeleted: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
     avatar: { public_id: { type: String }, url: { type: String } },
     bannerImage: { public_id: { type: String }, url: { type: String } },
     createdAt: { type: Date, default: new Date(Date.now()) },

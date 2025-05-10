@@ -23,6 +23,28 @@ const comapnySchema = new mongoose.Schema(
         },
       },
     ],
+    chat: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "chat",
+    },
+    deleted: {
+      type: Boolean,
+
+      default: false,
+    },
+    deletedInfo: {
+      deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+      },
+      deletedAt: {
+        type: Date,
+        default: new Date(Date.now()),
+      },
+      reason: {
+        type: String,
+      },
+    },
     location: {
       type: String,
     },
@@ -46,6 +68,22 @@ const comapnySchema = new mongoose.Schema(
         },
       },
     ],
+    requests: [
+      {
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "user",
+          unique: true,
+          required: true,
+        },
+        message: {
+          type: String,
+        },
+      },
+    ],
+    url: {
+      type: String,
+    },
     avatar: { public_id: { type: String }, url: { type: String } },
     bannerImage: { public_id: { type: String }, url: { type: String } },
     createdAt: { type: Date, default: new Date(Date.now()) },
@@ -54,6 +92,6 @@ const comapnySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Company = mongoose.model("company", comapnySchema);
+const Group = mongoose.model("group", comapnySchema);
 
-export default Company;
+export default Group;

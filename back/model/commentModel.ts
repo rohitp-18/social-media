@@ -11,6 +11,24 @@ const commentSchema = new mongoose.Schema(
       type: String,
       require: true,
     },
+    post: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "post",
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ["comment", "reply"],
+      default: "comment",
+    },
+    edited: {
+      type: Boolean,
+      default: false,
+    },
+    editedAt: {
+      type: Date,
+      default: null,
+    },
     reply: [
       {
         _id: {

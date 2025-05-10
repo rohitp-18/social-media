@@ -5,7 +5,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-
 function FooterS() {
   return (
     <div className="flex flex-col px-3 py-4 gap-4">
