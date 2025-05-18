@@ -238,7 +238,7 @@ const followCompany = expressAsyncHandler(
     }
 
     // Add user to company's followers
-    company.followers.push({ _id: req.user._id });
+    company.followers.push(req.user._id);
     // Add company to user's following list
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -246,7 +246,7 @@ const followCompany = expressAsyncHandler(
     }
     // Check if user is already following the company
     const isUserFollowing = user.companies.some(
-      (company) => company._id.toString() === companyId.toString()
+      (company) => company.toString() === companyId.toString()
     );
 
     if (isUserFollowing) {
@@ -307,7 +307,10 @@ const unfollowCompany = expressAsyncHandler(
     }
 
     // Remove user from company's followers
-    company.followers.pull({ _id: req.user._id });
+    // company.followers.pull( req.user._id );
+    company.followers = company.followers.filter(
+      (follower) => follower._id.toString() !== req.user._id.toString()
+    );
     // Remove company from user's following list
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -358,7 +361,7 @@ const getCompanyFollowersAndYou = expressAsyncHandler(
     // Filter the followers of the company to find those who are also followed by the user
     const followers = company.followers.filter((follower) =>
       user.companies.some(
-        (company) => company._id.toString() === follower._id.toString()
+        (company) => company.toString() === follower.toString()
       )
     );
 
@@ -389,11 +392,7 @@ const getCommonFollowers = expressAsyncHandler(
     }
 
     // Find the user who is following the company
-    const user = await User.findById(req.user._id).populate(
-      "companies",
-      "name email avatar bannerImage"
-    );
-
+    const user = await User.findById(req.user._id);
     // Handle case when user retrieval fails
     if (!user) {
       return next(new ErrorHandler("User not found", 404));
@@ -401,9 +400,7 @@ const getCommonFollowers = expressAsyncHandler(
 
     // Filter the followers of the company to find those who are also followed by the user
     const commonFollowers = company.followers.filter((follower) =>
-      user.companies.some(
-        (company) => company._id.toString() === follower._id.toString()
-      )
+      user.companies.some((comp) => comp.toString() === follower._id.toString())
     );
 
     // Return success response with company's followers and user's companies

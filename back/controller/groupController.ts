@@ -207,7 +207,7 @@ const removeMember = expressAsyncHandler(
     }
 
     const isAdmin = group.admin.some(
-      (admin) => admin._id.toString() === req.user._id.toString()
+      (admin) => admin.toString() === req.user._id.toString()
     );
 
     if (!isAdmin) {
@@ -216,7 +216,9 @@ const removeMember = expressAsyncHandler(
       );
     }
 
-    group.members.pull(req.user._id);
+    group.members = group.members.filter(
+      (member: any) => member.toString() !== req.user._id.toString()
+    );
     await group.save();
 
     res.status(200).json({
@@ -237,7 +239,9 @@ const leaveGroup = expressAsyncHandler(
       return next(new ErrorHandler("Group not found", 404));
     }
 
-    group.members.pull({ _id: req.user._id });
+    group.members = group.members.filter(
+      (member: any) => member.toString() !== req.user._id.toString()
+    );
 
     if (group.members.length === 0) {
       await group.deleteOne({ _id: groupId });

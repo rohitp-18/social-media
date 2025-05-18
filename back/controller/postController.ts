@@ -8,76 +8,33 @@ import User from "../model/userModel";
 import Notification from "../model/notificationModel";
 import Group from "../model/groupModel";
 import Company from "../model/companyModel";
+import Media from "../model/mediaModel";
 
 const createPost = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const {
-      name,
-      description,
-      location,
-      externalLinks,
-      postType,
-      postControl,
-      content,
-      tags,
-    } = req.body;
+    const { location, postType, content, tags, privacyControl, externalLinks } =
+      req.body;
 
     // Check if all required fields are present
-    if (
-      !name ||
-      !description ||
-      !tags ||
-      !location ||
-      !externalLinks ||
-      !postType ||
-      !content
-    ) {
+    if (!location || !postType || !content) {
       return next(new ErrorHandler("please fill all required fields", 400));
+    }
+
+    if (req.files.length > 5) {
+      return next(new ErrorHandler("You can only upload 5 images", 400));
     }
 
     // Initialize postData object with fields from request body
     const postData: any = {
-      name,
-      description,
-      tags,
       location,
-      externalLinks,
       postType,
       userId: req.user._id,
-      postControl,
+      privacyControl,
+      externalLinks: JSON.parse(externalLinks),
       content,
-      reactions: [], // Initialize empty reactions array
-      images: [], // Initialize empty images array
+      tags,
     };
 
-    // Handle image uploads if files are present in the request
-    if (req.files) {
-      Promise.all(
-        req.files.map(async (val: any, i: number) => {
-          // Convert file buffer to base64 string
-          const b64 = Buffer.from(val.buffer).toString("base64");
-          // Create data URI for Cloudinary upload
-          let dataURI = "data:" + val.mimetype + ";base64," + b64;
-          try {
-            // Upload image to Cloudinary
-            const data = await cloudinary.uploader.upload(dataURI, {
-              folder: `post/${req.user.name}/${name}`, // Organize uploads by user and post name
-              height: 200,
-              crop: "pad",
-            });
-            // Add uploaded image info to postData
-            postData.images = {
-              public_id: data.public_id,
-              url: data.secure_url,
-              order: i, // Maintain original file order
-            };
-          } catch (error: any | unknown) {
-            // Handle upload errors
-            return next(new ErrorHandler(error, 501));
-          }
-        })
-      );
-    }
     // Create the post in the database using the prepared postData
     const post = await Post.create(postData);
 
@@ -86,15 +43,61 @@ const createPost = expressAsyncHandler(
       return next(new ErrorHandler("Internal error", 500));
     }
 
+    // Handle image uploads if files are present in the request
+    if (req.files) {
+      await Promise.all(
+        req.files.map(async (val: any, i: number) => {
+          // Convert file buffer to base64 string
+          const b64 = Buffer.from(val.buffer).toString("base64");
+          // Create data URI for Cloudinary upload
+          let dataURI = "data:" + val.mimetype + ";base64," + b64;
+          try {
+            // Upload image to Cloudinary
+            const data = await cloudinary.uploader.upload(dataURI, {
+              folder: `post/${req.user.username}/${post._id}`, // Organize uploads by user and post name
+              height: 200,
+              crop: "pad",
+            });
+            // Add uploaded image info to postData
+            if (val.mimetype === "video/*") {
+              const b64 = Buffer.from(val.buffer).toString("base64");
+              let dataURI = "data:" + val.mimetype + ";base64," + b64;
+              try {
+                const data = await cloudinary.uploader.upload(dataURI, {
+                  folder: `post/${req.user.username}/${post._id}`,
+                  resource_type: "video",
+                });
+                console.log(data);
+                post.video = {
+                  public_id: data.public_id,
+                  url: data.secure_url,
+                };
+              } catch (error: any | unknown) {
+                return next(new ErrorHandler(error, 501));
+              }
+            } else {
+              post.images.push({
+                public_id: data.public_id,
+                url: data.secure_url,
+                order: i, // Maintain original file order
+              });
+            }
+          } catch (error: any | unknown) {
+            // Handle upload errors
+            return next(new ErrorHandler(error, 501));
+          }
+        })
+      );
+    }
+
     // send notification to following users and if its a group post then send to all group members if its a comapny post then send to all company members
     try {
-      const user = await User.findById(req.user._id).populate(
-        "following",
-        "name email"
-      );
+      const user = await User.findById(req.user._id)
+        .populate("following", "name email")
+        .populate("connections", "name email");
       if (!user) throw new ErrorHandler("User not found", 404);
-      const followers = user.followers.map(async (follower: any) => {
-        const notification = await Notification.create({
+      user.followers.map(async (follower: any) => {
+        await Notification.create({
           recipient: follower._id,
           sender: user._id,
           type: "post",
@@ -103,9 +106,43 @@ const createPost = expressAsyncHandler(
           url: `/post/${post._id}`,
         });
       });
+      user.connections.map(async (connection: any) => {
+        await Notification.create({
+          recipient: connection._id,
+          sender: user._id,
+          type: "post",
+          message: `${user.name} has created a new post`,
+          post: post._id,
+          url: `/post/${post._id}`,
+        });
+      });
     } catch (error) {
-      // dont send any errors to the user
+      console.log(error);
     }
+
+    try {
+      if (post.video) {
+        await Media.create({
+          user: req.user._id,
+          type: "video",
+          url: post.video.url,
+          thumbnail: post.video,
+          post: post._id,
+        });
+      } else {
+        await Promise.all(
+          post.images.map(async (img: any) => {
+            await Media.create({
+              user: req.user._id,
+              type: "image",
+              url: img.url,
+              thumbnail: img.url,
+              post: post._id,
+            });
+          })
+        );
+      }
+    } catch (error) {}
 
     // Return success response with created post object
     res.status(200).json({
@@ -119,18 +156,15 @@ const createPost = expressAsyncHandler(
 // create group or company post
 const createGroupPost = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { name, description, location, externalLinks, postType, content } =
-      req.body;
+    const { location, externalLinks, postType, content } = req.body;
 
     // Check if all required fields are present
-    if (!name || !description || !location || !externalLinks || !postType) {
+    if (!location || !externalLinks || !postType) {
       return next(new ErrorHandler("please fill all required fields", 400));
     }
 
     // Initialize postData object with fields from request body
     const postData: any = {
-      name,
-      description,
       location,
       externalLinks,
       postType,
@@ -149,7 +183,7 @@ const createGroupPost = expressAsyncHandler(
           try {
             // Upload image to Cloudinary
             const data = await cloudinary.uploader.upload(dataURI, {
-              folder: `post/${req.user.name}/${name}`, // Organize uploads by user and post name
+              folder: `post/${req.user.username}/${post._id}`, // Organize uploads by user and post name
               height: 200,
               crop: "pad",
             });
@@ -234,23 +268,21 @@ const createGroupPost = expressAsyncHandler(
 
 const companyPost = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { name, description, location, externalLinks, postType, content } =
-      req.body;
+    const { location, externalLinks, postType, content, images } = req.body;
 
     // Check if all required fields are present
-    if (!name || !description || !location || !externalLinks || !postType) {
+    if (!location || !externalLinks || !postType) {
       return next(new ErrorHandler("please fill all required fields", 400));
     }
 
     // Initialize postData object with fields from request body
     const postData: any = {
-      name,
-      description,
       location,
       externalLinks,
       postType,
       userId: req.user._id,
       content,
+      images: images || [],
     };
 
     // Handle image uploads if files are present in the request
@@ -264,16 +296,16 @@ const companyPost = expressAsyncHandler(
           try {
             // Upload image to Cloudinary
             const data = await cloudinary.uploader.upload(dataURI, {
-              folder: `post/${req.user.name}/${name}`, // Organize uploads by user and post name
+              folder: `post/${req.user.username}/${post._id}`, // Organize uploads by user and post name
               height: 200,
               crop: "pad",
             });
             // Add uploaded image info to postData
-            postData.images = {
+            postData.images.push({
               public_id: data.public_id,
               url: data.secure_url,
               order: i, // Maintain original file order
-            };
+            });
           } catch (error: any | unknown) {
             // Handle upload errors
             return next(new ErrorHandler(error, 501));
@@ -464,12 +496,91 @@ const deletePost = expressAsyncHandler(
 const updatePost = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const postId = req.params.id;
+    const {
+      location,
+      postType,
+      content,
+      tags,
+      privacyControl,
+      externalLinks,
+      images,
+    } = req.body;
+
+    // Check if all required fields are present
+    if (!location || !postType || !content) {
+      return next(new ErrorHandler("please fill all required fields", 400));
+    }
+
+    if (req.files.length > 5) {
+      return next(new ErrorHandler("You can only upload 5 images", 400));
+    }
+
+    // Initialize postData object with fields from request body
+    const postData: any = {
+      location,
+      postType,
+      images: (images && JSON.parse(images)) || [],
+      privacyControl,
+      externalLinks: (externalLinks && JSON.parse(externalLinks)) || [],
+      content,
+      tags,
+    };
+
+    if (req.files) {
+      await Promise.all(
+        req.files.map(async (val: any, i: number) => {
+          if (val.mimetype === "video/*") {
+            const b64 = Buffer.from(val.buffer).toString("base64");
+            let dataURI = "data:" + val.mimetype + ";base64," + b64;
+            const data = await cloudinary.uploader.upload(dataURI, {
+              folder: `post/${req.user.username}/${postId}`,
+              resource_type: "video",
+            });
+            postData.video = {
+              public_id: data.public_id,
+              url: data.secure_url,
+            };
+            await Media.create({
+              user: req.user._id,
+              type: "video",
+              url: data.secure_url,
+              thumbnail: data.secure_url,
+              post: postId,
+            });
+          } else {
+            // Convert file buffer to base64 string
+            const b64 = Buffer.from(val.buffer).toString("base64");
+            // Create data URI for Cloudinary upload
+            let dataURI = "data:" + val.mimetype + ";base64," + b64;
+            // Upload image to Cloudinary
+            const data = await cloudinary.uploader.upload(dataURI, {
+              folder: `post/${req.user.username}/${postId}`, // Organize uploads by user and post name
+              height: 200,
+              crop: "pad",
+            });
+            // Add uploaded image info to postData
+            postData.images.push({
+              public_id: data.public_id,
+              url: data.secure_url,
+              order: i, // Maintain original file order
+            });
+            await Media.create({
+              user: req.user._id,
+              type: "image",
+              url: data.secure_url,
+              thumbnail: data.secure_url,
+              post: postId,
+            });
+          }
+        })
+      );
+    }
 
     // Find the post to be updated
-    const post = await Post.findById(postId);
+    const post = await Post.findOne({ _id: postId, isDeleted: false });
 
     // Check if post exists
-    if (!post || post.isDeleted) {
+    if (!post) {
       return next(new ErrorHandler("Post not found", 404));
     }
 
@@ -479,7 +590,7 @@ const updatePost = expressAsyncHandler(
     }
 
     // Update the post with new data
-    const updatedPost = await Post.findByIdAndUpdate(postId, req.body, {
+    const updatedPost = await Post.findByIdAndUpdate(postId, postData, {
       new: true, // Return updated document
       runValidators: true, // Run validators on update
     });
@@ -519,12 +630,14 @@ const toggleLike = expressAsyncHandler(
     // Toggle like status: unlike if already liked, like if not already liked
     if (isLiked) {
       // Remove user's ID from likes array
-      post.likes.pull({ _id: userId });
+      post.likes = post.likes.filter(
+        (like) => like._id.toString() !== userId.toString()
+      );
       // Decrement like count
       post.likeCount = post.likeCount - 1;
     } else {
       // Add user's ID to likes array
-      post.likes.push({ _id: userId });
+      post.likes.push(userId);
       // Increment like count
       post.likeCount = post.likeCount + 1;
     }
@@ -571,6 +684,80 @@ const getLikedPosts = expressAsyncHandler(
   }
 );
 
+const getProfilePosts = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const username = req.params.id;
+    const tempUser = await User.findOne({ username, deleted: false });
+
+    if (!tempUser) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const posts = await Post.find({
+      userId: tempUser._id,
+      isDeleted: false,
+    }).populate("userId", "_id name headline avatar");
+
+    if (!posts) {
+      return next(new ErrorHandler("posts not found", 404));
+    }
+
+    // await Promise.all(
+    //   posts.map(async (post) => {
+    //     if (post.video) {
+    //       const tempMedia = await Media.findOne({ url: post.video.url });
+    //       console.log(tempMedia, !tempMedia);
+    //       if (!tempMedia) {
+    //         await Media.create({
+    //           user: tempUser._id,
+    //           type: "video",
+    //           url: post.video.url,
+    //           thumbnail: post.video,
+    //           post: post._id,
+    //         });
+    //       }
+    //     } else {
+    //       await Promise.all(
+    //         post.images.map(async (img) => {
+    //           const tempMedia = await Media.findOne({ url: img.url });
+    //           if (!tempMedia) {
+    //             await Media.create({
+    //               user: tempUser._id,
+    //               type: "image",
+    //               url: img.url,
+    //               thumbnail: img.url,
+    //               post: post._id,
+    //             });
+    //           }
+    //         })
+    //       );
+    //     }
+    //   })
+    // );
+    let isFollowing;
+
+    if (req.user) {
+      req.user.following.forEach((u: any) => {
+        if (u === tempUser._id) {
+          isFollowing = true;
+        }
+      });
+
+      if (!isFollowing) {
+        if (req.user._id.toString() === (tempUser._id as string).toString()) {
+          isFollowing = true;
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      posts,
+      isFollowing,
+    });
+  }
+);
+
 // Exporting all the functions to be used in the routes
 export {
   createPost,
@@ -582,4 +769,6 @@ export {
   // likes
   toggleLike,
   getLikedPosts,
+  // profile
+  getProfilePosts,
 };

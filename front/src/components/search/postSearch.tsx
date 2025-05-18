@@ -10,7 +10,7 @@ function PostSearch() {
         <Card className="flex flex-col w-full gap-3 overflow-auto">
           <CardContent className="flex flex-col gap-2 py-5">
             {[0, 1, 2, 3, 4].map((i) => (
-              <Post key={i} cardClass="w-full" />
+              <Post key={i} cardClass="w-full" post={{}} />
             ))}
           </CardContent>
         </Card>

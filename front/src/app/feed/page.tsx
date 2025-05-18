@@ -20,8 +20,6 @@ import {
 import { DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
 import FooterS from "@/components/footerS";
 import ProfileCard from "@/components/profileCard";
-import a from "@/components/a";
-import Head from "next/head";
 
 function Page() {
   return (
@@ -100,7 +98,7 @@ function Page() {
                   ))}
                 </CardContent>
               </Card>
-              <Post cardClass="w-full" />
+              <Post cardClass="w-full" post={{ title: "title" }} />
             </section>
             <aside className="min-h-screen flex-shrink-0 md:block hidden w-64">
               <div className="bg-background flex flex-col gap-2 h-min rounded-xl shadow-2xl p-3">

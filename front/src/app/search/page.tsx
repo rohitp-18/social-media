@@ -72,20 +72,21 @@ function Page() {
             { value: "3rd", label: "3rd" },
           ],
         },
-        {
-          title: "industry",
-          options: [
-            { value: "it_industry", label: "IT industry" },
-            { value: "other_industry", label: "Other industry" },
-          ],
-        },
-        {
-          title: "company",
-          options: [
-            { value: "company1", label: "Company 1" },
-            { value: "company2", label: "Company 2" },
-          ],
-        },
+        // for future updates
+        // {
+        //   title: "industry",
+        //   options: [
+        //     { value: "it_industry", label: "IT industry" },
+        //     { value: "other_industry", label: "Other industry" },
+        //   ],
+        // },
+        // {
+        //   title: "company",
+        //   options: [
+        //     { value: "company1", label: "Company 1" },
+        //     { value: "company2", label: "Company 2" },
+        //   ],
+        // },
         {
           title: "skills",
           options: [
@@ -216,13 +217,13 @@ function Page() {
             { value: "other_industry", label: "Other industry" },
           ],
         },
-        {
-          title: "company",
-          options: [
-            { value: "company1", label: "Company 1" },
-            { value: "company2", label: "Company 2" },
-          ],
-        },
+        // {
+        //   title: "company",
+        //   options: [
+        //     { value: "company1", label: "Company 1" },
+        //     { value: "company2", label: "Company 2" },
+        //   ],
+        // },
         {
           title: "members",
           options: [
@@ -400,9 +401,9 @@ function Page() {
                   <Tabs
                     value={type}
                     onValueChange={(val) => setType(val)}
-                    className="overflow-auto"
+                    className="md:overflow-hidden overflow-auto"
                   >
-                    <TabsList className="flex md:gap-6 gap-5 overflow-auto bg-transparent items-center justify-start">
+                    <TabsList className="flex md:gap-6 gap-5 min-h-12 max-h-max h-[unset] justify-center overflow-auto bg-transparent items-center md:justify-start">
                       {searchFilters.map(
                         (tabs) =>
                           tabs.value !== "all" && (

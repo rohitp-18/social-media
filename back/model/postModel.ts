@@ -22,28 +22,36 @@ const postSchema = new mongoose.Schema(
     },
     externalLinks: [
       {
-        url: { type: String },
-        previewData: { type: String },
-        about: { type: String },
+        url: String,
+        text: String,
       },
     ],
     reactions: [
       {
-        type: String,
-        enum: ["like", "love", "angry", "sad"],
-        default: "like",
-      },
-    ],
-    location: {
-      type: { type: String, enum: ["Point"] },
-      coordinates: { type: [Number], index: "2dsphere" },
-    },
-    tags: [
-      {
         userId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "user",
+          required: true,
         },
+        reaction: {
+          type: String,
+          enum: ["like", "love", "angry", "sad"],
+          default: "like",
+        },
+        createdAt: {
+          type: Date,
+          default: new Date(Date.now()),
+        },
+      },
+    ],
+    location: {
+      type: String,
+      default: null,
+    },
+    tags: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
       },
     ],
     hashtags: [
@@ -73,10 +81,8 @@ const postSchema = new mongoose.Schema(
     },
     savedBy: [
       {
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
       },
     ],
     edited: {
@@ -93,20 +99,16 @@ const postSchema = new mongoose.Schema(
     },
     likes: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+        required: true,
       },
     ],
     comment: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "comment",
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "comment",
+        required: true,
       },
     ],
     images: [
@@ -135,7 +137,6 @@ const postSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "company",
     },
-
     createdAt: { type: Date, default: new Date(Date.now()) },
     updatedAt: [{ type: Date, default: new Date(Date.now()) }],
   },

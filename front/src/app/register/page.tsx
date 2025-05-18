@@ -1,27 +1,80 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { registerUser, resetUser } from "@/store/user/userSlice";
+import { useRouter } from "next/navigation";
 
 function Page() {
   const [password, setPassword] = useState(true);
-  const [checkbox, setCheckbox] = useState(false);
+  const [checkbox, setCheckbox] = useState(true);
 
   const [email, setEmail] = useState("");
   const [passworValue, setPasswordValue] = useState("");
+  const [name, setName] = useState("");
+
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user, login, loading, error } = useSelector(
+    (state: any) => state.user
+  );
 
   function submitHandler(e: React.FormEvent): void {
     e.preventDefault();
 
-    if (!email || !passworValue) {
-      return alert("Please fill all fields");
+    if (!email || !passworValue || !name) {
+      toast.error("Please fill all required fields", {
+        position: "top-center",
+      });
+      return;
     }
+
+    if (!checkbox) {
+      toast.error("Please accept our terms and conditions", {
+        position: "top-center",
+      });
+      return;
+    }
+
+    const formData = {
+      name,
+      email,
+      password: passworValue,
+    };
+
+    dispatch(registerUser(formData));
   }
+
+  useEffect(() => {
+    if (!loading && user && login) {
+      toast.success("User registered successfully", {
+        position: "top-center",
+      });
+      dispatch(resetUser());
+      router.push("/u/" + user.username);
+      return;
+    }
+
+    if (!loading && user && !login) {
+      router.push("/u/" + user.username);
+      return;
+    }
+
+    if (error) {
+      toast.error(error, {
+        position: "top-center",
+      });
+      dispatch(resetUser());
+    }
+  }, [error, user]);
 
   return (
     <>
@@ -38,6 +91,18 @@ function Page() {
                 <div className="text-center opacity-80 text-sm">
                   Create your account.
                 </div>
+              </div>
+
+              <div className="grid w-full mb-4 max-w-sm items-center gap-1">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  className="p-1"
+                  type="text"
+                  id="name"
+                  placeholder="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
 
               <div className="grid w-full mb-4 max-w-sm items-center gap-1">

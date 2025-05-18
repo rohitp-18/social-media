@@ -9,6 +9,9 @@ import Company from "../model/companyModel";
 import Post from "../model/postModel";
 import Project from "../model/projectModel";
 import Comment from "../model/commentModel";
+import Media from "../model/mediaModel";
+import Experience from "../model/experienceModel";
+import Education from "../model/educationModel";
 
 const getUsers = expressAsyncHandler(async (req: Request, res: Response) => {
   sendToken(res, req.user);
@@ -94,7 +97,7 @@ const registerUser = expressAsyncHandler(
 
 const updateProfile = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { name, website } = req.body;
+    const { name, website, headline, location, pronouns } = req.body;
 
     if (!name) {
       return next(new ErrorHandler("Please fill all required fields", 403));
@@ -107,8 +110,11 @@ const updateProfile = expressAsyncHandler(
     }
 
     let form: any = {
-      website,
+      website: JSON.parse(website),
       name,
+      headline,
+      location: JSON.parse(location),
+      pronouns,
     };
 
     if (req.file) {
@@ -160,11 +166,7 @@ const logoutUser = expressAsyncHandler(
 
 const updateBanner = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { name } = req.body;
-
-    if (!name) {
-      return next(new ErrorHandler("Please fill all required fields", 403));
-    }
+    const { remove } = req.body;
 
     let user = await User.findById(req.user._id);
 
@@ -172,8 +174,39 @@ const updateBanner = expressAsyncHandler(
       return next(new ErrorHandler("User not found", 404));
     }
 
-    let form: { name: string; banner?: { public_id: string; url: string } } = {
-      name,
+    if (remove === "true") {
+      if (user.bannerImage && user.bannerImage.public_id) {
+        await cloudinary.uploader.destroy(user.bannerImage.public_id);
+      }
+      user = await User.findByIdAndUpdate(
+        req.user._id,
+        { bannerImage: { public_id: "", url: "" } },
+        {
+          new: true,
+          runValidators: true,
+          useFindAndModify: false,
+        }
+      );
+
+      return next(
+        res.status(200).json({
+          success: true,
+          message: "Banner removed successfully",
+          user,
+        })
+      );
+    }
+
+    if (!req.file) {
+      return next(new ErrorHandler("Please upload a banner image", 403));
+    }
+
+    if (user.bannerImage && user.bannerImage.public_id) {
+      await cloudinary.uploader.destroy(user.bannerImage.public_id);
+    }
+
+    let form: any = {
+      bannerImage: { public_id: "", url: "" },
     };
 
     if (req.file) {
@@ -181,14 +214,11 @@ const updateBanner = expressAsyncHandler(
       let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
       try {
         const data = await cloudinary.uploader.upload(dataURI, {
-          folder: `vip/user/${name}`,
+          folder: `vip/user/${user.name}`,
           height: 200,
           crop: "pad",
         });
-        form = {
-          ...form,
-          banner: { public_id: data.public_id, url: data.secure_url },
-        };
+        form.bannerImage = { public_id: data.public_id, url: data.secure_url };
       } catch (error: any | unknown) {
         return next(new ErrorHandler(error, 501));
       }
@@ -217,90 +247,53 @@ const getUserProfile = expressAsyncHandler(
     }
 
     const user = await User.findOne({ username: req.params.id })
-      .populate("skills._id", "name")
+      .populate("skills.skill", "name")
       .populate("groups", "name")
       .populate("companies", "name")
-      .populate("newsLetter", "name")
-      .populate("projects")
-      .populate("experience._id")
-      .populate("followers._id", "name avatar headline username")
-      .populate("following._id", "name avatar headline username");
+      .populate("followers", "name avatar headline username")
+      .populate("following", "name avatar headline username");
 
     if (!user) {
       return next(new ErrorHandler("User not found", 404));
     }
-    const posts = await Post.find({ userId: user._id });
+    const posts = await Post.find({ userId: user._id }).populate(
+      "userId",
+      "name headline bannerImage avatar"
+    );
 
     const comments = await Comment.find({ user: user._id });
+
+    const experiences = await Experience.find({
+      user: user._id,
+      isDeleted: false,
+    })
+      .populate("skills")
+      .limit(2);
+
+    const projects = await Project.find({ user: user._id, isDeleted: false })
+      .populate("skills")
+      .limit(2);
+
+    const educations = await Education.find({
+      user: user._id,
+      isDeleted: false,
+    })
+      .populate("skills")
+      .limit(2);
+
+    const media = await Media.find({ user: user._id, isDeleted: false }).limit(
+      10
+    );
 
     res.status(200).json({
       success: true,
       user,
       posts,
       comments,
-    });
-  }
-);
-
-const getUserPosts = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return next(new ErrorHandler("User not found", 404));
-    }
-
-    const posts = await Post.find({ user: req.params.id })
-      .populate("user", "name avatar headline username")
-      .populate("likes._id", "name avatar headline username")
-      .populate("comments._id", "text user")
-      .sort("-createdAt");
-
-    res.status(200).json({
-      success: true,
-      posts,
-    });
-  }
-);
-
-const getUserProjects = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return next(new ErrorHandler("User not found", 404));
-    }
-
-    const projects = await Project.find({ user: req.params.id })
-      .populate("user", "name avatar headline username")
-      .populate("likes._id", "name avatar headline username")
-      .populate("comments._id", "text user")
-      .sort("-createdAt");
-
-    res.status(200).json({
-      success: true,
       projects,
-    });
-  }
-);
-
-const getUserComments = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return next(new ErrorHandler("User not found", 404));
-    }
-
-    const comments = await Comment.find({ user: req.params.id })
-      .populate("user", "name avatar headline username")
-      .populate("likes._id", "name avatar headline username")
-      .populate("comments._id", "text user")
-      .sort("-createdAt");
-
-    res.status(200).json({
-      success: true,
-      comments,
+      media,
+      experiences,
+      educations,
     });
   }
 );
@@ -326,6 +319,190 @@ const getFollowers = expressAsyncHandler(
   }
 );
 
+const updateUserAbout = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { about } = req.body;
+
+    if (!about) {
+      return next(new ErrorHandler("Please fill all required fields", 403));
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { about },
+      {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "About updated successfully",
+      user,
+    });
+  }
+);
+
+const changeLanguage = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { language } = req.body;
+
+    if (!language) {
+      return next(new ErrorHandler("Please fill all required fields", 403));
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { language },
+      {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Language updated successfully",
+      user,
+      language,
+    });
+  }
+);
+
+const checkUsernameAvailable = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { username } = req.body;
+
+    if (!username) {
+      return next(new ErrorHandler("Please fill all required fields", 403));
+    }
+
+    const user = await User.findOne({
+      username,
+    });
+
+    if (user) {
+      return next(new ErrorHandler("Username already exists", 403));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Username available",
+    });
+  }
+);
+
+const changeUsername = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { username } = req.body;
+
+    if (!username) {
+      return next(new ErrorHandler("Please fill all required fields", 403));
+    }
+
+    const tempUser = await User.findOne({
+      username,
+    });
+
+    if (tempUser) {
+      return next(new ErrorHandler("Username already exists", 403));
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { username },
+      {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Username updated successfully",
+      user,
+    });
+  }
+);
+
+const userActivities = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.id || req.user?._id;
+    if (!userId) {
+      return next(new ErrorHandler("User ID is required", 400));
+    }
+
+    const user = await User.findOne({ username: userId, deleted: false });
+
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    // Fetch recent posts, comments, and projects by the user
+    const posts = await Post.find({ userId: user._id, isDeleted: false })
+      .sort({
+        createdAt: -1,
+      })
+      .populate("userId", "name headline bannerImage avatar");
+
+    const comments = await Comment.find({
+      user: user._id,
+      isDeleted: false,
+    })
+      .sort({
+        createdAt: -1,
+      })
+      .populate("user", "name headline bannerImage avatar");
+
+    const images = await Media.find({
+      user: user._id,
+      isDeleted: false,
+      type: "image",
+    }).sort({
+      createdAt: -1,
+    });
+
+    const videos = await Media.find({
+      user: user._id,
+      isDeleted: false,
+      type: "video",
+    }).sort({
+      createdAt: -1,
+    });
+
+    let isFollowing;
+
+    if (req.user) {
+      req.user.following.forEach((u: any) => {
+        if (u.toString() === (user._id as string).toString()) {
+          isFollowing = true;
+        }
+      });
+
+      if (!isFollowing) {
+        if (req.user._id.toString() === (user._id as string).toString()) {
+          isFollowing = true;
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      activities: {
+        posts,
+        comments,
+        images,
+        videos,
+      },
+      isFollowing,
+    });
+  }
+);
+
 export {
   getUsers,
   loginUser,
@@ -334,7 +511,10 @@ export {
   logoutUser,
   updateBanner,
   getUserProfile,
-  getUserPosts,
-  getUserProjects,
-  getUserComments,
+  updateUserAbout,
+  changeLanguage,
+  checkUsernameAvailable,
+  changeUsername,
+  getFollowers,
+  userActivities,
 };

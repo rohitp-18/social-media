@@ -10,6 +10,9 @@ interface UserState {
   error: string | null;
   login: boolean;
   profile?: any;
+  logout?: boolean;
+  updated?: boolean;
+  message?: string;
 }
 
 const initialState: UserState = {
@@ -17,6 +20,7 @@ const initialState: UserState = {
   loading: false,
   error: null,
   login: false,
+  updated: false,
 };
 
 const loginUser = createAsyncThunk(
@@ -29,7 +33,7 @@ const loginUser = createAsyncThunk(
       return response.data.user;
     } catch (error) {
       if (isAxiosError(error) && error.response) {
-        return thunkAPI.rejectWithValue(error.response.data);
+        throw new Error(error.response.data.message);
       }
       throw error;
     }
@@ -47,7 +51,7 @@ const registerUser = createAsyncThunk(
       return response.data.user;
     } catch (error) {
       if (isAxiosError(error) && error.response) {
-        return thunkAPI.rejectWithValue(error.response.data);
+        throw new Error(error.response.data.message);
       }
       throw error;
     }
@@ -60,7 +64,7 @@ const getUser = createAsyncThunk("user/getUser", async (_, thunkAPI) => {
     return response.data.user;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      throw new Error(error.response.data.message);
     }
     throw error;
   }
@@ -68,11 +72,11 @@ const getUser = createAsyncThunk("user/getUser", async (_, thunkAPI) => {
 
 const logout = createAsyncThunk("user/logout", async (_, thunkAPI) => {
   try {
-    await axios.post("/user/logout");
-    return null;
+    const response = await axios.post("/user/logout");
+    return response.data || { message: "Logout successful" };
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      throw new Error(error.response.data.message);
     }
     throw error;
   }
@@ -82,12 +86,48 @@ const userProfile = createAsyncThunk(
   "user/profile",
   async (url: string, thunkAPI) => {
     try {
-      const { data } = await axios.get(url);
+      const { data } = await axios.get(`/user/profile/${url}`);
 
       return data;
     } catch (error) {
       if (isAxiosError(error) && error.response) {
-        return thunkAPI.rejectWithValue(error.response.data);
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
+  }
+);
+
+const changeLanguage = createAsyncThunk(
+  "user/changeLanguage",
+  async (language: string, thunkAPI) => {
+    try {
+      const { data } = await axios.put("/user/update/language", {
+        language,
+      });
+
+      return data;
+    } catch (error) {
+      if (isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
+  }
+);
+
+const changeUsername = createAsyncThunk(
+  "user/changeUsername",
+  async (username: string, thunkAPI) => {
+    try {
+      const { data } = await axios.put("/user/update/username", {
+        username,
+      });
+
+      return data;
+    } catch (error) {
+      if (isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message);
       }
       throw error;
     }
@@ -98,8 +138,14 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    resetLogin: (state) => {
+    resetUser: (state) => {
       state.login = false;
+      state.logout = false;
+      state.updated = false;
+    },
+    clearError: (state) => {
+      state.error = null;
+      state.loading = false;
     },
   },
   extraReducers: (builder) => {
@@ -113,10 +159,11 @@ const userSlice = createSlice({
         state.user = action.payload;
         state.loading = false;
         state.login = true;
+        state.message = action.payload?.message || "Login successful";
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error.message as string;
       })
 
       // register user
@@ -128,10 +175,11 @@ const userSlice = createSlice({
         state.user = action.payload;
         state.loading = false;
         state.login = false;
+        state.message = action.payload?.message || "Registration successful";
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error.message as string;
       })
 
       // getUser reducers
@@ -145,7 +193,6 @@ const userSlice = createSlice({
       })
       .addCase(getUser.rejected, (state, action: any) => {
         state.loading = false;
-        state.error = action.payload.message;
       })
 
       .addCase(userProfile.pending, (state, action) => {
@@ -157,12 +204,75 @@ const userSlice = createSlice({
         state.loading = false;
       })
       .addCase(userProfile.rejected, (state, action) => {
-        state.error = action.payload as string;
+        state.error = action.error.message as string;
+        state.loading = false;
+      })
+
+      .addCase(logout.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(logout.fulfilled, (state, action) => {
+        state.loading = false;
+        state.logout = true;
+        state.user = null;
+        state.message = "Logout successful";
+      })
+      .addCase(logout.rejected, (state, action) => {
+        state.error = action.error.message as string;
+        state.loading = false;
+      })
+
+      .addCase(changeLanguage.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(changeLanguage.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user.language = action.payload.language;
+        if (state.profile) {
+          state.profile.user.language = action.payload.language;
+        }
+        state.updated = true;
+        state.message =
+          action.payload?.message || "Language changed successfully";
+      })
+      .addCase(changeLanguage.rejected, (state, action) => {
+        state.error = action.error.message as string;
+        state.loading = false;
+      })
+
+      .addCase(changeUsername.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(changeUsername.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user.username = action.payload.username;
+        if (state.profile) {
+          state.profile.user.username = action.payload.username;
+        }
+        state.updated = true;
+        state.message =
+          action.payload?.message || "Username changed successfully";
+      })
+      .addCase(changeUsername.rejected, (state, action) => {
+        state.error = action.error.message as string;
         state.loading = false;
       });
   },
 });
 
-const { resetLogin } = userSlice.actions;
-export { loginUser, registerUser, getUser, logout, resetLogin, userProfile };
+const { resetUser, clearError } = userSlice.actions;
+export {
+  loginUser,
+  registerUser,
+  getUser,
+  logout,
+  resetUser,
+  userProfile,
+  clearError,
+  changeLanguage,
+  changeUsername,
+};
 export default userSlice.reducer;

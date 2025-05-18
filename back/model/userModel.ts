@@ -2,49 +2,48 @@ import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
 interface IUser extends Document {
-  _id: mongoose.Types.ObjectId;
   name: string;
-  usernmae: string; // Note: This appears to be misspelled in schema
+  username: string;
   deactivated: boolean;
   deleted: boolean;
+  pronouns: string;
+  language: string;
+  headline: string;
   about: string;
-  about2: string;
-  gender: string;
-  location: {
-    country: {
-      type: String;
-    };
-    state: {
-      type: String;
-    };
-    city: {
-      type: String;
-    };
-  };
-  followers: Array<{ _id: mongoose.Types.ObjectId }>;
-  following: Array<{ _id: mongoose.Types.ObjectId }>;
-  skills: Array<{
-    _id: mongoose.Types.ObjectId;
-    from: "user" | "company" | "school";
-    accessedFrom: mongoose.Types.ObjectId;
-  }>;
+  images: { public_id: string; url: string }[];
+  followers: mongoose.Schema.Types.ObjectId[];
+  following: mongoose.Schema.Types.ObjectId[];
+  connections: mongoose.Schema.Types.ObjectId[];
+  skills: {
+    skill: mongoose.Schema.Types.ObjectId;
+    proficiency: string;
+    description: string;
+  }[];
   email: string;
   password: string;
-  projects: Array<{ _id: mongoose.Types.ObjectId }>;
-  experience: Array<{ _id: mongoose.Types.ObjectId }>;
-  topVoice: Array<{ _id: mongoose.Types.ObjectId }>;
-  companies: Array<{ _id: mongoose.Types.ObjectId }>;
-  groups: Array<{ _id: mongoose.Types.ObjectId }>;
-  newsLetter: Array<{ _id: mongoose.Types.ObjectId }>;
-  eduction: Array<{ _id: mongoose.Types.ObjectId }>;
+  location: {
+    country: string;
+    state: string;
+    city: string;
+  };
+  experience: mongoose.Schema.Types.ObjectId[];
+  projects: mongoose.Schema.Types.ObjectId[];
+  topVoice: mongoose.Schema.Types.ObjectId[];
+  companies: mongoose.Schema.Types.ObjectId[];
+  groups: mongoose.Schema.Types.ObjectId[];
+  newsLetter: mongoose.Schema.Types.ObjectId[];
+  education: mongoose.Schema.Types.ObjectId[];
+  website: {
+    link: string;
+    text: string;
+  };
   totalFollowers: number;
   totalFollowing: number;
   avatar: { public_id: string; url: string };
   bannerImage: { public_id: string; url: string };
   createdAt: Date;
-  updatedAt: Date[];
-  website: { link: string; text: string };
-  comparePassword(password: string): Promise<boolean>;
+  updatedAt: Date;
+  comparePassword: (password: string) => Promise<boolean>;
 }
 
 const UserSchema: Schema = new Schema(
@@ -53,7 +52,9 @@ const UserSchema: Schema = new Schema(
     username: { type: String, required: true, unique: true },
     deactivated: { type: Boolean, default: false },
     deleted: { type: Boolean, default: false },
-    about2: {
+    pronouns: { type: String },
+    language: { type: String, default: "english" },
+    headline: {
       type: String,
     },
     about: {
@@ -64,36 +65,36 @@ const UserSchema: Schema = new Schema(
     },
     followers: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
       },
     ],
     following: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+      },
+    ],
+    connections: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
       },
     ],
     skills: [
       {
-        _id: {
+        skill: {
           type: mongoose.Schema.Types.ObjectId,
           require: true,
           ref: "skill",
         },
-        from: {
+        proficiency: {
           type: String,
-          enum: ["user", "company", "school"],
-          required: true,
+          enum: ["beginner", "intermediate", "advanced", "expert"],
+          default: "beginner",
         },
-        accessedFrom: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true,
-          refPath: "skills.from",
+        description: {
+          type: String,
         },
       },
     ],
@@ -112,55 +113,41 @@ const UserSchema: Schema = new Schema(
     },
     experience: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true,
-          ref: "experience",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "experience",
       },
     ],
     projects: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true,
-          ref: "project",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "project",
       },
     ],
     topVoice: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
       },
     ],
     companies: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "company",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "company",
       },
     ],
     groups: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "group",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "group",
       },
     ],
     newsLetter: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "newsLetter",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "newsLetter",
       },
     ],
-    eduction: [{ type: String }],
+    education: [{ type: mongoose.Schema.Types.ObjectId, ref: "education" }],
     website: {
       link: {
         type: String,
@@ -169,6 +156,7 @@ const UserSchema: Schema = new Schema(
         type: String,
       },
     },
+    images: [{ public_id: { type: String }, url: { type: String } }],
     totalFollowers: { type: Number, default: 0 },
     totalFollowing: { type: Number, default: 0 },
     avatar: { public_id: { type: String }, url: { type: String } },

@@ -12,7 +12,7 @@ const comapnySchema = new mongoose.Schema(
     },
     posts: [
       {
-        _id: {
+        post: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
           unique: true,
@@ -50,27 +50,23 @@ const comapnySchema = new mongoose.Schema(
     },
     admin: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-          unique: true,
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+        unique: true,
+        required: true,
       },
     ],
     members: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-          unique: true,
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+        unique: true,
+        required: true,
       },
     ],
     requests: [
       {
-        _id: {
+        user: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "user",
           unique: true,

@@ -10,7 +10,7 @@ const addSkill = expressAsyncHandler(
     const userId = req.user._id; // Assuming you have user ID in req.user
 
     // Validate input
-    if (!name || !description || !category) {
+    if (!name) {
       return next(new ErrorHandler("Please provide all required fields", 400));
     }
 
@@ -61,7 +61,7 @@ const updateSkill = expressAsyncHandler(
     const { name, description, category } = req.body;
 
     // Validate input
-    if (!name || !description || !category) {
+    if (!name) {
       return next(new ErrorHandler("Please provide all required fields", 400));
     }
 
@@ -103,7 +103,7 @@ const deleteSkill = expressAsyncHandler(
   }
 );
 
-const deleteSkillUser = expressAsyncHandler(
+const removeSkillUser = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const skillId = req.params.id;
 
@@ -118,9 +118,7 @@ const deleteSkillUser = expressAsyncHandler(
     }
 
     // Check if the skill belongs to the user
-    const skillIndex = user.skills.findIndex(
-      (s) => s._id.toString() === skillId
-    );
+    const skillIndex = user.skills.findIndex((s) => s.toString() === skillId);
     if (skillIndex === -1) {
       return next(
         new ErrorHandler("You do not have permission to delete this skill", 403)
@@ -140,17 +138,49 @@ const deleteSkillUser = expressAsyncHandler(
 const getUserSkills = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.id;
-    const user = await User.findById(userId)
-      .populate("skills._id", "name")
-      .populate("skills.accessedFrom", "name avatar");
+    const user = await User.findById(userId).populate("skills");
     if (!user) {
       return next(new ErrorHandler("User not found", 404));
     }
 
-    const skills = user.skills.map((skill) => skill._id);
+    const skills = user.skills.map((skill) => skill);
     res.status(200).json({
       message: "Skills fetched successfully",
       skills,
+    });
+  }
+);
+
+const addUserSkill = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user._id; // Assuming you have user ID in req.user
+    const { skillId, proficiency, description } = req.body;
+
+    console.log(skillId);
+
+    // Validate input
+    if (!skillId) {
+      return next(new ErrorHandler("Please provide all required fields", 400));
+    }
+
+    // Check if the skill exists
+    const skill = await Skill.findById(skillId);
+    if (!skill) {
+      return next(new ErrorHandler("Skill not found", 404));
+    }
+
+    // Add the skill to the user's skills array
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    user.skills.push({ skill: skillId, proficiency, description });
+    await user.save();
+
+    res.status(200).json({
+      message: "Skill added successfully",
+      skill,
     });
   }
 );
@@ -159,7 +189,7 @@ const updateSkillUser = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user._id; // Assuming you have user ID in req.user
     const { skillId } = req.params;
-    const { from, accessedFrom } = req.body;
+    const { proficiency, description } = req.body;
 
     // Check if the skill belongs to the user
     const user = await User.findById(userId);
@@ -169,7 +199,7 @@ const updateSkillUser = expressAsyncHandler(
     }
 
     const skillIndex = user.skills.findIndex(
-      (s) => s._id.toString() === skillId
+      (s) => s.skill.toString() === skillId
     );
     if (skillIndex === -1) {
       return next(
@@ -178,8 +208,8 @@ const updateSkillUser = expressAsyncHandler(
     }
 
     // Update the skill
-    user.skills[skillIndex].from = from;
-    user.skills[skillIndex].accessedFrom = accessedFrom;
+    user.skills[skillIndex].proficiency = proficiency;
+    user.skills[skillIndex].description = description;
 
     await user.save();
 
@@ -190,13 +220,34 @@ const updateSkillUser = expressAsyncHandler(
   }
 );
 
+const searchSkills = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { query } = req.query;
+
+    // if (!query) {
+    //   return next(new ErrorHandler("Please provide a search query", 400));
+    // }
+
+    const skills = await Skill.find({
+      name: { $regex: query, $options: "i" },
+    }).limit(20);
+
+    res.status(200).json({
+      message: "Skills fetched successfully",
+      skills,
+    });
+  }
+);
+
 export {
   addSkill,
   getAllSkills,
   getSkillById,
   updateSkill,
   deleteSkill,
-  deleteSkillUser,
+  removeSkillUser,
   getUserSkills,
+  addUserSkill,
   updateSkillUser,
+  searchSkills,
 };

@@ -6,9 +6,11 @@ import {
   getSkillById,
   updateSkill,
   deleteSkill,
-  deleteSkillUser,
+  removeSkillUser,
   getUserSkills,
   updateSkillUser,
+  searchSkills,
+  addUserSkill,
 } from "../controller/skillController";
 
 const router = Router();
@@ -16,10 +18,15 @@ const router = Router();
 router.use(auth);
 
 router.get("/all", getAllSkills);
-router.get("/:id", getSkillById);
-router.post("/add", addSkill);
-router.route("/:id").get(updateSkill).put(updateSkill).delete(deleteSkill);
-router.get("/user", getUserSkills);
-router.route("/user/:id").delete(deleteSkillUser).put(updateSkillUser);
+router.post("/new", addSkill);
+router
+  .route("/skill/:id")
+  .get(getSkillById)
+  .put(updateSkill)
+  .delete(deleteSkill);
+router.post("/user/new", auth, addUserSkill);
+router.route("/user/:id").delete(removeSkillUser).put(updateSkillUser);
+router.get("/search", searchSkills);
+router.get("/user/:id/skills", getUserSkills);
 
 export default router;

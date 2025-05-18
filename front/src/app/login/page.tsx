@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AppDispatch, RootState } from "@/store/store";
-import { loginUser, resetLogin } from "@/store/user/userSlice";
+import { loginUser, resetUser } from "@/store/user/userSlice";
 import { Eye, EyeOffIcon, Facebook } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -44,7 +44,7 @@ function Page() {
         position: "top-center",
       });
       router.push(`/u/${user.username}`);
-      dispatch(resetLogin());
+      dispatch(resetUser());
     }
     if (!loading && user) {
       router.push(`/u/${user.username}`);

@@ -1,12 +1,18 @@
+"use client";
+
 import Navbar from "@/components/userNavbar";
+import IntroNavbar from "@/components/introNavbar";
 import React, { PropsWithChildren } from "react";
 import RecommendUser from "@/components/recommend/recommendUser";
 import YouMayKnow from "@/components/recommend/YouMayKnow";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 function Wrapper(props: PropsWithChildren) {
+  const { user } = useSelector((state: RootState) => state.user);
   return (
     <>
-      <Navbar />
+      {user ? <Navbar /> : <IntroNavbar />}
 
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container max-w-[1170px] mx-auto px-3">

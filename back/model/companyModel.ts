@@ -13,7 +13,7 @@ const comapnySchema = new mongoose.Schema(
     totalFollowers: { type: Number, default: 0 },
     posts: [
       {
-        _id: {
+        post: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
           unique: true,
@@ -28,12 +28,9 @@ const comapnySchema = new mongoose.Schema(
     membersCount: { type: Number, default: 0 },
     followers: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-          unique: true,
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+        unique: true,
       },
     ],
     address: [
@@ -47,12 +44,9 @@ const comapnySchema = new mongoose.Schema(
     ],
     admin: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-          unique: true,
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+        unique: true,
       },
     ],
     phone: {
@@ -77,12 +71,10 @@ const comapnySchema = new mongoose.Schema(
     ],
     jobs: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "job",
-          unique: true,
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "job",
+        unique: true,
+        required: true,
       },
     ],
     isDeleted: { type: Boolean, default: false },

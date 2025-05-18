@@ -4,6 +4,8 @@ import ErrorHandler from "../utils/errorHandler";
 import Project from "../model/projectModel";
 import { v2 as cloudinary } from "cloudinary";
 import Comment from "../model/commentModel";
+import User from "../model/userModel";
+import Media from "../model/mediaModel";
 
 const createProject = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -45,7 +47,7 @@ const createProject = expressAsyncHandler(
     let media: any = [];
 
     if (req.files) {
-      Promise.all(
+      await Promise.all(
         req.files.map(async (val: any, i: number) => {
           // Convert file buffer to base64 string
           const b64 = Buffer.from(val.buffer).toString("base64");
@@ -59,13 +61,12 @@ const createProject = expressAsyncHandler(
               crop: "pad",
             });
             // Add uploaded image info to postData
-            media[i] = {
+            media.push({
               public_id: data.public_id,
               url: data.secure_url,
               order: i,
-              type: "image", // Assuming all files are images; adjust as needed
-              // Maintain original file order
-            };
+              type: "image",
+            });
           } catch (error: any | unknown) {
             // Handle upload errors
             return next(new ErrorHandler(error, 501));
@@ -84,8 +85,20 @@ const createProject = expressAsyncHandler(
       liveLink,
       startDate,
       endDate,
-      current,
+      current: Boolean(current),
     });
+
+    await Promise.all(
+      project.media.map(async (mrd: any) => {
+        await Media.create({
+          user: req.user._id,
+          type: "image",
+          url: mrd.secure_url,
+          thumbnail: mrd.secure_url,
+          project: project._id,
+        });
+      })
+    );
 
     res.status(201).json({
       message: "Project created successfully",
@@ -135,7 +148,7 @@ const updateProject = expressAsyncHandler(
       skills,
       githubLink,
       liveLink,
-      oldImages,
+      media: oldImages,
       startDate,
       endDate,
       current,
@@ -165,10 +178,35 @@ const updateProject = expressAsyncHandler(
       return next(new ErrorHandler("You are not authorized", 401));
     }
 
-    let media: any = [...oldImages];
+    let media: any[] = [];
+
+    if (oldImages) {
+      media = [...oldImages];
+    }
+
+    const tempProject = await Project.findById(projectId);
+    if (!tempProject) {
+      return next(new ErrorHandler("Project not found", 404));
+    }
+
+    if (tempProject.media.length > 0) {
+      await Promise.all(
+        tempProject.media.map(async (val: any) => {
+          if (oldImages) {
+            const image = oldImages.find(
+              (img: any) => img.public_id === val.public_id
+            );
+            if (!image) {
+              await cloudinary.uploader.destroy(val.public_id);
+              await Media.deleteOne({ public_id: val.public_id });
+            }
+          }
+        })
+      );
+    }
 
     if (req.files) {
-      Promise.all(
+      await Promise.all(
         req.files.map(async (val: any, i: number) => {
           // Convert file buffer to base64 string
           const b64 = Buffer.from(val.buffer).toString("base64");
@@ -182,13 +220,20 @@ const updateProject = expressAsyncHandler(
               crop: "pad",
             });
             // Add uploaded image info to postData
-            media[i + oldImages.length] = {
+            media.push({
               public_id: data.public_id,
               url: data.secure_url,
-              order: i + oldImages.length,
+              order: 1 + media.length,
               type: "image", // Assuming all files are images; adjust as needed
               // Maintain original file order
-            };
+            });
+            await Media.create({
+              user: req.user._id,
+              type: "image",
+              url: data.secure_url,
+              thumbnail: data.secure_url,
+              project: projectId,
+            });
           } catch (error: any | unknown) {
             // Handle upload errors
             return next(new ErrorHandler(error, 501));
@@ -208,7 +253,7 @@ const updateProject = expressAsyncHandler(
         liveLink,
         startDate,
         endDate,
-        current,
+        current: Boolean(current),
       },
       { new: true }
     );
@@ -240,6 +285,23 @@ const deleteProject = expressAsyncHandler(
     project.deletedAt = new Date();
 
     await project.save();
+
+    if (project.media.length > 0) {
+      await Promise.all(
+        project.media.map(async (val: any) => {
+          await Media.updateOne(
+            { public_id: val.public_id },
+            {
+              $set: {
+                deletedAt: new Date(),
+                isDeleted: true,
+                deletedBy: req.user._id,
+              },
+            }
+          );
+        })
+      );
+    }
 
     res.status(200).json({
       message: "Project deleted successfully",
@@ -387,10 +449,10 @@ const getUserLikedProjects = expressAsyncHandler(
 const getUserProjects = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user._id;
-    const projects = await Project.find({ user: userId }).populate(
-      "user",
-      "name avatar"
-    );
+    const projects = await Project.find({
+      user: userId,
+      isDeleted: false,
+    }).populate("user", "name avatar");
 
     if (!projects) {
       return next(new ErrorHandler("No projects found", 404));
@@ -421,6 +483,31 @@ const searchProjects = expressAsyncHandler(
   }
 );
 
+const getProfileProjects = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const username = req.params.id;
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const projects = await Project.find({
+      user: user._id,
+      isDeleted: false,
+    }).populate("skills");
+
+    if (!projects) {
+      return next(new ErrorHandler("No projects found", 404));
+    }
+
+    res.status(200).json({
+      message: "User projects fetched successfully",
+      projects,
+    });
+  }
+);
+
 export {
   createProject,
   getAllProjects,
@@ -434,4 +521,5 @@ export {
   getUserLikedProjects,
   getUserProjects,
   searchProjects,
+  getProfileProjects,
 };

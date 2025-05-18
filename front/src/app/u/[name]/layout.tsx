@@ -23,16 +23,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const { user } = res;
 
-    // const {
-    //   data: { user },
-    // } = data;
+    if (!user) {
+      return {
+        title: "User not found",
+        description: "The user you are looking for does not exist.",
+      };
+    }
+
     return {
-      title: `${user.name} | TS`,
+      title: `${user.name} | TS - Social network site`,
       description: `Explore ${user.name}'s profile on our social media platform.`,
     };
   } catch (error) {
-    console.log(error);
-    // Handle error appropriately
     return {
       title: "Error",
       description: "An error occurred while fetching user data.",

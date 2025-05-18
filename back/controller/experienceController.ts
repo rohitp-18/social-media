@@ -2,17 +2,16 @@ import expressAsyncHandler from "express-async-handler";
 import { Request, Response, NextFunction } from "express";
 import Experience from "../model/experienceModel";
 import ErrorHandler from "../utils/errorHandler";
+import User from "../model/userModel";
 
 const createExperience = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const {
       title,
-      company,
       companyName,
       location,
       startDate,
       endDate,
-      current,
       description,
       workType,
       skills,
@@ -28,17 +27,18 @@ const createExperience = expressAsyncHandler(
     const experience = await Experience.create({
       user: req.user._id,
       title,
-      company,
+      companyName,
       location,
       startDate,
       endDate,
-      current,
+      working,
       description,
       workType,
       skills,
       jobType,
-      working,
     });
+
+    await experience.populate("skills", "name _id");
 
     res.status(201).json({
       message: "Experience created successfully",
@@ -70,10 +70,6 @@ const getExperienceById = expressAsyncHandler(
       return next(new ErrorHandler("Experience not found", 404));
     }
 
-    if (experience.user.toString() !== req.user._id.toString()) {
-      return next(new ErrorHandler("You are not authorized", 401));
-    }
-
     res.status(200).json({
       message: "Experience fetched successfully",
       experience,
@@ -86,12 +82,10 @@ const updateExperience = expressAsyncHandler(
     const experienceId = req.params.id;
     const {
       title,
-      company,
       companyName,
       location,
       startDate,
       endDate,
-      current,
       description,
       workType,
       skills,
@@ -108,11 +102,9 @@ const updateExperience = expressAsyncHandler(
       experienceId,
       {
         title,
-        company,
         location,
         startDate,
         endDate,
-        current,
         description,
         workType,
         skills,
@@ -159,10 +151,37 @@ const deleteExperience = expressAsyncHandler(
   }
 );
 
+const profileExperience = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.id;
+
+    const user = await User.findOne({ username: userId, deleted: false });
+
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const experiences = await Experience.find({
+      user: user._id,
+      isDeleted: false,
+    }).populate("skills", "name _id");
+
+    if (!experiences) {
+      return next(new ErrorHandler("No experiences found", 404));
+    }
+
+    res.status(200).json({
+      message: "Experiences fetched successfully",
+      experiences,
+    });
+  }
+);
+
 export {
   createExperience,
   getUserExperiences,
   getExperienceById,
   updateExperience,
   deleteExperience,
+  profileExperience,
 };

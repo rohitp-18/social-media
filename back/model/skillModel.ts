@@ -7,6 +7,11 @@ const skillSchema = new Schema(
       required: true,
       unique: true,
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+    },
     description: {
       type: String,
     },

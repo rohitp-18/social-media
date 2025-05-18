@@ -14,7 +14,6 @@ const experienceSchema = new mongoose.Schema(
     company: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "company",
-      required: true,
     },
     title: {
       type: String,
@@ -28,20 +27,21 @@ const experienceSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    workType: {
+    jobType: {
       type: String,
       enum: ["full-time", "part-time", "internship"],
       default: "full-time",
     },
     skills: [
       {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "skill",
       },
     ],
-    jobType: {
+    workType: {
       type: String,
       enum: ["remote", "onsite", "hybrid"],
-      default: "remote",
+      default: "onsite",
     },
     endDate: {
       type: Date,

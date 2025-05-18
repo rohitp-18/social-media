@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -25,6 +25,10 @@ import {
 } from "./ui/dropdown-menu";
 import { DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { clearError, logout, resetUser } from "@/store/user/userSlice";
+import { toast } from "sonner";
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -34,6 +38,28 @@ const Navbar: React.FC = () => {
   const [searchDrop, setSearchDrop] = useState(false);
 
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const {
+    user,
+    logout: logout2,
+    error,
+  } = useSelector((state: RootState) => state.user);
+
+  function logoutAction() {
+    dispatch(logout());
+  }
+
+  useEffect(() => {
+    if (logout2) {
+      toast.success("Logout successfully", { position: "top-center" });
+      dispatch(resetUser());
+      router.push("/login");
+    }
+    if (error) {
+      toast.success("Logout successfully", { position: "top-center" });
+      dispatch(clearError());
+    }
+  }, [logout2, error]);
 
   return (
     <nav className="sticky top-0 z-50 left-0 w-full border text-card-foreground bg-opacity-20 backdrop-blur-md shadow-md p-4 flex flex-col justify-between items-center bg-background/40 dark:shadow-lg">
@@ -108,63 +134,67 @@ const Navbar: React.FC = () => {
             <span className="md:block hidden text-sm"> Notification</span>
           </a>
 
-          <DropdownMenu open={drop} onOpenChange={(open) => setDrop(open)}>
-            <DropdownMenuTrigger className="focus-visible:outline-none flex justify-center items-center flex-col">
-              <Avatar className="w-4.5 h-4.5 flex-shrink-0">
-                <AvatarImage src="" />
-                <AvatarFallback>
-                  <User2 className="w-4 h-4 flex-shrink-0" />
-                </AvatarFallback>
-              </Avatar>
-              <span className="md:flex hidden items-center gap-1 text-sm">
-                You
-                <ChevronDown
-                  className={`w-4 h-4 ${drop ? "rotate-180" : ""}`}
-                />
-              </span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 mt-5 px-2 bg-background rounded-lg shadow-lg">
-              <DropdownMenuGroup className="px-1 py-2">
-                <div className="flex items-center gap-3">
-                  <Avatar className="flex-shrink-0">
-                    <AvatarImage src=""></AvatarImage>
-                    <AvatarFallback>
-                      <User2 className="w-14 flex-shrink-0 p-2 h-14" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col items-start">
-                    <h3 className="font-semibold text-base">Your Name</h3>
-                    <p className="opacity-70 text-sm leading-none">
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                    </p>
+          {user && (
+            <DropdownMenu open={drop} onOpenChange={(open) => setDrop(open)}>
+              <DropdownMenuTrigger className="focus-visible:outline-none flex justify-center items-center flex-col">
+                <Avatar className="w-4.5 h-4.5 flex-shrink-0">
+                  <AvatarImage src="" />
+                  <AvatarFallback>
+                    <User2 className="w-4 h-4 flex-shrink-0" />
+                  </AvatarFallback>
+                </Avatar>
+                <span className="md:flex hidden items-center gap-1 text-sm">
+                  You
+                  <ChevronDown
+                    className={`w-4 h-4 ${drop ? "rotate-180" : ""}`}
+                  />
+                </span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 mt-5 px-2 bg-background rounded-lg shadow-lg">
+                <DropdownMenuGroup className="px-1 py-2">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="flex-shrink-0">
+                      <AvatarImage src={user.avatar?.url}></AvatarImage>
+                      <AvatarFallback>
+                        <User2 className="w-14 flex-shrink-0 p-2 h-14" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col items-start">
+                      <h3 className="font-semibold text-base">{user.name}</h3>
+                      <p className="opacity-70 text-sm leading-none">
+                        {user.headline}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <Button
-                  variant={"outline"}
-                  onClick={() => router.push("/u/name")}
-                  className="w-full mt-3 mb-1 border-primary py-2 h-7 px-3 text-primary"
-                >
-                  View Profile
-                </Button>
-              </DropdownMenuGroup>
-              <hr />
-              <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <a href="/setting">Setting & Privacy</a>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <a href="/terms">Terms & conditions</a>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <a href="/lang">Language</a>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <hr />
-              <DropdownMenuGroup>
-                <DropdownMenuItem>Sign Out</DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => router.push("/u/" + user.username)}
+                    className="w-full mt-3 mb-1 border-primary py-2 h-7 px-3 text-primary"
+                  >
+                    View Profile
+                  </Button>
+                </DropdownMenuGroup>
+                <hr />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem>
+                    <a href="/setting">Setting & Privacy</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <a href="/terms">Terms & conditions</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <a href="/lang">Language</a>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <hr />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={logoutAction}>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <Button
             variant={"outline"}
