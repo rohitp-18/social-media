@@ -25,9 +25,9 @@ import { Input } from "../ui/input";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 import axios from "@/store/axios";
-import { userProfile } from "@/store/user/userSlice";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store/store";
+import { toggleFollow, userProfile } from "@/store/user/userSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 
 function ProfilePageCard({
   profile,
@@ -46,6 +46,7 @@ function ProfilePageCard({
   const [edit, setEdit] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.user);
 
   const handleBannerImageRemove = () => {
     setBannerImage(null);
@@ -332,16 +333,27 @@ function ProfilePageCard({
             className="flex items-center border-primary text-primary rounded-full hover:text-white hover:bg-primary"
             variant={"outline"}
           >
-            Add profile section
+            Edit Profile
           </Button>
         ) : (
           <>
-            <Button
-              className="flex items-center rounded-full"
-              variant={"default"}
-            >
-              <Plus /> Follow
-            </Button>
+            {user?.following.includes(profile.user._id) ? (
+              <Button
+                className="flex items-center rounded-full"
+                variant={"outline"}
+                onClick={() => dispatch(toggleFollow(profile.user._id))}
+              >
+                Following
+              </Button>
+            ) : (
+              <Button
+                className="flex items-center rounded-full"
+                variant={"default"}
+                onClick={() => dispatch(toggleFollow(profile.user._id))}
+              >
+                <Plus /> Follow
+              </Button>
+            )}
             <Button
               className="flex items-center border-primary text-primary rounded-full"
               variant={"outline"}

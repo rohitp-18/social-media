@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { Card, CardContent } from "../ui/card";
 import FooterS from "../footerS";
 
-function JobSearch() {
+function JobSearch({ setType, selectValues }: any) {
   return (
     <section className="grid grid-cols-[1fr_300px]  gap-4">
       <Card className="flex flex-col max-w-screen-md w-full gap-3 overflow-auto">

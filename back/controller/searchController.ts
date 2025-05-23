@@ -35,7 +35,28 @@ const getAllSearch = expressAsyncHandler(
         { bio: { $regex: q, $options: "i" } },
         ...(skillIds.length > 0 ? [{ skills: { $in: skillIds } }] : []),
       ],
-    }).limit(10);
+      ...(User.schema
+        .indexes()
+        .some(
+          (idx) =>
+            idx[0].hasOwnProperty("name") && idx[1].hasOwnProperty("text")
+        )
+        ? { $text: { $search: q as string } }
+        : {}),
+      deleted: false,
+    })
+      .populate("skills", "name _id")
+      .limit(10)
+      .sort(
+        User.schema
+          .indexes()
+          .some(
+            (idx) =>
+              idx[0].hasOwnProperty("name") && idx[1].hasOwnProperty("text")
+          )
+          ? { score: { $meta: "textScore" } }
+          : {}
+      );
 
     const companies = await Company.find({
       $or: [
@@ -44,12 +65,14 @@ const getAllSearch = expressAsyncHandler(
         { website: { $regex: q, $options: "i" } },
         { bio: { $regex: q, $options: "i" } },
       ],
-    }).limit(10);
+      isDeleted: false,
+    })
+      .populate("skills", "name _id")
+      .limit(10);
 
     const posts = await Post.find({
       $or: [
-        { title: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } },
+        { content: { $regex: q, $options: "i" } },
         ...(peoples.length > 0
           ? [{ user: { $in: peoples.map((user) => user._id) } }]
           : []),
@@ -60,23 +83,28 @@ const getAllSearch = expressAsyncHandler(
           ? [{ tags: { $in: peoples.map((user) => user._id) } }]
           : []),
       ],
-    }).limit(10);
+      isDeleted: false,
+    })
+      .limit(10)
+      .populate("userId", "name avatar headline location username");
 
     const projects = await Project.find({
       $or: [
         { title: { $regex: q, $options: "i" } },
         { description: { $regex: q, $options: "i" } },
-        ...(peoples.length > 0
-          ? [{ user: { $in: peoples.map((user) => user._id) } }]
-          : []),
       ],
-    }).limit(10);
+      isDeleted: false,
+    })
+      .limit(10)
+      .populate("user", "name avatar headline location username")
+      .populate("skills", "name _id");
 
     const groups = await Group.find({
       $or: [
         { title: { $regex: q, $options: "i" } },
         { description: { $regex: q, $options: "i" } },
       ],
+      isDeleted: false,
     }).limit(10);
 
     const jobs = await Job.find({
@@ -87,7 +115,15 @@ const getAllSearch = expressAsyncHandler(
           ? [{ company: { $in: companies.map((company) => company._id) } }]
           : []),
       ],
+      isDeleted: false,
     }).limit(10);
+
+    // extract all skills from peoples and companies projects
+    const peoplesSkills = peoples.flatMap((people) => people.skills);
+    const projectsSkills = projects.flatMap((project) => project.skills);
+
+    // combine all skills into a single array
+    const allSkills = [...peoplesSkills, ...projectsSkills];
 
     if (
       peoples.length === 0 &&
@@ -111,6 +147,7 @@ const getAllSearch = expressAsyncHandler(
         projects,
         groups,
         jobs,
+        skills: allSkills,
       });
     } else {
       const followingPeoples = peoples.map((people) => {
@@ -120,16 +157,12 @@ const getAllSearch = expressAsyncHandler(
         };
       });
 
-      console.log("follow people");
-
       const followingCompanies = companies.map((company) => {
         return {
           ...company.toObject(),
           isFollowing: req.user?.companies.includes(company._id),
         };
       });
-
-      console.log("follow company");
 
       const followingGroups = groups.map((group) => {
         return {
@@ -139,8 +172,6 @@ const getAllSearch = expressAsyncHandler(
         };
       });
 
-      console.log("follow groups");
-
       res.status(200).json({
         success: true,
         peoples: followingPeoples,
@@ -149,6 +180,7 @@ const getAllSearch = expressAsyncHandler(
         projects,
         groups: followingGroups,
         jobs,
+        skills: allSkills,
       });
     }
 
@@ -158,36 +190,75 @@ const getAllSearch = expressAsyncHandler(
 
 const getPeopleSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q, page, connections, location, skills, sort } = req.query;
+    const { q, page, location, connections, skills, sort } = req.query;
 
     if (!q) {
       return next(new ErrorHandler("Please provide a search query", 400));
+    }
+
+    let sortBy = {};
+    if (sort === "recent") {
+      sortBy = { createdAt: -1 };
+    } else if (sort === "popular") {
+      sortBy = { totalFollowers: -1 };
+    } else if (sort === "relevant") {
+      sortBy = {
+        score: { $meta: "textScore" },
+      };
+    } else if (sort === "connections") {
+      sortBy = { totalConnections: -1 };
     }
 
     const peoples = await User.find({
       $or: [
         { name: { $regex: q, $options: "i" } },
         { headline: { $regex: q, $options: "i" } },
-        { location: { $regex: q, $options: "i" } },
-        { skills: { $regex: q, $options: "i" } },
-        { website: { $regex: q, $options: "i" } },
+        { "website.link": { $regex: q, $options: "i" } },
+        { username: { $regex: q, $options: "i" } },
+        { "location.country": { $regex: q, $options: "i" } },
+        { "location.city": { $regex: q, $options: "i" } },
+        { "location.state": { $regex: q, $options: "i" } },
+        { "location.country": { $regex: q, $options: "i" } },
         { bio: { $regex: q, $options: "i" } },
+        ...(location
+          ? [{ "location.city": { $regex: location, $options: "i" } }]
+          : []),
+        ...(location
+          ? [{ "location.state": { $regex: location, $options: "i" } }]
+          : []),
+        ...(location
+          ? [{ "location.country": { $regex: location, $options: "i" } }]
+          : []),
+        ...(skills ? [{ skills: { $in: skills } }] : []),
       ],
-      ...(connections && { connections }),
-      ...(location && { location }),
-      ...(skills && { skills }),
-      ...(sort && { sort }),
     })
-      .skip((Number(page) - 1) * 20)
+      .sort(sortBy)
+      .skip((Number(page || 1) - 1) * 20)
       .limit(20);
 
     if (peoples.length === 0) {
       return next(new ErrorHandler("No results found", 404));
     }
 
+    if (req.user === undefined) {
+      return next(
+        res.status(200).json({
+          success: true,
+          peoples,
+        })
+      );
+    }
+
+    const followingPeoples = peoples.map((people) => {
+      return {
+        ...people.toObject(),
+        isFollowing: req.user?.following.includes(people._id),
+      };
+    });
+
     res.status(200).json({
       success: true,
-      peoples,
+      peoples: followingPeoples,
     });
   }
 );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment, use, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,14 +13,20 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from "../ui/dropdown-menu";
+import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 import {
   ArrowRight,
   Dot,
@@ -33,6 +39,7 @@ import {
   ThumbsUp,
   User2,
 } from "lucide-react";
+import { toggleFollow } from "@/store/user/userSlice";
 
 function ActivityCard({ isUser }: { isUser: boolean }) {
   const [activity, setActivity] = useState("post");
@@ -54,6 +61,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
     return `${seconds} seconds ago`;
   };
 
+  const dispatch = useDispatch<AppDispatch>();
   const { user, profile } = useSelector((state: RootState) => state.user);
   return (
     <>
@@ -159,7 +167,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                                     <h3 className="font-semibold text-sm leading-tight">
                                       {post.userId.name}
                                     </h3>
-                                    {post.userId._id === user._id && (
+                                    {post.userId._id === user?._id && (
                                       <span className="flex text-xs opacity-60 items-center pl-1">
                                         <Dot className="w-4 h-4" />
                                         <span>You</span>
@@ -181,7 +189,49 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                                   </div>
                                 </div>
                               </div>
-                              <MoreHorizontal className="w-6 h-6 opacity-70 hover:opacity-100" />
+                              <div className="flex justify-end items-center gap-2">
+                                {!isUser &&
+                                  !user?.following.includes(
+                                    post.userId._id
+                                  ) && (
+                                    <Button
+                                      className="w-min flex px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
+                                      variant={"outline"}
+                                      size={"sm"}
+                                      onClick={() =>
+                                        dispatch(toggleFollow(post.userId._id))
+                                      }
+                                    >
+                                      Follow
+                                    </Button>
+                                  )}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger>
+                                    <MoreHorizontal className="w-6 h-6 opacity-70 hover:opacity-100" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent className="mt-2 p-2 bg-background rounded-lg shadow-lg">
+                                    <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
+                                      Save post
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
+                                      Copy link
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
+                                      Report post
+                                    </DropdownMenuItem>
+                                    {user?._id === post.userId?._id && (
+                                      <>
+                                        <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm text-blue-500">
+                                          Edit post
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm text-red-500">
+                                          Delete post
+                                        </DropdownMenuItem>
+                                      </>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </CardHeader>
                             <CardContent className="p-4">
                               <CardDescription>

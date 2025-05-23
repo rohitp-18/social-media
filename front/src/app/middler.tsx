@@ -12,12 +12,8 @@ interface MiddlewareProps {
 }
 
 const Middleware: React.FC<MiddlewareProps> = ({ children }) => {
-  const [path, setPath] = useState("");
-  const pathname = usePathname();
-  const router = useRouter();
   useEffect(() => {
     store.dispatch(getUser());
-
     return () => {};
   }, []); // Empty dependency array to run only once
 

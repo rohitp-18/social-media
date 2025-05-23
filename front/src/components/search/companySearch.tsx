@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User2 } from "lucide-react";
 
-function CompanySearch() {
+function CompanySearch({ setType, selectValues }: any) {
   return (
     <section className="grid grid-cols-[1fr_300px]  gap-4">
       <div>

@@ -503,6 +503,110 @@ const userActivities = expressAsyncHandler(
   }
 );
 
+const recommendationsUser = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const users = await User.find({
+      _id: { $ne: user._id, $nin: user.following }, // Exclude self and already-followed users
+      $or: [
+        {
+          skills: { $in: user.skills },
+        },
+        {
+          headline: {
+            $regex: user.headline ? user.headline.split(/\s+/).join("|") : "",
+            $options: "i",
+          }, // Contain headline words/phrases
+        },
+        {
+          about: {
+            $regex: user.about ? user.about.split(/\s+/).join("|") : "",
+            $options: "i",
+          }, // Contain about words/phrases
+        },
+      ], // Find users with similar skills
+      deleted: false,
+      isDeleted: false,
+    })
+      .populate("followers", "name avatar headline username")
+      .populate("following", "name avatar headline username")
+      .limit(10);
+
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  }
+);
+
+const followUser = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+
+    const tempUser = await User.findOne({ _id: id, deleted: false });
+
+    if (!tempUser) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    if (req.user?._id.toString() === (tempUser._id as string).toString()) {
+      return next(new ErrorHandler("You cannot follow yourself", 400));
+    }
+
+    const user = await req.user?.following.find(
+      (user: any) => user._id.toString() === (tempUser._id as string).toString()
+    );
+
+    const loginUser = await User.findById(req.user._id);
+
+    if (!loginUser) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    if (user) {
+      loginUser.following = loginUser.following.filter(
+        (user: any) => user.toString() !== (tempUser._id as string).toString()
+      );
+      tempUser.followers = tempUser.followers.filter(
+        (user: any) => user.toString() !== (loginUser._id as string).toString()
+      );
+      tempUser.totalFollowers = tempUser.followers.length;
+      loginUser.totalFollowing = loginUser.following.length;
+
+      await loginUser.save();
+      await tempUser.save();
+
+      res.status(200).json({
+        success: true,
+        follow: false,
+        userId: tempUser._id,
+        message: "Unfollowed successfully",
+      });
+    } else {
+      loginUser.following.push(tempUser._id as any);
+      tempUser.followers.push(loginUser._id as any);
+
+      tempUser.totalFollowers = tempUser.followers.length;
+      loginUser.totalFollowing = loginUser.following.length;
+
+      await loginUser.save();
+      await tempUser.save();
+
+      res.status(200).json({
+        success: true,
+        follow: true,
+        userId: tempUser._id,
+        message: "Followed successfully",
+      });
+    }
+  }
+);
+
 export {
   getUsers,
   loginUser,
@@ -517,4 +621,6 @@ export {
   changeUsername,
   getFollowers,
   userActivities,
+  recommendationsUser,
+  followUser,
 };

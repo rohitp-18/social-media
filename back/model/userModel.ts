@@ -39,6 +39,7 @@ interface IUser extends Document {
   };
   totalFollowers: number;
   totalFollowing: number;
+  totalConnections: number;
   avatar: { public_id: string; url: string };
   bannerImage: { public_id: string; url: string };
   createdAt: Date;
@@ -159,6 +160,7 @@ const UserSchema: Schema = new Schema(
     images: [{ public_id: { type: String }, url: { type: String } }],
     totalFollowers: { type: Number, default: 0 },
     totalFollowing: { type: Number, default: 0 },
+    totalConnections: { type: Number, default: 0 },
     avatar: { public_id: { type: String }, url: { type: String } },
     bannerImage: { public_id: { type: String }, url: { type: String } },
     createdAt: { type: Date, default: new Date(Date.now()) },

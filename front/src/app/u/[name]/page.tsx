@@ -57,10 +57,14 @@ function ProfilePage({ params }: { params: { name: string } }) {
   useEffect(() => {
     if (profile) {
       setIsUser(profile?.user._id === user?._id);
-      console.log(profile);
     }
   }, [dispatch, profile]);
 
+  useEffect(() => {
+    if (profile) {
+      setIsUser(profile?.user._id === user?._id);
+    }
+  }, [dispatch, user]);
   return (
     <>
       {profile && (

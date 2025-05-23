@@ -13,6 +13,7 @@ interface UserState {
   logout?: boolean;
   updated?: boolean;
   message?: string;
+  changeFollow: boolean;
 }
 
 const initialState: UserState = {
@@ -21,6 +22,7 @@ const initialState: UserState = {
   error: null,
   login: false,
   updated: false,
+  changeFollow: false,
 };
 
 const loginUser = createAsyncThunk(
@@ -72,7 +74,7 @@ const getUser = createAsyncThunk("user/getUser", async (_, thunkAPI) => {
 
 const logout = createAsyncThunk("user/logout", async (_, thunkAPI) => {
   try {
-    const response = await axios.post("/user/logout");
+    const response = await axios.get("/user/logout");
     return response.data || { message: "Logout successful" };
   } catch (error) {
     if (isAxiosError(error) && error.response) {
@@ -134,6 +136,22 @@ const changeUsername = createAsyncThunk(
   }
 );
 
+const toggleFollow = createAsyncThunk(
+  "user/toggleFollow",
+  async (username: string, thunkAPI) => {
+    try {
+      const { data } = await axios.get("/user/follow/" + username, {});
+
+      return data;
+    } catch (error) {
+      if (isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -141,7 +159,9 @@ const userSlice = createSlice({
     resetUser: (state) => {
       state.login = false;
       state.logout = false;
+      state.changeFollow = false;
       state.updated = false;
+      state.message = undefined;
     },
     clearError: (state) => {
       state.error = null;
@@ -259,6 +279,39 @@ const userSlice = createSlice({
       .addCase(changeUsername.rejected, (state, action) => {
         state.error = action.error.message as string;
         state.loading = false;
+      })
+
+      .addCase(toggleFollow.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(toggleFollow.fulfilled, (state, action) => {
+        state.loading = false;
+        state.changeFollow = true;
+        if (action.payload.follow) {
+          state.user.following.push(action.payload.userId);
+          if (state.profile?.user?._id === action.payload.userId) {
+            state.profile.user.followers.push(state.user._id);
+            state.profile.user.totalFollowers =
+              state.profile.user.followers.length;
+          }
+        } else {
+          state.user.following = state.user.following.filter(
+            (user: any) => user !== action.payload.userId
+          );
+          if (state.profile?.user?._id === action.payload.userId) {
+            state.profile.user.followers = state.profile.user.followers.filter(
+              (user: any) => user !== state.user._id
+            );
+            state.profile.user.totalFollowers =
+              state.profile.user.followers.length;
+          }
+        }
+        state.message = action.payload?.message || "you are following now";
+      })
+      .addCase(toggleFollow.rejected, (state, action) => {
+        state.error = action.error.message as string;
+        state.loading = false;
       });
   },
 });
@@ -274,5 +327,6 @@ export {
   clearError,
   changeLanguage,
   changeUsername,
+  toggleFollow,
 };
 export default userSlice.reducer;

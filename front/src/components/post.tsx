@@ -20,8 +20,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuItem,
 } from "./ui/dropdown-menu";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { useSelector } from "react-redux";

@@ -1,8 +1,9 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, User2 } from "lucide-react";
+import axios from "@/store/axios";
 
 function RecommendCompany() {
   return (

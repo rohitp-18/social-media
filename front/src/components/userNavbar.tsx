@@ -80,16 +80,6 @@ const Navbar: React.FC = () => {
                 router.push(`/search?q=${encodeURIComponent(search.trim())}`)
               }
             />
-            {search && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 h-7 w-7 p-0"
-                onClick={() => setSearch("")}
-              >
-                ×
-              </Button>
-            )}
           </div>
           <Search
             onClick={() => setSearchDrop(!searchDrop)}

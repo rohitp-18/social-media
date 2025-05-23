@@ -40,6 +40,58 @@ const searchInConnections = createAsyncThunk(
   }
 );
 
+const searchProjects = createAsyncThunk(
+  "allSearch/searchProjects",
+  async (params: any) => {
+    try {
+      const { data } = await axios.get("/search/project", {
+        params,
+      });
+      return data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(error.response?.data.message);
+      }
+      throw new Error("Something went wrong");
+    }
+  }
+);
+
+const searchPeoples = createAsyncThunk(
+  "allSearch/searchPeoples",
+  async (query: any, thunkAPI) => {
+    try {
+      console.log(query);
+      const { data } = await axios.get("/search/people", {
+        params: query,
+      });
+      return data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(error.response?.data.message);
+      }
+      throw new Error("Something went wrong");
+    }
+  }
+);
+
+const searchPosts = createAsyncThunk(
+  "allSearch/searchPosts",
+  async (query: any, thunkAPI) => {
+    try {
+      const { data } = await axios.get("/search/post", {
+        params: query,
+      });
+      return data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(error.response?.data.message);
+      }
+      throw new Error("Something went wrong");
+    }
+  }
+);
+
 interface IAllSearch {
   peoples: any[];
   companies: any[];
@@ -52,6 +104,7 @@ interface IAllSearch {
   page: number;
   loading: boolean;
   error: string | null;
+  skills: any[];
 }
 
 const initialState: IAllSearch = {
@@ -62,6 +115,7 @@ const initialState: IAllSearch = {
   groups: [],
   connections: [],
   jobs: [],
+  skills: [],
   total: 0,
   loading: false,
   error: null,
@@ -107,6 +161,7 @@ const getAllSearchSlice = createSlice({
         state.projects = projects;
         state.groups = groups;
         state.jobs = jobs;
+        state.skills = action.payload.skills;
       })
       .addCase(getAllSearch.rejected, (state) => {
         state.peoples = [];
@@ -127,12 +182,54 @@ const getAllSearchSlice = createSlice({
       })
       .addCase(searchInConnections.rejected, (state) => {
         state.connections = [];
+      })
+
+      // projects
+      .addCase(searchProjects.pending, (state) => {
+        state.projects = [];
+      })
+      .addCase(searchProjects.fulfilled, (state, action: any) => {
+        state.projects = action.payload.projects;
+      })
+      .addCase(searchProjects.rejected, (state, action) => {
+        state.error = action.error.message || "";
+      })
+
+      // peoples
+      .addCase(searchPeoples.pending, (state) => {
+        state.peoples = [];
+      })
+      .addCase(searchPeoples.fulfilled, (state, action: any) => {
+        state.peoples = action.payload.peoples;
+      })
+      .addCase(searchPeoples.rejected, (state) => {
+        state.peoples = [];
+      })
+
+      // posts
+      .addCase(searchPosts.pending, (state) => {
+        state.posts = [];
+      })
+      .addCase(searchPosts.fulfilled, (state, action: any) => {
+        state.posts = action.payload.posts;
+      })
+      .addCase(searchPosts.rejected, (state, action) => {
+        state.error = action.error.message || "";
+        state.posts = [];
       });
   },
 });
 
 const { clearAllSearch, clearError } = getAllSearchSlice.actions;
 
-export { clearAllSearch, clearError, getAllSearch, searchInConnections };
+export {
+  clearAllSearch,
+  clearError,
+  getAllSearch,
+  searchInConnections,
+  searchProjects,
+  searchPeoples,
+  searchPosts,
+};
 
 export default getAllSearchSlice.reducer;

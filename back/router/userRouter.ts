@@ -12,6 +12,8 @@ import {
   checkUsernameAvailable,
   changeUsername,
   userActivities,
+  recommendationsUser,
+  followUser,
 } from "../controller/userController";
 import { auth } from "../middleware/auth";
 import upload from "../config/multer";
@@ -31,5 +33,7 @@ router.put("/update/about", auth, updateUserAbout);
 router.put("/update/language", auth, changeLanguage);
 router.put("/check/username", auth, checkUsernameAvailable);
 router.put("/update/username", auth, changeUsername);
+router.get("/recommend", auth, recommendationsUser);
+router.get("/follow/:id", auth, followUser);
 
 export default router;

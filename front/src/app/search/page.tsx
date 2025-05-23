@@ -6,6 +6,7 @@ import GroupSearch from "@/components/search/groupSearch";
 import JobSearch from "@/components/search/jobSearch";
 import PeopleSearch from "@/components/search/peopleSearch";
 import PostSearch from "@/components/search/postSearch";
+import ProjectSearch from "@/components/search/projectSearch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -28,21 +29,68 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/userNavbar";
-import { usePathname, useRouter } from "next/navigation";
+import IntroNavbar from "@/components/introNavbar";
+import { RootState } from "@/store/store";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 function Page() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
   const [index, setIndex] = useState(0);
+  const [query, setQuery] = useState("");
+  const [selectValues, setSelectValues] = useState<any>({});
 
   const pathname = usePathname();
+  const searchParam = useSearchParams();
   const router = useRouter();
 
+  const { skills, posts, projects, peoples, groups, companies } = useSelector(
+    (state: RootState) => state.search
+  );
+  const { user } = useSelector((state: RootState) => state.user);
+
+  const handleSelectChange = (filter: any, value: string) => {
+    if (type === "all") {
+      return;
+    }
+
+    setSelectValues((prev: any) => ({
+      ...prev,
+      [filter.key]: value,
+    }));
+
+    if (type !== "all") {
+      const url = new URLSearchParams(window.location.search);
+      url.set(filter.key, value);
+      window.history.replaceState(null, "", `/search?${url.toString()}`);
+    }
+
+    if (type === "all") {
+      const url = new URLSearchParams(window.location.search);
+      url.set(filter.title, value);
+      window.history.replaceState(null, "", `/search?${url.toString()}`);
+    }
+  };
+
+  const urlChange = () => {
+    const url = new URLSearchParams(window.location.search);
+    url.set("type", type);
+    window.history.replaceState(null, "", `/search?${url.toString()}`);
+  };
+
   useEffect(() => {
-    const query = new URLSearchParams(window.location.search).get("q");
-    if (query) {
-      router.push(`/search?q=${encodeURIComponent(query)}`);
+    const q = searchParam.get("q");
+    const t = searchParam.get("type");
+    console.log(q);
+    if (q) {
+      router.push(
+        `/search?q=${encodeURIComponent(q)}&type=${encodeURIComponent(
+          t ? t : "all"
+        )}`
+      );
+      setQuery(q);
     }
   }, [pathname, router]);
 
@@ -53,7 +101,8 @@ function Page() {
       label: "People",
       filters: [
         {
-          title: "location",
+          key: "location",
+          title: "Location",
           search: true,
           options: [
             { value: "USA", label: "USA" },
@@ -64,43 +113,48 @@ function Page() {
             { value: "India", label: "India" },
           ],
         },
-        {
-          title: "connections",
-          options: [
-            { value: "1st", label: "1st" },
-            { value: "2nd", label: "2nd" },
-            { value: "3rd", label: "3rd" },
-          ],
-        },
+        // {
+        //   key: "connections",
+        //   title: "Connections",
+        //   options: [
+        //     { value: "1", label: "1st" },
+        //     { value: "2", label: "2nd" },
+        //     { value: "3", label: "3rd" },
+        //   ],
+        // },
         // for future updates
         // {
-        //   title: "industry",
+        //   key: "industry",
+        //   title: "Industry",
         //   options: [
         //     { value: "it_industry", label: "IT industry" },
         //     { value: "other_industry", label: "Other industry" },
         //   ],
         // },
         // {
-        //   title: "company",
+        //   key: "company",
+        //   title: "Company",
         //   options: [
         //     { value: "company1", label: "Company 1" },
         //     { value: "company2", label: "Company 2" },
         //   ],
         // },
         {
-          title: "skills",
-          options: [
-            {
-              value: "skill1",
-              label: "Skill 1",
-            },
-          ],
+          key: "skill",
+          title: "Skills",
+          options: skills.map((skill) => ({
+            value: skill._id,
+            label: skill.name,
+          })),
         },
         {
-          title: "sort by",
+          key: "sort",
+          title: "Sort by",
           options: [
-            { value: "relevance", label: "Relevance" },
-            { value: "most_recent", label: "Most recent" },
+            { value: "relevant", label: "Relevance" },
+            { value: "recent", label: "Most recent" },
+            { value: "connections", label: "Most connections" },
+            { value: "popular", label: "Popular" },
           ],
         },
       ],
@@ -111,6 +165,7 @@ function Page() {
       apply: true,
       filters: [
         {
+          key: "date_posted",
           title: "Date posted",
           options: [
             { value: "past_day", label: "Past 24 hours" },
@@ -120,16 +175,18 @@ function Page() {
           ],
         },
         {
-          title: "sort by",
+          key: "sort",
+          title: "Sort by",
           options: [
-            { value: "most_relevant", label: "Most relevant" },
-            { value: "most_recent", label: "Most recent" },
-            { value: "most_liked", label: "Most liked" },
-            { value: "most_commented", label: "Most commented" },
+            { value: "relevant", label: "Most relevant" },
+            { value: "recent", label: "Most recent" },
+            { value: "liked", label: "Most liked" },
+            { value: "commented", label: "Most commented" },
           ],
         },
         {
-          title: "experience level",
+          key: "experience_level",
+          title: "Experience Level",
           options: [
             { value: "0", label: "Entry level" },
             { value: "1", label: "Intermediate" },
@@ -139,7 +196,8 @@ function Page() {
           ],
         },
         {
-          title: "company",
+          title: "Company",
+          key: "company",
           search: true,
           options: [
             { value: "company1", label: "Company 1" },
@@ -148,6 +206,7 @@ function Page() {
         },
         {
           title: "Work Type",
+          key: "workType",
           options: [
             { value: "remote", label: "Remote" },
             { value: "hybrid", label: "Hybrid" },
@@ -155,7 +214,8 @@ function Page() {
           ],
         },
         {
-          title: "location",
+          title: "Location",
+          key: "location",
           search: true,
           options: [{ value: "India", label: "India" }],
         },
@@ -166,7 +226,8 @@ function Page() {
       label: "Posts",
       filters: [
         {
-          title: "type",
+          title: "Type",
+          key: "contain",
           options: [
             { value: "text", label: "Text" },
             { value: "image", label: "Image" },
@@ -174,7 +235,8 @@ function Page() {
           ],
         },
         {
-          title: "timeframe",
+          title: "Timeframe",
+          key: "timeframe",
           options: [
             { value: "past_day", label: "Past 24 hours" },
             { value: "past_week", label: "Past week" },
@@ -183,12 +245,13 @@ function Page() {
           ],
         },
         {
-          title: "sort by",
+          title: "Sort by",
+          key: "sort",
           options: [
-            { value: "most_relevant", label: "Most relevant" },
-            { value: "most_recent", label: "Most recent" },
-            { value: "most_liked", label: "Most liked" },
-            { value: "most_commented", label: "Most commented" },
+            { value: "relevant", label: "Most relevant" },
+            { value: "recent", label: "Most recent" },
+            { value: "liked", label: "Most liked" },
+            { value: "commented", label: "Most commented" },
           ],
         },
       ],
@@ -199,7 +262,8 @@ function Page() {
       apply: true,
       filters: [
         {
-          title: "location",
+          title: "Location",
+          key: "location",
           search: true,
           options: [
             { value: "USA", label: "USA" },
@@ -210,40 +274,44 @@ function Page() {
             { value: "India", label: "India" },
           ],
         },
-        {
-          title: "industry",
-          options: [
-            { value: "it_industry", label: "IT industry" },
-            { value: "other_industry", label: "Other industry" },
-          ],
-        },
         // {
-        //   title: "company",
+        //   title: "Industry",
+        //   key: "industry",
+        //   options: [
+        //     { value: "it_industry", label: "IT industry" },
+        //     { value: "other_industry", label: "Other industry" },
+        //   ],
+        // },
+        // {
+        //   title: "Company",
         //   options: [
         //     { value: "company1", label: "Company 1" },
         //     { value: "company2", label: "Company 2" },
         //   ],
         // },
+        // {
+        //   title: "Members",
+        //   key: "members",
+        //   options: [
+        //     { value: "member1", label: "Member 1" },
+        //     { value: "member2", label: "Member 2" },
+        //   ],
+        // },
         {
-          title: "members",
-          options: [
-            { value: "member1", label: "Member 1" },
-            { value: "member2", label: "Member 2" },
-          ],
+          title: "Skills",
+          key: "skill",
+          options: skills.map((skill) => ({
+            value: skill._id,
+            label: skill.name,
+          })),
         },
         {
-          title: "skills",
+          title: "Sort by",
+          key: "sort",
           options: [
-            { value: "skill1", label: "Skill 1" },
-            { value: "skill2", label: "Skill 2" },
-          ],
-        },
-        {
-          title: "sort by",
-          options: [
-            { value: "most_relevant", label: "Most relevant" },
-            { value: "most_recent", label: "Most recent" },
-            { value: "most_members", label: "Most members" },
+            { value: "relevant", label: "Most relevant" },
+            { value: "recent", label: "Most recent" },
+            { value: "members", label: "Most members" },
           ],
         },
       ],
@@ -254,6 +322,7 @@ function Page() {
       filters: [
         {
           title: "location",
+          key: "location",
           search: true,
           options: [
             { value: "USA", label: "USA" },
@@ -265,7 +334,8 @@ function Page() {
           ],
         },
         {
-          title: "industry",
+          title: "Industry",
+          key: "industry",
           options: [
             { value: "it_industry", label: "IT industry" },
             { value: "other_industry", label: "Other industry" },
@@ -273,6 +343,7 @@ function Page() {
         },
         {
           title: "size",
+          key: "size",
           options: [
             { value: "small", label: "Small" },
             { value: "medium", label: "Medium" },
@@ -280,11 +351,47 @@ function Page() {
           ],
         },
         {
-          title: "sort by",
+          title: "Sort by",
+          key: "sort",
           options: [
-            { value: "most_relevant", label: "Most relevant" },
-            { value: "most_recent", label: "Most recent" },
-            { value: "most_employees", label: "Most employees" },
+            { value: "relevant", label: "Most relevant" },
+            { value: "recent", label: "Most recent" },
+            { value: "employees", label: "Most employees" },
+          ],
+        },
+      ],
+    },
+    {
+      value: "projects",
+      label: "Projects",
+      filters: [
+        {
+          title: "Skills",
+          search: true,
+          options: skills.map((skill) => ({
+            value: skill._id,
+            label: skill.name,
+          })),
+        },
+        {
+          title: "No of Members",
+          key: "members",
+          options: [
+            { value: "1", label: "1" },
+            { value: "2", label: "2" },
+            { value: "3", label: "3" },
+            { value: "4", label: "4" },
+            { value: "5", label: "5" },
+          ],
+        },
+
+        {
+          title: "Sort by",
+          key: "sort",
+          options: [
+            { value: "relevant", label: "Most relevant" },
+            { value: "recent", label: "Most recent" },
+            { value: "members", label: "Most members" },
           ],
         },
       ],
@@ -295,12 +402,22 @@ function Page() {
     const selectedFilter = searchFilters.find(
       (filter) => filter.value === type
     );
-    setIndex(searchFilters.indexOf(selectedFilter!));
+    urlChange();
+    setIndex(
+      searchFilters.indexOf(selectedFilter!) < 0
+        ? 0
+        : searchFilters.indexOf(selectedFilter!)
+    );
   }, [type, searchFilters]);
+
+  useEffect(() => {
+    setSelectValues({ q: query });
+    window.history.replaceState(null, "", `/search?q=${query}`);
+  }, [type, query]);
 
   return (
     <>
-      <Navbar />
+      {user ? <Navbar /> : <IntroNavbar />}
 
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container lg:max-w-[1100px] mx-auto">
@@ -338,38 +455,49 @@ function Page() {
                 )}
 
                 <div className="flex gap-5 w-full items-center">
-                  {searchFilters[index].filters?.map((f) => (
-                    <div key={f.title} className="flex flex-col">
-                      {/* <label className="text-sm font-semibold">{f.title}</label> */}
-                      <Select onValueChange={(val) => console.log(f.title)}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder={f.title} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {f.search && (
-                              <Input
-                                type="text"
-                                placeholder="Search..."
-                                className="p-2 w-full mb-2 border rounded-md"
-                                onChange={(e) => setSearch(e.target.value)}
-                              />
-                            )}
-                          </SelectGroup>
-                          <SelectGroup>
-                            {f.options.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
+                  {((type === "posts" && posts.length > 0) ||
+                    (type === "projects" && projects.length > 0) ||
+                    (type === "people" && peoples.length > 0) ||
+                    (type === "groups" && groups.length > 0) ||
+                    (type === "companies" && companies.length > 0)) &&
+                    searchFilters[index].filters?.map((f) => (
+                      <div key={f.title} className="flex flex-col">
+                        {/* <label className="text-sm font-semibold">{f.title}</label> */}
+                        <Select
+                          value={selectValues[f.title] || ""}
+                          onValueChange={(value) =>
+                            handleSelectChange(f, value)
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={f.title} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              {f.search && (
+                                <Input
+                                  value={search}
+                                  type="text"
+                                  placeholder="Search..."
+                                  className="p-2 w-full mb-2 border rounded-md"
+                                  onChange={(e) => setSearch(e.target.value)}
+                                />
+                              )}
+                            </SelectGroup>
+                            <SelectGroup>
+                              {f.options.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
 
                   {searchFilters[index].apply && (
                     <>
@@ -426,34 +554,25 @@ function Page() {
         </div>
         <section className="container lg:max-w-[1100px] mx-auto py-6">
           {type === "all" && (
-            <>
-              <All />
-            </>
+            <All setType={setType} selectValues={selectValues} />
           )}
           {type === "people" && (
-            <>
-              <PeopleSearch />
-            </>
+            <PeopleSearch setType={setType} selectValues={selectValues} />
           )}
           {type === "jobs" && (
-            <>
-              <JobSearch />
-            </>
+            <JobSearch setType={setType} selectValues={selectValues} />
           )}
           {type === "companies" && (
-            <>
-              <CompanySearch />
-            </>
+            <CompanySearch setType={setType} selectValues={selectValues} />
           )}
           {type === "posts" && (
-            <>
-              <PostSearch />
-            </>
+            <PostSearch setType={setType} selectValues={selectValues} />
           )}
           {type === "groups" && (
-            <>
-              <GroupSearch />
-            </>
+            <GroupSearch setType={setType} selectValues={selectValues} />
+          )}
+          {type === "projects" && (
+            <ProjectSearch setType={setType} selectValues={selectValues} />
           )}
         </section>
       </main>
