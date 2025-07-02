@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,10 +9,12 @@ import {
   CardHeader,
 } from "./ui/card";
 import {
+  Earth,
   Heart,
   MessageCircleMoreIcon,
   MoreVerticalIcon,
   Repeat,
+  Send,
   Share2Icon,
   User,
 } from "lucide-react";
@@ -28,8 +30,28 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import axios from "@/store/axios";
+import { Drawer } from "./ui/drawer";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Separator } from "./ui/separator";
+import { Input } from "./ui/input";
+import Comments from "./postComponents/comments";
+import ShareDialog from "./postComponents/shareDialog";
+import { timeAgo } from "@/lib/functions";
 
 function Post({ cardClass, post, isFollowing, setEdit, setSelect }: any) {
+  const [isLike, setIsLike] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [share, setShare] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
   const { user } = useSelector((state: RootState) => state.user);
   const router = useRouter();
 
@@ -44,6 +66,42 @@ function Post({ cardClass, post, isFollowing, setEdit, setSelect }: any) {
     }
   };
 
+  async function toggleSavePost(postId: string) {
+    try {
+      const { data } = await axios.put(`/posts/post/${postId}/save`, {});
+      toast.success(data.message, { position: "top-center" });
+      setIsSaved(data.isSaved);
+    } catch (error: any) {
+      toast.error(error.response?.data.message || "Internal Error", {
+        position: "top-center",
+      });
+    }
+  }
+
+  async function toggleLike(e: any) {
+    e.preventDefault();
+
+    try {
+      const { data } = await axios.put(`/posts/post/${post._id}/like`, {}, {});
+      setIsLike(data.isLiked);
+      setLikeCount(data.likeCount);
+    } catch (error) {
+      toast.error("Internal Error", { position: "top-center" });
+    }
+  }
+
+  useEffect(() => {
+    if (post && user) {
+      if (post.likes) {
+        setIsLike(post.likes.includes(user?._id));
+        setLikeCount(post.likeCount || 0);
+        setIsSaved(post.savedBy.includes(user?._id));
+      }
+    }
+
+    return;
+  }, [post, user]);
+
   return (
     // <Card className="card max-w-[500px] border border-1 border-zinc-800 justify-center items-center bg-card text-card-foreground">
     <>
@@ -54,7 +112,7 @@ function Post({ cardClass, post, isFollowing, setEdit, setSelect }: any) {
               <div className="flex items-start gap-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage
-                    src={post.userId?.avatar.url}
+                    src={post.userId?.avatar?.url}
                     alt={post.userId?.name || "User"}
                   />
                   <AvatarFallback>
@@ -66,6 +124,12 @@ function Post({ cardClass, post, isFollowing, setEdit, setSelect }: any) {
                   <p className="text-sm opacity-90 -mt-1">
                     {post.userId?.headline}
                   </p>
+                  <div className="text-xs opacity-70 leading-none flex items-center gap-1">
+                    <span>{post.createdAt ? timeAgo(post.createdAt) : ""}</span>
+                    <span className="text-xs flex items-center">
+                      <Earth className="w-3 h-3" />
+                    </span>
+                  </div>
 
                   <Button
                     className="w-min mt-2.5 flex md:hidden px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
@@ -147,31 +211,61 @@ function Post({ cardClass, post, isFollowing, setEdit, setSelect }: any) {
               )}
             </div>
           </CardContent>
+          {/* <hr className="pb-1" /> */}
+          {/* <CardContent className="flex justify-between py-1 pt-0 items-center gap-4">
+            <div className="flex gap-2">
+              <div className="flex items-center gap-1 text-xs">
+                <span>{likeCount}</span>
+                <span className="font-semibold">Likes</span>
+              </div>
+            </div>
+            <div></div>
+          </CardContent> */}
           <hr className="pt-3 pb-1" />
+
           <CardFooter className="pb-3">
             <div className="flex w-full justify-between">
-              <div className="flex-col gap-1 items-center flex">
-                <Heart className="h-5 w-5" />
-                <h4 className="text-sm opacity-80">Like</h4>
+              <div
+                onClick={(e) => toggleLike(e)}
+                className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
+              >
+                <Heart
+                  className={`h-5 w-5 ${
+                    isLike
+                      ? "fill-red-600 stroke-red-600 border-none"
+                      : "fill-none"
+                  }`}
+                />
+                <h4 className="text-sm opacity-80">
+                  {likeCount > 0 ? likeCount : "Likes"}
+                </h4>
               </div>
-              <div className="flex-col gap-1 items-center flex">
-                <MessageCircleMoreIcon className="h-5 w-5" />
-                <h4 className="text-sm opacity-80">Comment</h4>
-              </div>
-              <div className="flex-col gap-1 items-center flex">
-                <Share2Icon className="h-5 w-5" />
+              <Comments postId={post._id} />
+              <div
+                onClick={() => setShare(!share)}
+                className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
+              >
+                <Send className="h-5 w-5" />
                 <h4 className="text-sm opacity-80">Share</h4>
               </div>
-              {/* <div className="flex-col gap-1 items-center flex">
-                <Repeat className="h-5 w-5" />
-                <h4 className="text-sm opacity-80">Repost</h4>
-              </div> */}
-              <div className="flex-col gap-1 items-center flex">
+              {share && (
+                <ShareDialog
+                  post={post}
+                  open={share}
+                  setOpen={(val: boolean) => setShare(val)}
+                />
+              )}
+              <div
+                onClick={() => toggleSavePost(post._id)}
+                className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
+              >
                 <svg
-                  className="h-5 w-5"
-                  fill="none"
+                  className={`w-5 h-5 ${
+                    isSaved ? "fill-foreground" : "fill-background"
+                  }`}
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  fill="none"
                   strokeWidth={2}
                 >
                   <path
@@ -180,7 +274,9 @@ function Post({ cardClass, post, isFollowing, setEdit, setSelect }: any) {
                     d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-5-7 5V5z"
                   />
                 </svg>
-                <h4 className="text-sm opacity-80">Save</h4>
+                <h4 className="text-sm opacity-80">
+                  {isSaved ? "Saved" : "Save"}
+                </h4>
               </div>
             </div>
           </CardFooter>

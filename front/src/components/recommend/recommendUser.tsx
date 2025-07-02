@@ -25,7 +25,7 @@ function RecommendUser() {
       setLoading(true);
       const { data } = await axios.get("/user/recommend");
 
-      setUsers(data);
+      setUsers(data.users);
     } catch (error) {
     } finally {
       setLoading(false);
@@ -69,18 +69,18 @@ function RecommendUser() {
                     size={"sm"}
                     onClick={() => dispatch(toggleFollow(user._id))}
                   >
-                    {loginUser.following.includes(user._id) ? (
+                    {loginUser && loginUser.following.includes(user._id) ? (
                       <Check />
                     ) : (
                       <Plus />
                     )}
-                    {loginUser.following.includes(user._id)
+                    {loginUser && loginUser.following.includes(user._id)
                       ? "Following"
                       : "Follow"}
                   </Button>
                 </div>
               </div>
-              <hr />
+              {i !== users.length - 1 && <hr />}
             </Fragment>
           ))}
       </CardContent>

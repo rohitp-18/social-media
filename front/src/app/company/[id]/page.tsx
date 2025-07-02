@@ -9,7 +9,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { User2, Edit2 } from "lucide-react";
+import { User2, Edit2, MoreHorizontal, Plus } from "lucide-react";
 import Image from "next/image";
 import back from "@/assets/back.png";
 import { Button } from "@/components/ui/button";
@@ -18,18 +18,38 @@ import { useParams, usePathname } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import CompanyTabs from "./companyTabs";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { getSingleCompany } from "@/store/company/companySlice";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-function Page() {
+function Page({ params }: { params: { id: string } }) {
   const [editIntro, setEditIntro] = useState(false);
   const [tab, setTab] = useState("");
 
   const param = useParams();
   const pathname = usePathname();
+  const dispatch = useDispatch<AppDispatch>();
+  const { company, loading, error } = useSelector(
+    (state: RootState) => state.company
+  );
 
   useEffect(() => {
     console.log(pathname.split("tab=")[1] || "Home");
     setTab(pathname.split("tab=")[1] || "Home");
   }, [pathname]);
+
+  useEffect(() => {
+    Promise.resolve(params).then((res: { id: string }) => {
+      dispatch(getSingleCompany(res.id));
+    });
+  }, [params]);
 
   const tabValues = useMemo(() => ["Home", "About", "Jobs", "People"], []);
 
@@ -62,14 +82,10 @@ function Page() {
                   <div className="flex flex-col gap-1 md:px-4 pt-0 pb-3">
                     <h3 className="md:text-2xl text-xl pb-2 font-semibold">
                       Professional Profile
-                      <span className="text-xs pl-2 opacity-70">(He/Him)</span>
                     </h3>
                     <span className="text-sm">
                       MERN FULL STACK WEB DEVELOPER || React || Node.js ||
                       MongoDB
-                    </span>
-                    <span className="text-opacity-90 md:hidden text-sm opacity-70">
-                      Punyashlok ahilybai holker solapur University
                     </span>
                     <div className="flex justify-start items-center gap-2">
                       <h3 className="text-opacity-50 text-sm -mt-1 opacity-50">
@@ -81,14 +97,51 @@ function Page() {
                         <span className="text-sm pr-1 font-semibold">545</span>
                         <span className="text-sm">Followers</span>
                       </div>
+                      <div className="">
+                        <span className="text-sm pr-1 font-semibold">545</span>
+                        <span className="text-sm">Employees</span>
+                      </div>
                     </div>
                     <div className="flex justify-start items-center gap-3 mt-5">
+                      <Button
+                        className="flex items-center rounded-full"
+                        variant={"default"}
+                        // onClick={() => dispatch(toggleFollow(profile.user._id))}
+                      >
+                        <Plus /> Follow
+                      </Button>
+                      <Button
+                        className="flex items-center rounded-full"
+                        variant={"default"}
+                        // onClick={() => dispatch(toggleFollow(profile.user._id))}
+                      >
+                        Visit website
+                      </Button>
                       <Button
                         className="flex items-center border-primary text-primary rounded-full hover:text-white hover:bg-primary"
                         variant={"outline"}
                       >
                         Add profile section
                       </Button>
+                      <Button
+                        className="flex items-center border-primary text-primary rounded-full hover:text-white hover:bg-primary"
+                        variant={"outline"}
+                      >
+                        Message
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="flex justify-center items-center gap-2 p-2 border-foreground rounded-full border">
+                          <MoreHorizontal className="w-5 h-5" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem>
+                              <Plus className="w-4 h-4" />
+                              <div className="">Create page</div>
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                   <div className="flex justify-start items-start">
@@ -123,6 +176,7 @@ function Page() {
               <CompanyTabs tab={tab} />
             </section>
             <Sidebar />
+            <section></section>
           </section>
         </div>
       </main>

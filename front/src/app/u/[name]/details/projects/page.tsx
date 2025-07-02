@@ -36,6 +36,7 @@ import ProjectForm from "@/components/forms/projectForm";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import ProjectCard from "@/components/projectCard";
+import Link from "next/link";
 
 function Page({ params }: { params: { name: string } }) {
   const [select, setSelect] = useState<any>(null);
@@ -101,9 +102,9 @@ function Page({ params }: { params: { name: string } }) {
         <Card className="">
           <CardHeader className="flex flex-row justify-between items-center gap-5">
             <div className="flex items-center md:gap-6 gap-4">
-              <a href={`/u/${name}`}>
+              <Link href={`/u/${name}`}>
                 <MoveLeft className="w-5 h-5 hover:cursor-pointer opacity-80 hover:opacity-100" />
-              </a>
+              </Link>
 
               <CardTitle className="font-semibold text-lg">Projects</CardTitle>
             </div>

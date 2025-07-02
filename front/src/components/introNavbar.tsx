@@ -19,6 +19,7 @@ import { Button } from "./ui/button";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Input } from "./ui/input";
+import Link from "next/link";
 
 const Navbar: React.FC = () => {
   const [search, setSearch] = React.useState("");
@@ -56,55 +57,58 @@ const Navbar: React.FC = () => {
           />
         </div>
         <div className="flex gap-5 space-x-6">
-          <a
+          <Link
             href="/"
             className={`no-underline hover:underline flex flex-col items-center ${
               pathname === "/" ? "font-bold" : ""
             }`}
           >
             <Home className="w-[1rem] h-[1rem]" /> Home
-          </a>
-          <a
+          </Link>
+          <Link
             href="/new"
             className={`no-underline hover:underline flex flex-col items-center ${
               pathname === "/new" ? "font-bold" : ""
             }`}
           >
             <Users className="w-[1rem] h-[1rem]" /> Users
-          </a>
-          <a
+          </Link>
+          <Link
             href="/transactions"
             className={` no-underline hover:underline flex flex-col items-center ${
               pathname === "/transactions" ? "font-bold" : ""
             }`}
           >
             <Newspaper className="w-[1rem] h-[1rem]" /> Articles
-          </a>
-          <a
+          </Link>
+          <Link
             href="/transactions"
             className={` no-underline hover:underline flex flex-col items-center ${
               pathname === "/transactions" ? "font-bold" : ""
             }`}
           >
             <BriefcaseBusiness className="w-[1rem] h-[1rem]" /> Jobs
-          </a>
+          </Link>
           {user ? (
-            <a
+            <Link
               href={`/u/${user.username}/`}
               className={` no-underline hover:underline flex flex-col items-center ${
                 pathname === `/u/${user.username}/` ? "font-bold" : ""
               }`}
             >
               <User2 className="w-[1rem] h-[1rem]" /> Account
-            </a>
+            </Link>
           ) : (
             <div className="flex gap-4">
-              <a href="/register?back=/" className="no-underline">
+              <Link
+                href={`/register?back=${pathname}`}
+                className="no-underline"
+              >
                 <Button variant={"outline"}>Join with Us</Button>
-              </a>
-              <a href="/login?back=/" className="no-underline">
+              </Link>
+              <Link href={`/login?back=${pathname}`} className="no-underline">
                 <Button>Sign In</Button>
-              </a>
+              </Link>
             </div>
           )}
           <Button

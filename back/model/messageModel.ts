@@ -14,11 +14,9 @@ const messageModel = new mongoose.Schema(
     },
     readBy: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+        required: true,
       },
     ],
     content: {
@@ -37,18 +35,8 @@ const messageModel = new mongoose.Schema(
       type: String,
     },
     replyTo: {
-      messageId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "message",
-      },
-      contentPreview: {
-        type: String,
-        maxlength: 100,
-      },
-      messageType: {
-        type: String,
-        enum: ["text", "image", "video", "audio", "document"],
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "message",
     },
   },
   {

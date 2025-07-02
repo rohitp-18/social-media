@@ -41,6 +41,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 function Page({ params }: { params: { name: string } }) {
   const [name, setName] = useState("");
@@ -139,9 +140,9 @@ function Page({ params }: { params: { name: string } }) {
         <Card className="">
           <CardHeader className="flex flex-row justify-between items-center gap-5">
             <div className="flex items-center md:gap-6 gap-4">
-              <a href={`/u/${name}`}>
+              <Link href={`/u/${name}`}>
                 <MoveLeft className="w-5 h-5 opacity-80 hover:opacity-100" />
-              </a>
+              </Link>
               <CardTitle className="font-semibold text-lg">Skills</CardTitle>
             </div>
 

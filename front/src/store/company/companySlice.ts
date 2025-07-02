@@ -19,6 +19,21 @@ const searchCompaniesAction = createAsyncThunk(
   }
 );
 
+const getSingleCompany = createAsyncThunk(
+  "company/getSingleCompany",
+  async (id: string, thunkAPI) => {
+    try {
+      const { data } = await axios.get(`/companies/one/${id}`);
+      return data;
+    } catch (error: any) {
+      if (isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error(error.message);
+    }
+  }
+);
+
 interface companyInterface {
   companies: any[];
   loading: boolean;
@@ -73,10 +88,23 @@ const companySlice = createSlice({
       .addCase(searchCompaniesAction.rejected, (state, action) => {
         state.searchLoading = false;
         state.error = action.error.message || "Something went wrong";
+      })
+
+      .addCase(getSingleCompany.pending, (state) => {
+        state.loading = true;
+        state.company = {};
+      })
+      .addCase(getSingleCompany.fulfilled, (state, action) => {
+        state.loading = false;
+        state.company = action.payload;
+      })
+      .addCase(getSingleCompany.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Something went wrong";
       });
   },
 });
 
 const { resetcompany, clearError } = companySlice.actions;
-export { resetcompany, clearError, searchCompaniesAction };
+export { resetcompany, clearError, searchCompaniesAction, getSingleCompany };
 export default companySlice.reducer;

@@ -18,6 +18,21 @@ const getProfileActivity = createAsyncThunk(
   }
 );
 
+const getSinglePost = createAsyncThunk(
+  "userPost/getSinglePost",
+  async (userPostId: string, thunkAPI) => {
+    try {
+      const { data } = await axios.get(`/posts/user/${userPostId}`);
+      return data;
+    } catch (error: any) {
+      if (isAxiosError(error) && error.response) {
+        throw error.response.data.message;
+      }
+      throw error.message;
+    }
+  }
+);
+
 const deletePost = createAsyncThunk(
   "userPost/deletePost",
   async (userPostId: string, thunkAPI) => {
@@ -78,6 +93,7 @@ const createPost = createAsyncThunk(
 interface PostState {
   userPosts: any[];
   loading: boolean;
+  singlePost: any | null;
   error: string | null;
   message: string | null;
   updated: boolean;
@@ -95,6 +111,7 @@ const initialState: PostState = {
   error: null,
   message: null,
   comments: [],
+  singlePost: null,
   images: [],
   videos: [],
   updated: false,
@@ -193,6 +210,21 @@ const userPostSlice = createSlice({
         if (action.payload) {
           state.error = action.error.message as string;
         }
+      })
+
+      // get single userPost
+      .addCase(getSinglePost.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getSinglePost.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singlePost = action.payload.post;
+      })
+      .addCase(getSinglePost.rejected, (state, action) => {
+        state.loading = false;
+        if (action.payload) {
+          state.error = action.error.message as string;
+        }
       });
   },
 });
@@ -205,5 +237,6 @@ export {
   createPost,
   resetPost,
   clearError,
+  getSinglePost,
 };
 export default userPostSlice.reducer;

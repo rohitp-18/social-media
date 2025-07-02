@@ -13,6 +13,7 @@ import { Diamond, Plus, Pencil, ArrowRight } from "lucide-react";
 import { useSelector } from "react-redux";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
+import Link from "next/link";
 
 function ProjectCard({ isUser }: { isUser: boolean }) {
   const { user, profile } = useSelector((state: any) => state.user);
@@ -22,19 +23,19 @@ function ProjectCard({ isUser }: { isUser: boolean }) {
         <CardTitle>Projects</CardTitle>
 
         {isUser && profile.projects.length > 0 && (
-          <a
+          <Link
             href={`/u/${profile.user.username}/details/projects?add=true`}
             className="flex gap-2 md:gap-5"
           >
             <Plus className="w-5 h-5 opacity-90" />
-          </a>
+          </Link>
         )}
       </CardHeader>
       <CardContent className="flex flex-col gap-3 py-4">
         {profile.projects.length > 0 ? (
           profile.projects.map((project: any, i: number) => (
             <Fragment key={project._id}>
-              <a
+              <Link
                 href={`/u/${profile.user.username}/details/projects/${project._id}`}
                 key={project._id}
                 className="flex flex-col justify-start"
@@ -89,7 +90,7 @@ function ProjectCard({ isUser }: { isUser: boolean }) {
                     ))}
                   </div>
                 )}
-              </a>
+              </Link>
               {i < profile.projects.length - 1 && (
                 <Separator className="my-4" />
               )}
@@ -98,14 +99,16 @@ function ProjectCard({ isUser }: { isUser: boolean }) {
         ) : (
           <div className="flex justify-center items-center flex-col min-h-24">
             {isUser && (
-              <a href={`/u/${profile.user.username}/details/projects?add=true`}>
+              <Link
+                href={`/u/${profile.user.username}/details/projects?add=true`}
+              >
                 <Button
                   variant={"outline"}
                   className="flex text-primary border-primary hover:text-primary items-center rounded-full"
                 >
                   Add Projects
                 </Button>
-              </a>
+              </Link>
             )}
             <span className="text-sm opacity-60">
               No projects have been added yet
@@ -115,14 +118,14 @@ function ProjectCard({ isUser }: { isUser: boolean }) {
       </CardContent>
       <Separator />
       {profile.user.skills.length > 0 && (
-        <a href={`/u/${profile.user.username}/details/projects`}>
+        <Link href={`/u/${profile.user.username}/details/projects`}>
           <Button
             variant={"link"}
             className="w-full h-12 hover:no-underline hover:bg-secondary text-foreground"
           >
             Show all Projects <ArrowRight className="w-10 h-10" />
           </Button>
-        </a>
+        </Link>
       )}
     </Card>
   );

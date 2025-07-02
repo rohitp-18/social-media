@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { registerUser, resetUser } from "@/store/user/userSlice";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function Page() {
   const [password, setPassword] = useState(true);
@@ -22,6 +22,7 @@ function Page() {
   const [name, setName] = useState("");
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const { user, login, loading, error } = useSelector(
     (state: any) => state.user
@@ -76,9 +77,17 @@ function Page() {
     }
   }, [error, user]);
 
+  useEffect(() => {
+    if (searchParams) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("nav", "false");
+      router.replace("?" + params.toString());
+    }
+  }, [searchParams, router]);
+
   return (
     <>
-      <main className="min-h-screen bg-backgrouund/70">
+      <main className="min-h-screen bg-background/70">
         <h3>LOGO</h3>
         <section className="w-full flex justify-center items-center h-screen">
           <div className="min-w-[320px] md:min-w-96 shadow-2xl dark:bg-zinc-800 bg-white rounded-lg p-6">

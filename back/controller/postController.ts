@@ -383,12 +383,12 @@ const companyPost = expressAsyncHandler(
 
 /**
  * Fetches all posts with user information
- * GET /api/posts
+ * GET /api/v1/posts
  */
 const getAllPosts = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     // Retrieve all posts and populate with user details
-    const posts = await Post.find({ isDeleted: false }).populate(
+    let posts = await Post.find({ isDeleted: false }).populate(
       "userId",
       "name email"
     );
@@ -398,10 +398,16 @@ const getAllPosts = expressAsyncHandler(
       return next(new ErrorHandler("Internal error", 500));
     }
 
+    // check is liked by user or not
+    const postsWithIsLike = posts.map((post: any) => {
+      const isLike = post.likes.includes(req.user?._id);
+      return { ...post.toObject(), isLike };
+    });
+
     // Return success response with all posts
     res.status(200).json({
       success: true,
-      posts,
+      posts: postsWithIsLike,
       message: "posts fetched successfully",
     });
   }
@@ -409,14 +415,17 @@ const getAllPosts = expressAsyncHandler(
 
 /**
  * Fetches a single post by ID
- * GET /api/posts/:id
+ * GET /api/v1/posts/:id
  */
 const getSinglePost = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const postId = req.params.id;
 
     // Find post by ID and include user details
-    const post = await Post.findById(postId).populate("userId", "name email");
+    const post = await Post.findById(postId).populate(
+      "userId",
+      "name email avatar headline"
+    );
 
     // Handle case when post is not found
     if (!post || post.isDeleted) {
@@ -434,7 +443,7 @@ const getSinglePost = expressAsyncHandler(
 
 /**
  * Fetches all posts by a specific user
- * GET /api/posts/user/:id
+ * GET /api/v1/posts/user/:id
  */
 const getUserPosts = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -459,7 +468,7 @@ const getUserPosts = expressAsyncHandler(
 
 /**
  * Deletes a post by ID
- * DELETE /api/posts/:id
+ * DELETE /api/v1/posts/:id
  */
 const deletePost = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -491,7 +500,7 @@ const deletePost = expressAsyncHandler(
 
 /**
  * Updates a post by ID
- * PUT /api/posts/:id
+ * PUT /api/v1/posts/:id
  */
 const updatePost = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -606,12 +615,12 @@ const updatePost = expressAsyncHandler(
 
 /**
  * Toggles like status on a post
- * POST /api/posts/like
+ * POST /api/v1/posts/like
  */
 const toggleLike = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     // Extract post ID from request body
-    const { postId } = req.body;
+    const postId = req.params.id;
     // Get current user's ID from auth middleware
     const userId = req.user._id;
 
@@ -651,6 +660,7 @@ const toggleLike = expressAsyncHandler(
       message: isLiked
         ? "Post unliked successfully"
         : "Post liked successfully",
+      isLiked: !isLiked,
       likeCount: post.likeCount,
     });
   }
@@ -658,7 +668,7 @@ const toggleLike = expressAsyncHandler(
 
 /**
  * Fetches all posts liked by a specific user
- * GET /api/posts/liked/:id
+ * GET /api/v1/posts/liked/:id
  */
 const getLikedPosts = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -750,10 +760,61 @@ const getProfilePosts = expressAsyncHandler(
       }
     }
 
+    // return with is liked or not
+    const postsWithIsLike = posts.map((post) => {
+      const isLike = post.likes.includes(req.user?._id);
+      return { ...post.toObject(), isLike };
+    });
+
     res.status(200).json({
       success: true,
-      posts,
+      posts: postsWithIsLike,
       isFollowing,
+    });
+  }
+);
+
+const toggleSavePost = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const postId = req.params.id;
+    const userId = req.user._id;
+
+    // Find the target post in database
+    const post = await Post.findById(postId);
+    // Check if post exists and is not deleted
+    if (!post || post.isDeleted) {
+      return next(new ErrorHandler("Post not found", 404));
+    }
+
+    // Check if user has already saved this post
+    const isSaved = post.savedBy.includes(userId);
+
+    // Toggle save status: unsave if already saved, save if not already saved
+    if (isSaved) {
+      // Remove user's ID from savedBy array
+      post.savedBy = post.savedBy.filter(
+        (savedUser) => savedUser.toString() !== userId.toString()
+      );
+      // Decrement saved count
+      post.savedCount -= 1;
+    } else {
+      // Add user's ID to savedBy array
+      post.savedBy.push(userId);
+      // Increment saved count
+      post.savedCount += 1;
+    }
+
+    // Save the updated post to database
+    await post.save();
+
+    // Return success response
+    res.status(200).json({
+      success: true,
+      message: isSaved
+        ? "Post unsaved successfully"
+        : "Post saved successfully",
+      isSaved: !isSaved,
+      savedCount: post.savedCount,
     });
   }
 );
@@ -771,4 +832,5 @@ export {
   getLikedPosts,
   // profile
   getProfilePosts,
+  toggleSavePost,
 };

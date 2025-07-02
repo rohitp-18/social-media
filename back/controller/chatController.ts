@@ -6,6 +6,7 @@ import { v2 as cloudinary } from "cloudinary";
 import Message from "../model/messageModel";
 import Group from "../model/groupModel";
 import Notification from "../model/notificationModel";
+import User from "../model/userModel";
 
 const createChat = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -13,22 +14,17 @@ const createChat = expressAsyncHandler(
 
     const chat = await Chat.findOne({
       isGroupChat: false,
-      $or: [
+      $and: [
         { members: { $elemMatch: { $eq: req.user._id } } },
         { members: { $elemMatch: { $eq: userId } } },
       ],
     })
       .populate("members", "-password")
       .populate("lastMessage");
+    console.log(23, "Chat search");
 
     if (chat) {
-      const notification = await Notification.create({
-        sender: req.user._id,
-        recipient: userId,
-        type: "chat",
-        message: `${req.user.name} started a chat with you`,
-        relatedId: chat._id,
-      });
+      console.log(26, "Chat already exists", chat);
 
       return next(
         res.status(200).json({
@@ -46,6 +42,7 @@ const createChat = expressAsyncHandler(
       members: [req.user._id, userId],
     });
 
+    console.log(44, newChat);
     if (!newChat) {
       return next(new ErrorHandler("Chat not created", 500));
     }
@@ -77,13 +74,29 @@ const fetchChats = expressAsyncHandler(
     const chats = await Chat.find({
       members: { $elemMatch: { $eq: req.user._id } },
     })
-      .populate("members", "-password")
-      .populate("lastMessage")
-      .sort({ updatedAt: -1 });
+      .populate("members", "name email avatar headline")
+      .populate("group", "name avatar")
+      .populate("lastMessage", "-chat")
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    // Count unread messages for each chat without relying on the last message timestamp
+    const chatsWithUnread = await Promise.all(
+      chats.map(async (chat) => {
+        const unreadCount = await Message.countDocuments({
+          chat: chat._id,
+          readBy: { $ne: req.user._id },
+        });
+        return {
+          ...chat,
+          unreadCount,
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
-      chats,
+      chats: chatsWithUnread,
       message: "Chats fetched successfully",
     });
   }
@@ -94,7 +107,7 @@ const fetchChat = expressAsyncHandler(
     const chatId = req.params.id;
 
     const chat = await Chat.findById(chatId)
-      .populate("members", "-password")
+      .populate("members", "name avatar email username")
       .populate("lastMessage")
       .sort({ updatedAt: -1 });
 
@@ -103,15 +116,40 @@ const fetchChat = expressAsyncHandler(
     }
 
     const messages = await Message.find({ chat: chatId })
-      .populate("sender", "-password")
+      .populate("sender", "name avatar username")
       .populate("chat")
-      .sort({ createdAt: -1 });
+      .populate("replyTo")
+      .sort({ createdAt: 1 });
+
+    if (!messages) {
+      return next(new ErrorHandler("messages not found", 404));
+    }
+
+    const allMessages = await Promise.all(
+      messages.map(async (message: any) => {
+        if (
+          !message.readBy.some(
+            (user: any) => user._id.toString() === req.user._id.toString()
+          )
+        ) {
+          message.readBy.push(req.user._id);
+          await message.save();
+        }
+        if (message.replyTo) {
+          return await User.populate(message, {
+            path: "replyTo.sender",
+            select: "name avatar username",
+          });
+        }
+        return message;
+      })
+    );
 
     res.status(200).json({
       success: true,
       chat,
       message: "Chat fetched successfully",
-      messages,
+      messages: allMessages,
     });
   }
 );
@@ -164,6 +202,16 @@ const createMessage = expressAsyncHandler(
       return next(new ErrorHandler("cannot send a message", 403));
     }
 
+    // check if chat exists
+    const chatExists = await Chat.findById(chat);
+    if (!chatExists || chatExists.isDeleted) {
+      return next(new ErrorHandler("Chat not found", 404));
+    }
+
+    if (!chatExists.members.includes(sender)) {
+      return next(new ErrorHandler("You are not a member of this chat", 403));
+    }
+
     if (!content && !image && !video && !audio && !document) {
       return next(new ErrorHandler("Please fill all required fields", 403));
     }
@@ -188,6 +236,115 @@ const createMessage = expressAsyncHandler(
     if (reply) {
       message = await Message.create({ sender, chat, reply });
     }
+
+    if (!message) {
+      return next(new ErrorHandler("Message not created", 500));
+    }
+
+    message.readBy.push(sender);
+    await message.save();
+
+    chatExists.lastMessage = message._id;
+    await chatExists.save();
+
+    const populatedMessage = await Message.findById(message._id)
+      .populate("sender", "name avatar username")
+      .populate("chat", "members");
+
+    res.status(200).json({
+      message: populatedMessage,
+      success: true,
+    });
+  }
+);
+
+const readMessage = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId, messageId } = req.body;
+    if (!chatId || !messageId) {
+      return next(new ErrorHandler("Chat ID and Message ID are required", 400));
+    }
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat || chat.isDeleted) {
+      return next(new ErrorHandler("Chat not found", 404));
+    }
+
+    const message = await Message.findById(messageId)
+      .populate("sender", "name avatar username")
+      .populate("chat", "members");
+
+    if (!message) {
+      return next(new ErrorHandler("Message not found", 404));
+    }
+
+    if (
+      !message.readBy.some(
+        (user) => user._id.toString() === req.user._id.toString()
+      )
+    ) {
+      message.readBy.push(req.user._id);
+      await message.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Message read successfully",
+      data: message,
+    });
+  }
+);
+
+const createReplyMessage = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { chatId, messageId, content } = req.body;
+
+    if (!chatId || !messageId || !content) {
+      return next(
+        new ErrorHandler(
+          "Chat ID, Message ID and Reply content are required",
+          400
+        )
+      );
+    }
+
+    const chat = await Chat.findById(chatId);
+    if (!chat || chat.isDeleted) {
+      return next(new ErrorHandler("Chat not found", 404));
+    }
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return next(new ErrorHandler("Message not found", 404));
+    }
+
+    const replyMessage = await Message.create({
+      sender: req.user._id,
+      chat: chatId,
+      content: content,
+      replyTo: message._id,
+    });
+
+    if (!replyMessage) {
+      return next(new ErrorHandler("Reply message not created", 500));
+    }
+
+    replyMessage.readBy.push(req.user._id);
+    await replyMessage.save();
+
+    chat.lastMessage = replyMessage._id as typeof chat.lastMessage;
+    await chat.save();
+
+    const populatedReplyMessage = await Message.findById(replyMessage._id)
+      .populate("sender", "name avatar username")
+      .populate("chat", "members");
+
+    res.status(200).json({
+      success: true,
+      message: "Reply message created successfully",
+      data: populatedReplyMessage,
+    });
   }
 );
 
@@ -198,4 +355,6 @@ export {
   deleteChat,
   //
   createMessage,
+  readMessage,
+  createReplyMessage,
 };

@@ -32,6 +32,7 @@ const deleteNotification = expressAsyncHandler(
     res.status(200).json({
       success: true,
       message: "Notification deleted successfully",
+      notificationId: notification._id,
     });
   }
 );

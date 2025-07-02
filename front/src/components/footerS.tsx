@@ -5,59 +5,60 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import Link from "next/link";
 function FooterS() {
   return (
     <div className="flex flex-col px-3 py-4 gap-4">
       <div className="flex flex-wrap gap-3 justify-center py-3 items-center">
-        <a href="#" className="text-sm opacity-80 hover:underline">
+        <Link href="#" className="text-sm opacity-80 hover:underline">
           about
-        </a>
-        <a href="#" className="text-sm opacity-80 hover:underline">
+        </Link>
+        <Link href="#" className="text-sm opacity-80 hover:underline">
           help
-        </a>
-        <a href="#" className="text-sm opacity-80 hover:underline">
+        </Link>
+        <Link href="#" className="text-sm opacity-80 hover:underline">
           privacy
-        </a>
-        <a href="#" className="text-sm opacity-80 hover:underline">
+        </Link>
+        <Link href="#" className="text-sm opacity-80 hover:underline">
           terms
-        </a>
-        <a href="#" className="text-sm opacity-80 hover:underline">
+        </Link>
+        <Link href="#" className="text-sm opacity-80 hover:underline">
           contact
-        </a>
+        </Link>
         <DropdownMenu>
           <DropdownMenuTrigger className="text-sm opacity-80 focus-visible:outline-none">
             more
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-background p-2 rounded-lg shadow-lg">
             <DropdownMenuItem>
-              <a href="#" className="w-full">
+              <Link href="#" className="w-full">
                 accessibility
-              </a>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <a href="#" className="w-full">
+              <Link href="#" className="w-full">
                 careers
-              </a>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <a href="#" className="w-full">
+              <Link href="#" className="w-full">
                 developers
-              </a>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <a href="#" className="w-full">
+              <Link href="#" className="w-full">
                 advertising
-              </a>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <a href="#" className="w-full">
+              <Link href="#" className="w-full">
                 cookies
-              </a>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <a href="#" className="w-full">
+              <Link href="#" className="w-full">
                 community guidelines
-              </a>
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

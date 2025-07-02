@@ -39,6 +39,7 @@ import {
   getProfileEducations,
 } from "@/store/user/educationSlice";
 import EducationForm from "@/components/forms/educationForm";
+import Link from "next/link";
 
 function page({ params }: { params: { name: string } }) {
   const [select, setSelect] = useState<any>(null);
@@ -100,9 +101,9 @@ function page({ params }: { params: { name: string } }) {
       <Card className="">
         <CardHeader className="flex flex-row justify-between items-center gap-5">
           <div className="flex items-center md:gap-6 gap-4">
-            <a href={`/u/${username}`}>
+            <Link href={`/u/${username}`}>
               <MoveLeft className="w-5 h-5 hover:cursor-pointer opacity-80 hover:opacity-100" />
-            </a>
+            </Link>
             <CardTitle className="font-semibold text-lg">Educations</CardTitle>
           </div>
           {isUser && educations.length > 0 && (

@@ -1,4 +1,3 @@
-import a from "@/components/a";
 import Navbar from "@/components/introNavbar";
 import Image from "next/image";
 

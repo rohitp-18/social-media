@@ -3,9 +3,11 @@
 import store from "@/store/store";
 import { useEffect, useState } from "react";
 import { Provider } from "react-redux";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { getUser } from "@/store/user/userSlice";
+import Navbar from "@/components/userNavbar";
+import IntroNavbar from "@/components/introNavbar";
 
 interface MiddlewareProps {
   children: React.ReactNode;

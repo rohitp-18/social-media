@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AppDispatch, RootState } from "@/store/store";
 import { loginUser, resetUser } from "@/store/user/userSlice";
+import e from "express";
 import { Eye, EyeOffIcon, Facebook } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ function Page() {
   );
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   function submitHandler(e: React.FormEvent): void {
     e.preventDefault();
@@ -43,11 +45,19 @@ function Page() {
       toast.success("Login successful", {
         position: "top-center",
       });
-      router.push(`/u/${user.username}`);
+      if (searchParams.get("back")) {
+        router.push(searchParams.get("back") as string);
+      } else {
+        router.push(`/u/${user.username}`);
+      }
       dispatch(resetUser());
     }
     if (!loading && user) {
-      router.push(`/u/${user.username}`);
+      if (searchParams.get("back")) {
+        router.push(searchParams.get("back") as string);
+      } else {
+        router.push(`/u/${user.username}`);
+      }
     }
     if (!loading && error) {
       toast.error(error, {

@@ -14,7 +14,6 @@ import {
   Search,
   Users2,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -36,6 +35,7 @@ import Experience from "@/components/profile/experience";
 import ProjectCard from "@/components/profile/profileProjectCard";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 function ProfilePage({ params }: { params: { name: string } }) {
   const [editIntro, setEditIntro] = useState(false);
@@ -82,7 +82,6 @@ function ProfilePage({ params }: { params: { name: string } }) {
             />
           )}
 
-          {user ? <Navbar /> : <IntroNavbar />}
           <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
             <div className="container max-w-[1170px] mx-auto">
               {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}
@@ -219,14 +218,14 @@ function ProfilePage({ params }: { params: { name: string } }) {
                         <CardTitle>Education</CardTitle>
                         {isUser && profile.educations.length > 0 && (
                           <div className="flex gap-2 md:gap-5">
-                            <a
+                            <Link
                               href={`/u/${userName}/details/educations?add=true`}
                             >
                               <Plus className="w-5 h-5 opacity-90" />
-                            </a>
-                            <a href={`/u/${userName}/details/educations`}>
+                            </Link>
+                            <Link href={`/u/${userName}/details/educations`}>
                               <Pencil className="w-5 h-5 opacity-90" />
-                            </a>
+                            </Link>
                           </div>
                         )}
                       </CardHeader>
@@ -315,7 +314,7 @@ function ProfilePage({ params }: { params: { name: string } }) {
                         ) : (
                           <div className="flex justify-center items-center flex-col min-h-24">
                             {isUser && (
-                              <a
+                              <Link
                                 href={`/u/${userName}/details/educations?add=true`}
                               >
                                 <Button
@@ -324,7 +323,7 @@ function ProfilePage({ params }: { params: { name: string } }) {
                                 >
                                   Add Education
                                 </Button>
-                              </a>
+                              </Link>
                             )}
                             <span className="text-sm opacity-60">
                               No education has been added yet
@@ -335,7 +334,7 @@ function ProfilePage({ params }: { params: { name: string } }) {
                       {profile.educations.length > 0 && (
                         <>
                           <Separator className="mt-3" />
-                          <a href={`/u/${userName}/details/educations`}>
+                          <Link href={`/u/${userName}/details/educations`}>
                             <Button
                               variant={"link"}
                               className="w-full h-12 hover:no-underline hover:bg-secondary text-foreground"
@@ -343,7 +342,7 @@ function ProfilePage({ params }: { params: { name: string } }) {
                               Show all Educations{" "}
                               <ArrowRight className="w-10 h-10" />
                             </Button>
-                          </a>
+                          </Link>
                         </>
                       )}
                     </Card>
@@ -356,12 +355,12 @@ function ProfilePage({ params }: { params: { name: string } }) {
                       <CardTitle>Skills</CardTitle>
                       {isUser && profile.user.skills.length > 0 && (
                         <div className="flex gap-2 md:gap-5">
-                          <a href={`/u/${userName}/details/skills?add=true`}>
+                          <Link href={`/u/${userName}/details/skills?add=true`}>
                             <Plus className="w-5 h-5 opacity-90" />
-                          </a>
-                          <a href={`/u/${userName}/details/skills`}>
+                          </Link>
+                          <Link href={`/u/${userName}/details/skills`}>
                             <Pencil className="w-5 h-5 opacity-90" />
-                          </a>
+                          </Link>
                         </div>
                       )}
                     </CardHeader>
@@ -391,14 +390,16 @@ function ProfilePage({ params }: { params: { name: string } }) {
                       ) : (
                         <div className="flex justify-center items-center flex-col min-h-24">
                           {isUser && (
-                            <a href={`/u/${userName}/details/skills?add=true`}>
+                            <Link
+                              href={`/u/${userName}/details/skills?add=true`}
+                            >
                               <Button
                                 variant={"outline"}
                                 className="flex text-primary border-primary hover:text-primary items-center rounded-full"
                               >
                                 Add Skills
                               </Button>
-                            </a>
+                            </Link>
                           )}
                           <span className="text-sm opacity-60">
                             No skills have been added yet
@@ -408,14 +409,14 @@ function ProfilePage({ params }: { params: { name: string } }) {
                     </CardContent>
                     <Separator className="mt-3" />
                     {profile.user.skills.length > 0 && (
-                      <a href={`/u/${userName}/details/skills`}>
+                      <Link href={`/u/${userName}/details/skills`}>
                         <Button
                           variant={"link"}
                           className="w-full h-12 hover:no-underline hover:bg-secondary text-foreground"
                         >
                           Show all Skills <ArrowRight className="w-10 h-10" />
                         </Button>
-                      </a>
+                      </Link>
                     )}
                   </Card>
                   {/* Interest card */}

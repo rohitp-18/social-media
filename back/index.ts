@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
 import morgan from "morgan";
+import http from "http";
 
 import mongodb from "./config/mongodb";
 import path from "path";
@@ -25,6 +26,7 @@ import applyJobRouter from "./router/applyJobRouter";
 import projectRouter from "./router/projectRouter";
 import educationRouter from "./router/educationRouter";
 import searchRouter from "./router/searchRouter";
+import setupSocket from "./utils/socket";
 
 dotenv.config({ path: path.resolve(path.join(__dirname, "./config/.env")) });
 mongodb();
@@ -36,6 +38,8 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_KEY,
   api_secret: process.env.CLOUDINARY_SECRET,
 });
+
+const server = http.createServer(app);
 
 app.use(cors<Request>({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
@@ -62,6 +66,8 @@ app.use("/api/v1/search", searchRouter);
 
 app.use(error);
 
-app.listen(process.env.PORT, () => {
+setupSocket(server);
+
+server.listen(process.env.PORT, () => {
   console.log(`Server is running on http://localhost:${process.env.PORT}`);
 });

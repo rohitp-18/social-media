@@ -81,7 +81,11 @@ function Page({ params }: { params: { name: string } }) {
     }
   }, [searchParams, isUser]);
   return (
-    <Wrapper>
+    <Wrapper
+      asideClassName={"lg:flex md:hidden"}
+      sectionClassName={"md:grid-cols-1"}
+      section2ClassName={"max-w"}
+    >
       {(create || edit) && isUser && (
         <Dialog open={create || edit} onOpenChange={handleClose}>
           <PostForm
@@ -94,7 +98,7 @@ function Page({ params }: { params: { name: string } }) {
         </Dialog>
       )}
       {userPosts.length > 0 && (
-        <section className="md:grid grid-cols-[250px_1fr] block mx-auto max-w-7xl min-h-screen gap-6">
+        <section className="md:grid grid-cols-[250px_1fr] block mx-auto w-full max-w-7xl min-h-screen gap-6">
           <aside className="md:flex flex-col gap-3 w-full shrink hidden h-min">
             {user && (
               <>
@@ -105,13 +109,17 @@ function Page({ params }: { params: { name: string } }) {
                       <span className="text-sm font-semibold opacity-90">
                         Following
                       </span>
-                      <span className="text-sm opacity-80">100</span>
+                      <span className="text-sm opacity-80">
+                        {user.totalFollowing}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-semibold opacity-80">
                         Followers
                       </span>
-                      <span className="text-sm opacity-80">100</span>
+                      <span className="text-sm opacity-80">
+                        {user.totalFollowers}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -119,7 +127,7 @@ function Page({ params }: { params: { name: string } }) {
             )}
             <FooterS />
           </aside>
-          <div className="flex flex-col gap-4 mb-5">
+          <div className="flex w-full flex-col gap-4 mb-5">
             <Card className="w-full">
               <CardHeader className="flex-row justify-between pb-3 gap-5">
                 <div className="flex items-center gap-5">
@@ -211,30 +219,26 @@ function Page({ params }: { params: { name: string } }) {
                     />
                   ))}
               </TabsContent>
-              <TabsContent value="image">
-                <div className="grid">
-                  {images.length > 0 ? (
-                    images.map((img: any, i: number) => (
-                      <div
-                        key={i}
-                        className="w-full h-full overflow-hidden rounded-lg bg-muted flex items-center justify-center border border-border"
-                      >
-                        <img
-                          src={img.url}
-                          alt={img.name}
-                          loading="lazy"
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-full flex flex-col items-center justify-center py-8">
-                      <span className="opacity-70 text-sm">
-                        No images found
-                      </span>
-                    </div>
-                  )}
-                </div>
+              <TabsContent value="image" className="w-full">
+                {images.length > 0 ? (
+                  images.map((img: any, i: number) => (
+                    <Card
+                      key={i}
+                      className="w-full h-full shrink-0 overflow-hidden my-2 rounded-lg bg-muted border border-border"
+                    >
+                      <img
+                        src={img.url}
+                        alt={img.name}
+                        loading="lazy"
+                        className="object-cover w-full h-full"
+                      />
+                    </Card>
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-8">
+                    <span className="opacity-70 text-sm">No images found</span>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>

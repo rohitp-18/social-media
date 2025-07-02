@@ -29,6 +29,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { clearError, logout, resetUser } from "@/store/user/userSlice";
 import { toast } from "sonner";
+import Link from "next/link";
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -62,7 +63,7 @@ const Navbar: React.FC = () => {
   }, [logout2, error]);
 
   return (
-    <nav className="sticky top-0 z-50 left-0 w-full border text-card-foreground bg-opacity-20 backdrop-blur-md shadow-md p-4 flex flex-col justify-between items-center bg-background/40 dark:shadow-lg">
+    <nav className="sticky h-[70px] top-0 z-50 left-0 w-full border text-card-foreground bg-opacity-20 backdrop-blur-md shadow-md p-4 flex flex-col justify-between items-center bg-background/40 dark:shadow-lg">
       <section className="max-w-6xl mx-auto flex items-center justify-between w-full space-x-4">
         <div className="flex gap-4 items-center">
           <h2 className="text-2xl font-bold italic">TS</h2>
@@ -87,7 +88,7 @@ const Navbar: React.FC = () => {
           />
         </div>
         <div className="flex gap-3 space-x-4">
-          <a
+          <Link
             href="/feed"
             className={`no-underline hover:underline flex flex-col items-center ${
               pathname === "/feed" ? "font-bold" : ""
@@ -95,8 +96,8 @@ const Navbar: React.FC = () => {
           >
             <Home className="w-[1rem] h-[1rem]" />
             <span className="md:block hidden text-sm"> Feed</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/network"
             className={`no-underline hover:underline flex flex-col items-center ${
               pathname === "/network" ? "font-bold" : ""
@@ -104,8 +105,8 @@ const Navbar: React.FC = () => {
           >
             <Users className="w-[1rem] h-[1rem]" />
             <span className="md:block hidden text-sm">Network</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/jobs"
             className={` no-underline hover:underline flex flex-col items-center ${
               pathname === "/jobs" ? "font-bold" : ""
@@ -113,8 +114,8 @@ const Navbar: React.FC = () => {
           >
             <Newspaper className="w-[1rem] h-[1rem]" />
             <span className="md:block hidden text-sm"> Jobs</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/notification"
             className={` no-underline hover:underline flex flex-col items-center ${
               pathname === "/notification" ? "font-bold" : ""
@@ -122,7 +123,7 @@ const Navbar: React.FC = () => {
           >
             <Bell className="w-[1rem] h-[1rem]" />
             <span className="md:block hidden text-sm"> Notification</span>
-          </a>
+          </Link>
 
           {user && (
             <DropdownMenu open={drop} onOpenChange={(open) => setDrop(open)}>
@@ -167,13 +168,13 @@ const Navbar: React.FC = () => {
                 <hr />
                 <DropdownMenuGroup>
                   <DropdownMenuItem>
-                    <a href="/setting">Setting & Privacy</a>
+                    <Link href="/setting">Setting & Privacy</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <a href="/terms">Terms & conditions</a>
+                    <Link href="/terms">Terms & conditions</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <a href="/lang">Language</a>
+                    <Link href="/lang">Language</Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <hr />

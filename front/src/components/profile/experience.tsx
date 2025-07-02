@@ -13,6 +13,7 @@ import { Button } from "../ui/button";
 import { Diamond, Plus, Pencil, ArrowRight } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Separator } from "../ui/separator";
+import Link from "next/link";
 
 function Experience({
   isUser,
@@ -28,12 +29,12 @@ function Experience({
         <CardTitle>Experience</CardTitle>
         {isUser && profile.experiences.length > 0 && (
           <div className="flex gap-2 md:gap-5">
-            <a href={`/u/${username}/details/experience?add=true`}>
+            <Link href={`/u/${username}/details/experience?add=true`}>
               <Plus className="w-5 h-5 opacity-90" />
-            </a>
-            <a href={`/u/${username}/details/experience`}>
+            </Link>
+            <Link href={`/u/${username}/details/experience`}>
               <Pencil className="w-5 h-5 opacity-90" />
-            </a>
+            </Link>
           </div>
         )}
       </CardHeader>
@@ -112,14 +113,14 @@ function Experience({
         ) : (
           <div className="flex justify-center items-center flex-col min-h-24">
             {isUser && (
-              <a href={`/u/${username}/details/experience?add=true`}>
+              <Link href={`/u/${username}/details/experience?add=true`}>
                 <Button
                   variant={"outline"}
                   className="flex text-primary border-primary hover:text-primary items-center rounded-full"
                 >
-                  Add Experience
+                  kLink Add Experience
                 </Button>
-              </a>
+              </Link>
             )}
             <span className="text-sm opacity-60">
               No experience has been added yet
@@ -129,14 +130,14 @@ function Experience({
       </CardContent>
       <Separator className="mt-2" />
       {profile.experiences.length > 0 && (
-        <a href={`/u/${profile.user.username}/details/experience`}>
+        <Link href={`/u/${profile.user.username}/details/experience`}>
           <Button
             variant={"link"}
             className="w-full h-12 hover:no-underline hover:bg-secondary text-foreground"
           >
-            Show all Experiences <ArrowRight className="w-10 h-10" />
+            kLink Show all Experiences <ArrowRight className="w-10 h-10" />
           </Button>
-        </a>
+        </Link>
       )}
     </Card>
   );

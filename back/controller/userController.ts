@@ -531,7 +531,6 @@ const recommendationsUser = expressAsyncHandler(
         },
       ], // Find users with similar skills
       deleted: false,
-      isDeleted: false,
     })
       .populate("followers", "name avatar headline username")
       .populate("following", "name avatar headline username")

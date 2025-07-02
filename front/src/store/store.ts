@@ -10,6 +10,7 @@ import companyReducer from "./company/companySlice";
 import educationReducer from "./user/educationSlice";
 import searchReducer from "./search/allSearchSlice";
 import userPostsReducer from "./user/userPostSlice";
+import chatSlice from "./chat/chatSlice";
 
 const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ const store = configureStore({
     education: educationReducer,
     search: searchReducer,
     userPosts: userPostsReducer,
+    chats: chatSlice,
   },
 });
 

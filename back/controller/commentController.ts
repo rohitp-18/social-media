@@ -16,11 +16,16 @@ const createComment = expressAsyncHandler(
       return next(new ErrorHandler("Post not found", 404));
     }
 
+    await Comment.deleteOne({ post: postId, user: userId }).populate(
+      "user",
+      "name email avatar"
+    );
+
     const newComment = await Comment.create({
       user: userId,
       content: comment,
       post: postId,
-      type,
+      type: "comment",
     });
 
     if (!newComment) {
@@ -29,8 +34,43 @@ const createComment = expressAsyncHandler(
 
     res.status(200).json({
       success: true,
-      comment,
+      comment: await newComment.populate("user", "name email avatar"),
       message: "comment created successfully",
+    });
+  }
+);
+
+const createReply = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { postId, commentId, reply } = req.body;
+    const userId = req.user._id;
+
+    const post = await Post.findById(postId);
+    if (!post || post.isDeleted) {
+      return next(new ErrorHandler("Post not found", 404));
+    }
+
+    const comment = await Comment.findById(commentId);
+    if (!comment || comment.isDeleted) {
+      return next(new ErrorHandler("Comment not found", 404));
+    }
+
+    const newReply = await Comment.create({
+      user: userId,
+      content: reply,
+      post: postId,
+      parent: commentId,
+      type: "reply",
+    });
+
+    if (!newReply) {
+      return next(new ErrorHandler("Reply not created", 500));
+    }
+
+    res.status(200).json({
+      success: true,
+      reply: await newReply.populate("user", "name email avatar"),
+      message: "Reply created successfully",
     });
   }
 );
@@ -38,26 +78,41 @@ const createComment = expressAsyncHandler(
 const getAllComments = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { postId } = req.params;
-    const post = await Post.findById(postId)
-      .populate("reply.id", "content user")
-      .populate("user", "name email")
-      .populate("comment._id", "content user");
+
+    // Validate post existence and not deleted
+    const post = await Post.findById(postId);
     if (!post || post.isDeleted) {
       return next(new ErrorHandler("Post not found", 404));
     }
 
-    const comments = post.comment.map((comment) => comment._id);
-    const allComments = await Comment.find({ _id: { $in: comments } })
-      .populate("user", "name email")
-      .populate("post", "title content");
+    // Fetch all top-level comments (not replies) for the post
+    const comments = await Comment.find({
+      post: postId,
+      parent: { $exists: false },
+      isDeleted: false,
+    })
+      .populate("user", "name email avatar")
+      .sort({ createdAt: -1 });
 
-    if (!allComments) {
-      return next(new ErrorHandler("Comments not found", 404));
-    }
+    // Optionally, fetch replies for each comment
+    const commentsWithReplies = await Promise.all(
+      comments.map(async (comment) => {
+        const replies = await Comment.find({
+          parent: comment._id,
+          isDeleted: false,
+        })
+          .populate("user", "name email avatar")
+          .sort({ createdAt: 1 });
+        return {
+          ...comment.toObject(),
+          replies,
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
-      comments: allComments,
+      comments: commentsWithReplies,
       message: "Comments fetched successfully",
     });
   }
@@ -121,7 +176,9 @@ const toggleLikeComment = expressAsyncHandler(
     const isLiked = comment.likes.includes(userId);
 
     if (isLiked) {
-      comment.likes.pull(userId);
+      comment.likes = comment.likes.filter(
+        (likeId: any) => likeId.toString() !== userId.toString()
+      );
     } else {
       comment.likes.push(userId);
     }
@@ -130,6 +187,7 @@ const toggleLikeComment = expressAsyncHandler(
 
     res.status(200).json({
       success: true,
+      liked: !isLiked,
       message: isLiked ? "Comment unliked" : "Comment liked",
       comment,
     });
@@ -138,6 +196,7 @@ const toggleLikeComment = expressAsyncHandler(
 
 export {
   createComment,
+  createReply,
   getAllComments,
   deleteComment,
   getUserCommentedPosts,

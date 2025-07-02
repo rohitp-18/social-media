@@ -52,11 +52,18 @@ const NotificationSchema: Schema = new Schema(
     },
     relatedId: {
       type: Schema.Types.ObjectId,
-      refPath: "refModel",
     },
     refModel: {
       type: String,
-      enum: ["Job", "Post", "Group", "User", "Newsletter"],
+      enum: [
+        "Job",
+        "Post",
+        "Group",
+        "User",
+        "Newsletter",
+        "Invitation",
+        "chat",
+      ],
     },
     url: {
       type: String,

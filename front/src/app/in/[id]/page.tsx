@@ -42,7 +42,6 @@ function Page() {
 
   return (
     <>
-      <Navbar />
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container max-w-[1170px] mx-auto">
           {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}

@@ -136,6 +136,34 @@ const getAllSearch = expressAsyncHandler(
       return next(new ErrorHandler("No results found", 404));
     }
 
+    const peopleAlsoSearch = await User.find({
+      $or: [
+        { name: { $regex: q, $options: "i" } },
+        { headline: { $regex: q, $options: "i" } },
+        { "location.city": { $regex: q, $options: "i" } },
+        { "location.state": { $regex: q, $options: "i" } },
+        { "location.country": { $regex: q, $options: "i" } },
+        { "website.link": { $regex: q, $options: "i" } },
+        { bio: { $regex: q, $options: "i" } },
+      ],
+      deleted: false,
+    })
+      .limit(10)
+      .populate("skills", "name _id")
+      .select(
+        "-password -email -connections -followers -following -__v -createdAt -updatedAt"
+      )
+      .sort(
+        User.schema
+          .indexes()
+          .some(
+            (idx) =>
+              idx[0].hasOwnProperty("name") && idx[1].hasOwnProperty("text")
+          )
+          ? { score: { $meta: "textScore" } }
+          : {}
+      );
+
     // check you following people and companies
 
     if (req.user === undefined) {
