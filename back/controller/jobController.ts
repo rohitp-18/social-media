@@ -70,42 +70,51 @@ const createJob = expressAsyncHandler(
       return next(new ErrorHandler("Internal Error", 500));
     }
 
-    company.jobs.push(job._id);
-    await company.save();
+    tempCompany.jobs.push(job._id);
+    await tempCompany.save();
 
     try {
-      company.followers.forEach((follower: any) => {
-        Notification.create({
-          recipient: follower._id,
-          sender: req.user._id,
-          type: "job",
-          message: `New job posted by ${tempCompany.name}`,
-          job: job._id,
-          company: tempCompany._id,
-        });
-      });
+      await Notification.create(
+        tempCompany.followers.map(
+          (follower: any) =>
+            follower !== req.user._id && {
+              recipient: follower,
+              sender: req.user._id,
+              type: "job",
+              message: `New job posted by ${tempCompany.name} for ${job.title}`,
+              job: job._id,
+              company: tempCompany._id,
+            }
+        )
+      );
 
-      company.members.forEach((member: any) => {
-        Notification.create({
-          recipient: member._id,
-          sender: req.user._id,
-          type: "job",
-          message: `New job posted by ${tempCompany.name}`,
-          job: job._id,
-          company: tempCompany._id,
-        });
-      });
+      await Notification.create(
+        tempCompany.members.map(
+          (member: any) =>
+            member !== req.user._id && {
+              sender: req.user._id,
+              recipient: member,
+              type: "job",
+              message: `New job posted by ${tempCompany.name} for ${job.title}`,
+              job: job._id,
+              company: tempCompany._id,
+            }
+        )
+      );
 
-      company.admin.forEach((admin: any) => {
-        Notification.create({
-          recipient: admin._id,
-          sender: req.user._id,
-          type: "job",
-          message: `New job posted by ${tempCompany.name}`,
-          job: job._id,
-          company: tempCompany._id,
-        });
-      });
+      await Notification.create(
+        tempCompany.admin.map(
+          (member: any) =>
+            member !== req.user._id && {
+              recipient: member._id,
+              sender: req.user._id,
+              type: "job",
+              message: `New job posted by ${tempCompany.name} for ${job.title}`,
+              job: job._id,
+              company: tempCompany._id,
+            }
+        )
+      );
     } catch (error) {}
 
     res.status(201).json({
@@ -229,6 +238,7 @@ const updateJob = expressAsyncHandler(
       category,
       preferredSkills,
       essentialSkills,
+      isActive,
     } = req.body;
 
     if (
@@ -242,20 +252,42 @@ const updateJob = expressAsyncHandler(
       return next(new ErrorHandler("Please fill all required fields", 403));
     }
 
-    job.title = title;
-    job.description = description;
-    job.company = company;
-    job.location = location;
-    job.salary = salary;
-    job.user = req.user._id;
-    job.noOfOpening = noOfOpening;
-    job.type = type;
-    job.experience = experience;
-    job.skills = skills;
-    job.category = category;
-    job.preferredSkills = preferredSkills;
-    job.essentialSkills = essentialSkills;
-    job.questions = questions;
+    const tempCompany = await Company.findById(company);
+
+    if (!tempCompany || tempCompany.isDeleted) {
+      return next(new ErrorHandler("Company not found", 404));
+    }
+
+    const isAdmin = tempCompany.admin.some(
+      (admin) => admin._id.toString() === req.user._id.toString()
+    );
+
+    if (!isAdmin) {
+      return next(
+        new ErrorHandler("You are not authorized to update this job", 403)
+      );
+    }
+
+    await Job.findByIdAndUpdate(
+      jobId,
+      {
+        title,
+        description,
+        company,
+        location,
+        salary,
+        noOfOpening,
+        type,
+        experience,
+        skills,
+        category,
+        preferredSkills,
+        essentialSkills,
+        questions,
+        isActive: isActive !== undefined ? isActive : job.isActive,
+      },
+      { new: true, runValidators: true }
+    );
 
     await job.save();
 
@@ -271,8 +303,10 @@ const getJob = expressAsyncHandler(
     const jobId = req.params.id;
 
     const job = await Job.findById(jobId)
-      .populate("user", "name email")
-      .populate("company", "name avatar");
+      .populate("user", "name email avatar headline followers username")
+      .populate("company", "name avatar headline followers admin")
+      .populate("preferredSkills", "name")
+      .populate("essentialSkills", "name");
     if (!job || job.isDeleted) {
       return next(new ErrorHandler("Job not found", 404));
     }
@@ -320,6 +354,136 @@ const getCompanyJobs = expressAsyncHandler(
   }
 );
 
+const introductionJobs = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // find highpaying jobs
+    const jobs = await Job.find({}).sort({ salary: -1 }).limit(25);
+
+    res.status(200).json({
+      success: true,
+      jobs,
+      message: "High paying jobs fetched successfully",
+    });
+  }
+);
+
+const recommendedJobs = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { user } = req;
+    const companyId = req.query.company as string;
+
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const jobs = await Job.find({
+      isDeleted: false,
+      company: companyId || { $ne: null },
+      $or: [
+        {
+          preferredSkills: {
+            $in: user.skills.map((skill: any) => skill.skill.toString()),
+          },
+        },
+        {
+          essentialSkills: {
+            $in: user.skills.map((skill: any) => skill.skill.toString()),
+          },
+        },
+        {
+          description: {
+            $regex: user.skills.map((skill: any) => skill.skill.name).join("|"),
+            $options: "i",
+          },
+        },
+      ],
+    })
+      .populate("user", "name email avatar username headline followers")
+      .populate("company", "name avatar")
+      .limit(10);
+
+    if (!jobs) {
+      return next(new ErrorHandler("Internal Error", 500));
+    }
+
+    res.status(200).json({
+      success: true,
+      jobs,
+    });
+  }
+);
+
+const toggleSaveJob = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { jobId } = req.params;
+    const userId = req.user._id;
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return next(new ErrorHandler("Job not found", 404));
+    }
+
+    const isSaved = job.savedBy.includes(userId);
+    console.log(isSaved);
+    if (isSaved) {
+      job.savedBy = job.savedBy.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+    } else {
+      job.savedBy.push(userId);
+    }
+
+    console.log(job.savedBy);
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: isSaved ? "Job unsaved successfully" : "Job saved successfully",
+      jobId,
+      save: !isSaved,
+    });
+  }
+);
+
+const toggleActiveJob = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { jobId } = req.params;
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return next(new ErrorHandler("Job not found", 404));
+    }
+
+    const company = await Company.findById(job.company);
+
+    if (!company || company.isDeleted) {
+      return next(new ErrorHandler("Company not found", 404));
+    }
+
+    const isAdmin = company.admin.some(
+      (admin) => admin._id.toString() === req.user._id.toString()
+    );
+
+    if (!isAdmin) {
+      return next(
+        new ErrorHandler("You are not authorized to toggle job status", 403)
+      );
+    }
+
+    job.isActive = !job.isActive;
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: job.isActive
+        ? "Job activated successfully"
+        : "Job deactivated successfully",
+      jobId,
+      active: job.isActive,
+    });
+  }
+);
+
 export {
   createJob,
   getAllJobs,
@@ -329,4 +493,8 @@ export {
   getMyJobs,
   searchJob,
   getCompanyJobs,
+  introductionJobs,
+  recommendedJobs,
+  toggleSaveJob,
+  toggleActiveJob,
 };

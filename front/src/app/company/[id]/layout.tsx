@@ -12,17 +12,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await Promise.resolve(params);
 
   try {
-    // const data = await fetch(
-    //   `http://localhost:5000/api/v1/user/profile/${name}`,
-    //   {
-    //     method: "GET",
-    //   }
-    // );
-
-    // const res = await data.json();
-
-    // const { user } = res;
-
     const { data } = await axios.get(`/company/one/${id}`);
     const { company } = data;
 

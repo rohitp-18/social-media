@@ -10,6 +10,7 @@ const router = Router();
 router.use(auth);
 
 router.get("/all", getAllNotifications);
+router.get("/meet");
 router.delete("/delete/:id", deleteNotification);
 
 export default router;

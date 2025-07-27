@@ -63,6 +63,14 @@ function setupSocket(server: HttpServer): void {
         }
       });
     });
+
+    // notification
+    socket.on("send_notification", (data: any) => {
+      const { userId, notification } = data;
+      if (onlineUsers.has(userId)) {
+        io.to(userId).emit("receive_notification", notification);
+      }
+    });
   });
 }
 

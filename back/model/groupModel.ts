@@ -6,6 +6,12 @@ const comapnySchema = new mongoose.Schema(
       type: String,
       require: true,
     },
+    headline: {
+      type: String,
+    },
+    about: {
+      type: String,
+    },
     email: {
       type: String,
       require: true,
@@ -15,22 +21,18 @@ const comapnySchema = new mongoose.Schema(
         post: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
-          unique: true,
           ref: "post",
         },
-        type: {
-          type: String,
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          ref: "user",
         },
       },
     ],
     chat: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "chat",
-    },
-    deleted: {
-      type: Boolean,
-
-      default: false,
     },
     deletedInfo: {
       deletedBy: {
@@ -45,14 +47,15 @@ const comapnySchema = new mongoose.Schema(
         type: String,
       },
     },
-    location: {
-      type: String,
-    },
+    location: [
+      {
+        type: String,
+      },
+    ],
     admin: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
-        unique: true,
         required: true,
       },
     ],
@@ -60,7 +63,6 @@ const comapnySchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
-        unique: true,
         required: true,
       },
     ],
@@ -69,19 +71,23 @@ const comapnySchema = new mongoose.Schema(
         user: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "user",
-          unique: true,
           required: true,
         },
         message: {
           type: String,
+          default: "",
         },
       },
     ],
-    url: {
+    website: {
       type: String,
     },
     avatar: { public_id: { type: String }, url: { type: String } },
     bannerImage: { public_id: { type: String }, url: { type: String } },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
     createdAt: { type: Date, default: new Date(Date.now()) },
     updatedAt: [{ type: Date, default: new Date(Date.now()) }],
   },

@@ -11,13 +11,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { Button } from "@/components/ui/button";
 import { getProfileActivity } from "@/store/user/userPostSlice";
-import PostForm from "@/components/forms/postForm";
+import PostForm from "@/components/forms/userPostForm";
 import { Dialog } from "@/components/ui/dialog";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 
-function Page({ params }: { params: { name: string } }) {
+function Page() {
   const [userName, setUserName] = useState<string | undefined>(undefined);
   const [isUser, setIsUser] = useState(false);
   const [create, setCreate] = useState(false);
@@ -25,6 +25,7 @@ function Page({ params }: { params: { name: string } }) {
   const [select, setSelect] = useState<any>(null);
   const [activity, setActivity] = useState("post");
 
+  const { name } = useParams();
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const { user } = useSelector((state: RootState) => state.user);
@@ -39,15 +40,14 @@ function Page({ params }: { params: { name: string } }) {
   }
 
   useEffect(() => {
-    Promise.resolve(params).then((res: any) => {
-      setUserName(decodeURIComponent(String(res.name)));
-      dispatch(getProfileActivity(decodeURIComponent(String(res.name))));
-    });
-  }, [params]);
+    if (name) {
+      setUserName(name as string);
+      dispatch(getProfileActivity(name as string));
+    }
+  }, [name]);
 
   useEffect(() => {
     if (userName && user) {
-      console.log(userName, user?.username, user?.username === userName);
       setIsUser(userName === user?.username);
     }
   }, [userName, user]);
@@ -128,6 +128,7 @@ function Page({ params }: { params: { name: string } }) {
             <FooterS />
           </aside>
           <div className="flex w-full flex-col gap-4 mb-5">
+            {/* Activity Feed info about user post create post */}
             <Card className="w-full">
               <CardHeader className="flex-row justify-between pb-3 gap-5">
                 <div className="flex items-center gap-5">
@@ -172,8 +173,9 @@ function Page({ params }: { params: { name: string } }) {
               </CardContent>
             </Card>
             <Tabs value={activity} onValueChange={(va) => setActivity(va)}>
+              {/* activity feed buttons to navigate */}
               <Card>
-                <CardContent className="pt-4 p-4">
+                <CardContent className="pt-4 p-4 mb-3">
                   <TabsList className="flex gap-3 bg-transparent items-center justify-start">
                     <Button
                       variant={activity === "post" ? "default" : "outline"}
@@ -203,10 +205,20 @@ function Page({ params }: { params: { name: string } }) {
                         Images
                       </Button>
                     )}
+                    {videos.length > 0 && (
+                      <Button
+                        variant={activity === "video" ? "default" : "outline"}
+                        onClick={() => setActivity("video")}
+                        className="rounded-full"
+                        value="video"
+                      >
+                        Videos
+                      </Button>
+                    )}
                   </TabsList>
                 </CardContent>
               </Card>
-              <TabsContent value="post">
+              <TabsContent value="post" className="flex flex-col gap-2 w-full">
                 {userPosts.length > 0 &&
                   userPosts.map((u) => (
                     <Post
@@ -227,9 +239,9 @@ function Page({ params }: { params: { name: string } }) {
                       className="w-full h-full shrink-0 overflow-hidden my-2 rounded-lg bg-muted border border-border"
                     >
                       <img
+                        loading="lazy"
                         src={img.url}
                         alt={img.name}
-                        loading="lazy"
                         className="object-cover w-full h-full"
                       />
                     </Card>
@@ -237,6 +249,50 @@ function Page({ params }: { params: { name: string } }) {
                 ) : (
                   <div className="col-span-full flex flex-col items-center justify-center py-8">
                     <span className="opacity-70 text-sm">No images found</span>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent
+                value="comment"
+                className="w-full flex flex-col gap-2"
+              >
+                {comments.length > 0 ? (
+                  comments.map((c: any, i: number) => (
+                    <Post
+                      post={c.post}
+                      key={c._id}
+                      isFollowing={isFollowing || isUser}
+                      setEdit={setEdit}
+                      setSelect={setSelect}
+                      comment={c}
+                      cardClass="w-full"
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-8">
+                    <span className="opacity-70 text-sm">
+                      No comments found
+                    </span>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="video" className="w-full">
+                {videos.length > 0 ? (
+                  videos.map((vid: any, i: number) => (
+                    <Card
+                      key={i}
+                      className="w-full h-full shrink-0 overflow-hidden my-2 rounded-lg bg-muted border border-border"
+                    >
+                      <video
+                        src={vid.url}
+                        controls
+                        className="object-cover w-full h-full"
+                      />
+                    </Card>
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-8">
+                    <span className="opacity-70 text-sm">No videos found</span>
                   </div>
                 )}
               </TabsContent>

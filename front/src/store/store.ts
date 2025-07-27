@@ -11,6 +11,10 @@ import educationReducer from "./user/educationSlice";
 import searchReducer from "./search/allSearchSlice";
 import userPostsReducer from "./user/userPostSlice";
 import chatSlice from "./chat/chatSlice";
+import jobsSlice from "./jobs/jobSlice";
+import applyJobsSlice from "./jobs/applyJobsSlice";
+import postSlice from "./utils/postSlice";
+import groupSlice from "./group/groupSlice";
 
 const store = configureStore({
   reducer: {
@@ -23,7 +27,11 @@ const store = configureStore({
     education: educationReducer,
     search: searchReducer,
     userPosts: userPostsReducer,
+    posts: postSlice,
     chats: chatSlice,
+    jobs: jobsSlice,
+    applyJobs: applyJobsSlice,
+    group: groupSlice,
   },
 });
 

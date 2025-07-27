@@ -234,6 +234,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                                   >
                                     {post.images.map((img: any, i: number) => (
                                       <img
+                                        loading="lazy"
                                         key={i}
                                         src={img.url}
                                         alt={img.name}
@@ -370,6 +371,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                         className="h-48 overflow-hidden rounded-lg bg-muted flex items-center justify-center border border-border"
                       >
                         <img
+                          loading="lazy"
                           src={img.url}
                           alt={img.name}
                           loading="lazy"

@@ -28,6 +28,7 @@ import axios from "@/store/axios";
 import { toggleFollow, userProfile } from "@/store/user/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
+import Link from "next/link";
 
 function ProfilePageCard({
   profile,
@@ -177,6 +178,7 @@ function ProfilePageCard({
         <div className="flex flex-col relative w-full">
           {profile.user.bannerImage ? (
             <img
+              loading="lazy"
               src={profile.user.bannerImage.url}
               alt="background"
               className="w-full aspect-[4/1] flex-shrink-0 rounded-lg"
@@ -217,6 +219,7 @@ function ProfilePageCard({
                     <div className="w-full aspect-[4/1] flex-shrink-0 rounded-lg">
                       {bannerImagePreview ? (
                         <img
+                          loading="lazy"
                           src={bannerImagePreview}
                           alt="background"
                           className="w-full aspect-[4/1] flex-shrink-0 rounded-lg"
@@ -304,18 +307,33 @@ function ProfilePageCard({
             </div>
           )}
           <div className="flex opacity-60 items-center gap-2">
-            <div className="">
+            <Link
+              href={`/u/${profile.user.username}/peoples/followers`}
+              className="hover:underline hover:opacity-100 opacity-80"
+            >
               <span className="text-sm pr-1 font-semibold">
                 {profile.user.totalFollowers}
               </span>
               <span className="text-sm">Followers</span>
-            </div>
-            <div className="">
+            </Link>
+            <Link
+              href={`/u/${profile.user.username}/peoples/following`}
+              className="hover:underline hover:opacity-100 opacity-80"
+            >
               <span className="text-sm pr-1 font-semibold">
                 {profile.user.totalFollowing}
               </span>
               <span className="text-sm">Following</span>
-            </div>
+            </Link>
+            <Link
+              href={`/u/${profile.user.username}/peoples/connections`}
+              className="hover:underline hover:opacity-100 opacity-80"
+            >
+              <span className="text-sm pr-1 font-semibold">
+                {profile.user.totalConnections}
+              </span>
+              <span className="text-sm">Connections</span>
+            </Link>
           </div>
         </div>
         {isUser && (

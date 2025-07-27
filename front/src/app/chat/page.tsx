@@ -21,13 +21,19 @@ import { AppDispatch, RootState } from "@/store/store";
 import { CheckCheck, MoreHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import React, { use, useCallback, useEffect, useState } from "react";
+import React, {
+  use,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import { readMessage } from "@/store/chat/chatSlice";
 import ChatLogo from "@/components/chat/chatLogo";
+import { useSocket } from "@/store/utils/socketContext";
 
-let socket: any;
 function Page() {
   const [selectedChat, setSelectedChat] = useState<any>();
   const [selectedUser, setSelectedUser] = useState<any>();
@@ -35,19 +41,24 @@ function Page() {
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [allMessages, setAllMessages] = useState<any[]>([]);
+  // count the fetch chats
+  const [fetchCount, setFetchCount] = useState(0);
 
   const { user } = useSelector((state: RootState) => state.user);
   const { chats: chatState } = useSelector((state: RootState) => state.chats);
+  const { socket } = useSocket();
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
+  // check if the user is in a group chat
   const fetchChats = async () => {
     setLoading(true);
     try {
       setLoading(true);
       const { data } = await axios.get(`/chat/fetch`);
       setChats(data.chats);
+      setFetchCount((prev) => prev + 1);
     } catch (error) {
       console.error("Error fetching chats:", error);
     } finally {
@@ -55,6 +66,7 @@ function Page() {
     }
   };
 
+  // update the chats when a new message is received or read the message
   function setUpdatedChats(message: any) {
     setChats((prevChats) => {
       const updatedChats = prevChats.map((chat) => {
@@ -82,6 +94,13 @@ function Page() {
       if (chat.unreadCount > 0) {
         chat.unreadCount = 0;
       }
+      window.history.replaceState(
+        {},
+        "",
+        `/chat?selectedUser=${user._id}&chatId=${chat._id}&isGroup=${
+          chat.isGroup || false
+        }`
+      );
       // socket.emit("all_read_messages", {
       //   chatId: chat._id,
       //   userId: user._id,
@@ -92,6 +111,13 @@ function Page() {
     },
     [user, socket]
   );
+
+  const handleRemoveChatSelection = useCallback(() => {
+    setSelectedUser("");
+    setSelectedChat("");
+    setIsGroup(false);
+    window.history.replaceState({}, "", `/chat`);
+  }, []);
 
   const handleNewMessage = (newMessage: any) => {
     console.log("New message received:", newMessage);
@@ -104,12 +130,13 @@ function Page() {
             messageId: newMessage._id,
           })
         );
-        socket.emit("read_message", {
-          chatId: newMessage.chat._id,
-          message: newMessage,
-          userId: newMessage.sender._id,
-          senderId: user._id,
-        });
+        socket &&
+          socket.emit("read_message", {
+            chatId: newMessage.chat._id,
+            message: newMessage,
+            userId: newMessage.sender._id,
+            senderId: user._id,
+          });
 
         setUpdatedChats({
           ...newMessage,
@@ -135,17 +162,7 @@ function Page() {
   // socket stablish connects
   useEffect(() => {
     if (!user) return;
-    const selectedUserFromParams = searchParams.get("selectedUser");
-    if (selectedUserFromParams) {
-      setSelectedUser(selectedUserFromParams);
-    }
-
-    // Initialize socket connection
-    socket = io("ws://localhost:5000", {
-      query: { selectedUser: user._id },
-      transports: ["websocket"],
-    });
-
+    if (!socket) return;
     socket.emit("register_user", user._id);
 
     socket.on("connect", () => {
@@ -154,6 +171,27 @@ function Page() {
 
     return () => {};
   }, [user]);
+
+  // handle chat selection from URL params
+  useEffect(() => {
+    if (!searchParams || !chats) return;
+    const chatId = searchParams.get("chatId");
+    const userId = searchParams.get("selectedUser");
+    const isGroupParam = searchParams.get("isGroup");
+
+    if (chatId && userId) {
+      const chat = chats.find((c) => c._id === chatId);
+      const user = chat?.members.find((m: any) => m._id === userId);
+      if (chat && user) {
+        setSelectedChat(chat);
+        setSelectedUser(user);
+        setIsGroup(isGroupParam === "true");
+        handleChatSelection(chat, user);
+      }
+    } else {
+      handleRemoveChatSelection();
+    }
+  }, [searchParams, fetchCount]);
 
   // handle new messages
   useEffect(() => {
@@ -212,9 +250,13 @@ function Page() {
                 selectedUser
                   ? "md:grid-cols-[250px_1fr] lg:grid-cols-[320px_1fr]"
                   : "md:grid-cols-[320px_1fr]"
-              } flex-1 hidden my-3 mx-1 w-full h-full`}
+              } flex-1 my-3 mx-1 w-full h-full`}
             >
-              <div className="flex flex-col gap-2 pt-3 pb-2 px-1.5">
+              <div
+                className={`md:flex ${
+                  selectedChat ? "hidden" : ""
+                } flex-col gap-2 pt-3 pb-2 px-1.5`}
+              >
                 <div className="mb-4 px-2">
                   <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100">
                     Chats
@@ -236,8 +278,12 @@ function Page() {
                   ))}
                 </div>
               </div>
-              {selectedChat ? (
-                <div className="flex flex-col">
+              {selectedChat && selectedChat._id ? (
+                <div
+                  className={`md:flex flex-col h-full ${
+                    selectedUser ? "" : "hidden"
+                  }`}
+                >
                   <div className="flex w-full justify-between items-center h-[65px] gap-3 p-3 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex gap-2 items-center">
                       <Avatar className="h-10 w-10">
@@ -263,10 +309,7 @@ function Page() {
                         className=""
                         size={"icon"}
                         variant="ghost"
-                        onClick={() => {
-                          setSelectedChat("");
-                          setSelectedUser("");
-                        }}
+                        onClick={handleRemoveChatSelection}
                       >
                         <X className="w-5 h-5" />
                       </Button>
@@ -295,14 +338,14 @@ function Page() {
                             <DropdownMenuItem>
                               Mute Conversation
                             </DropdownMenuItem>
-                            <DropdownMenuItem>Archive Chat</DropdownMenuItem>
+                            {/* <DropdownMenuItem>Archive Chat</DropdownMenuItem>
                             <DropdownMenuItem className="text-red-600">
                               Delete Chat
                             </DropdownMenuItem>
                             <DropdownMenuItem>Mark as Unread</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => {}}>
                               Pin Chat
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                           </DropdownMenuGroup>
                         </DropdownMenuContent>
                       </DropdownMenu>

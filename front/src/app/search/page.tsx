@@ -417,6 +417,7 @@ function Page() {
 
   return (
     <>
+      {user ? <Navbar /> : <IntroNavbar />}
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container lg:max-w-[1100px] mx-auto">
           <Card className="bg-background flex flex-col gap-3 shadow-md w-full">

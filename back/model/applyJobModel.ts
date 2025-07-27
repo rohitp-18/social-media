@@ -17,14 +17,19 @@ const applyJobModel = new mongoose.Schema(
       ref: "job",
       required: true,
     },
+    interview: {
+      type: Date,
+      default: null,
+    },
     status: {
       type: String,
       enum: ["applied", "interview", "rejected", "hired"],
       default: "applied",
     },
     resume: {
-      type: String,
-      required: true,
+      url: { type: String },
+      public_id: { type: String },
+      name: { type: String },
     },
     coverLetter: {
       type: String,
@@ -34,22 +39,27 @@ const applyJobModel = new mongoose.Schema(
       ref: "company",
       required: true,
     },
-    createdAt: {
-      type: Date,
-      default: new Date(Date.now()),
+    reschedule: {
+      newInterviewDate: [{ type: Date }],
+      explanation: {
+        type: String,
+        default: "",
+      },
     },
-    question: [
+    questions: [
       {
         question: {
           type: String,
-          required: true,
         },
         answer: {
           type: String,
-          required: true,
         },
       },
     ],
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

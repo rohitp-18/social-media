@@ -19,6 +19,7 @@ import { useSearchParams } from "next/navigation";
 import { getAllSearch } from "@/store/search/allSearchSlice";
 import { Separator } from "../ui/separator";
 import { toggleFollow } from "@/store/user/userSlice";
+import Link from "next/link";
 
 function All({ setType, selectValues }: any) {
   const params = useSearchParams();
@@ -355,10 +356,13 @@ function All({ setType, selectValues }: any) {
                 <>
                   {companies.map((company: any, i: number) => (
                     <Fragment key={company._id}>
-                      <div className="flex justify-between my-2 items-start">
+                      <Link
+                        href={`/company/${company._id}`}
+                        className="flex justify-between my-2 items-start"
+                      >
                         <div className="flex justify-start items-start gap-3">
                           <Avatar className="w-10 h-10">
-                            <AvatarImage src={company.logo?.url} />
+                            <AvatarImage src={company.avatar?.url} />
                             <AvatarFallback>
                               <User2 className="w-8 h-8 p-1.5" />
                             </AvatarFallback>
@@ -368,12 +372,10 @@ function All({ setType, selectValues }: any) {
                               {company.name}{" "}
                             </span>
                             <span className="text-sm opacity-90 line-clamp-1 leading-tight text-ellipsis overflow-hidden">
-                              {company.position} | {company.industry} |{" "}
-                              {company.connections} |{company.location} |{" "}
-                              {company.skills.join(" | ")}
+                              {company.headline} | {company.location} |{" "}
                             </span>
                             <span className="opacity-70 text-[13px]">
-                              {company.followers} followers
+                              {company.totalFollowers} followers
                             </span>
                           </div>
                         </div>
@@ -385,7 +387,7 @@ function All({ setType, selectValues }: any) {
                         >
                           follow
                         </Button>
-                      </div>
+                      </Link>
                       {i < companies.length - 1 && <hr className="my-1" />}
                     </Fragment>
                   ))}

@@ -7,15 +7,20 @@ import {
   allJobApplications,
   updateJobApplication,
   getJobApplication,
+  rescheduleInterview,
+  acceptReschedule,
 } from "../controller/applyJobController";
+import upload from "../config/multer";
 
 const router = Router();
 
 router.use(auth);
 
-router.post("/create", createJobApplication);
+router.post("/create", upload.single("resume"), createJobApplication);
 router.get("/user", userJobApplications);
-router.get("/all", allJobApplications);
+router.get("/job/:id", allJobApplications);
+router.put("/reschedule/:id", rescheduleInterview);
+router.put("/accept/:id", acceptReschedule);
 router
   .route("/:id")
   .delete(deleteJobApplication)

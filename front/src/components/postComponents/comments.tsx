@@ -163,6 +163,7 @@ function Comments({ postId }: { postId: string }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<
     Record<string, boolean>
@@ -170,6 +171,8 @@ function Comments({ postId }: { postId: string }) {
   const { user } = useSelector((state: RootState) => state.user);
 
   const getAllComments = useCallback(async () => {
+    if (!postId) return;
+    if (!open) return;
     setLoading(true);
     try {
       const { data } = await axios.get(`/comments/all/${postId}`);
@@ -179,12 +182,12 @@ function Comments({ postId }: { postId: string }) {
     } finally {
       setLoading(false);
     }
-  }, [postId]);
+  }, [postId, open]);
 
   useEffect(() => {
     getAllComments();
     setExpandedReplies({});
-  }, [getAllComments]);
+  }, [getAllComments, postId]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -252,11 +255,21 @@ function Comments({ postId }: { postId: string }) {
   }, []);
 
   return (
-    <Dialog onOpenChange={(val) => val && getAllComments()}>
-      <div className="flex-col hover:cursor-pointer hover:scale-105 w-16 gap-1 items-center flex">
-        <MessageCircleMoreIcon className="h-5 w-5" />
-        <span className="text-sm opacity-80">Comment</span>
-      </div>
+    <Dialog
+      open={open}
+      onOpenChange={(val) => {
+        if (val) {
+          getAllComments();
+        }
+        setOpen(val);
+      }}
+    >
+      <DialogTrigger asChild>
+        <div className="flex-col hover:cursor-pointer hover:scale-105 w-16 gap-1 items-center flex">
+          <MessageCircleMoreIcon className="h-5 w-5" />
+          <span className="text-sm opacity-80">Comment</span>
+        </div>
+      </DialogTrigger>
       <DialogContent
         className="max-h-[90%] overflow-auto pb-0"
         style={{ scrollbarWidth: "thin" }}

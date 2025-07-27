@@ -9,6 +9,10 @@ export enum NotificationType {
   GROUP = "group",
   FOLLOWING = "following",
   FOLLOWER = "follower",
+  COMMENT = "comment",
+  COMPANY = "company",
+  CHAT = "chat",
+  APPLICATION = "application",
 }
 
 // Define the notification interface
@@ -29,12 +33,12 @@ const NotificationSchema: Schema = new Schema(
   {
     recipient: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: true,
     },
     sender: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: true,
     },
     type: {
@@ -50,20 +54,23 @@ const NotificationSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
-    relatedId: {
-      type: Schema.Types.ObjectId,
-    },
+
     refModel: {
       type: String,
       enum: [
-        "Job",
-        "Post",
-        "Group",
-        "User",
-        "Newsletter",
-        "Invitation",
-        "chat",
+        "applyJob",
+        "post",
+        "groups",
+        "users",
+        "newsletter",
+        "invitations",
+        "companies",
+        "chats",
       ],
+    },
+    relatedId: {
+      type: Schema.Types.ObjectId,
+      refPath: "refModel",
     },
     url: {
       type: String,

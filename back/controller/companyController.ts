@@ -4,25 +4,89 @@ import ErrorHandler from "../utils/errorHandler";
 import Company from "../model/companyModel";
 import User from "../model/userModel";
 import Notification from "../model/notificationModel";
+import { v2 as cloudinary } from "cloudinary";
+import Post from "../model/postModel";
+import Job from "../model/jobModel";
 
-const createComapany = expressAsyncHandler(
+const createCompany = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { name, email, phone, address, users } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      address,
+      website,
+      headline,
+      about,
+      state,
+      city,
+      country,
+    } = req.body;
 
     // Validate required fields
     if (!name || !email || !phone || !address) {
       return next(new ErrorHandler("Please provide all required fields", 400));
     }
 
-    // Create new company
-    const company = await Company.create({
+    // Check if company with the same name already exists
+    const existingCompany = await Company.findOne({
+      name,
+    });
+
+    if (existingCompany) {
+      return next(
+        new ErrorHandler("Company with this name already exists", 400)
+      );
+    }
+
+    const companyData: any = {
       name,
       email,
       phone,
-      address,
-      admin: req.user._id,
-      members: [users],
-    });
+      address: [{ address, city, state, country }],
+      website,
+      headline,
+      about,
+      admin: [req.user._id],
+      isDeleted: false,
+      members: [req.user._id],
+    };
+
+    if (req.files) {
+      // Handle logo and banner images if provided
+      const logo = req.files["logo"] ? req.files["logo"][0].path : null;
+      const banner = req.files["banner"] ? req.files["banner"][0].path : null;
+
+      if (logo) {
+        const logoUpload = await cloudinary.uploader.upload(logo, {
+          folder: "social/companies/logo",
+          resource_type: "image",
+        });
+        if (logoUpload) {
+          companyData.avatar = {
+            public_id: logoUpload.public_id,
+            url: logoUpload.secure_url,
+          };
+        }
+      }
+
+      if (banner) {
+        const bannerUpload = await cloudinary.uploader.upload(banner, {
+          folder: "social/companies/banner",
+          resource_type: "image",
+        });
+
+        if (bannerUpload) {
+          companyData.bannerImage = {
+            public_id: bannerUpload.public_id,
+            url: bannerUpload.secure_url,
+          };
+        }
+      }
+    }
+
+    // Create new company
+    const company = await Company.create(companyData);
 
     // Handle case when company creation fails
     if (!company) {
@@ -64,20 +128,37 @@ const getSingleCompany = expressAsyncHandler(
 
     // Find company by ID and populate with name email avatar and bannerImage
     const company = await Company.findById(companyId)
-      .populate("admin", "name email avatar bannerImage")
-      .populate("members", "name email avatar bannerImage")
-      .populate("posts")
-      .populate("jobs", "title description location salary companyId")
-      .populate("followers", "name email avatar bannerImage");
+      .populate("admin", "name email avatar username bannerImage")
+      .populate("members", "name email avatar username bannerImage")
+      .populate("followers", "name email avatar username bannerImage");
 
     if (!company || company.isDeleted) {
       return next(new ErrorHandler("Company not found", 404));
     }
 
+    const posts = await Post.find({
+      isDeleted: false,
+      origin: company._id,
+      postType: "company",
+    })
+      .populate("userId", "name email avatar username bannerImage")
+      .populate("likes", "name email avatar username bannerImage")
+      .populate("comment", "name headline avatar username bannerImage")
+      .populate("origin", "name headline avatar username bannerImage")
+      .sort({ createdAt: -1 });
+
+    const jobs = await Job.find({ company: company._id, isDeleted: false })
+      .populate("company", "name email avatar username bannerImage")
+      .populate("user", "name email avatar username bannerImage")
+      .limit(10)
+      .sort({ createdAt: -1 });
+
     // Return success response with company data
     res.status(200).json({
       success: true,
       company,
+      posts,
+      jobs,
       message: "Company fetched successfully",
     });
   }
@@ -86,7 +167,18 @@ const getSingleCompany = expressAsyncHandler(
 const updatePrimaryCompany = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const companyId = req.params.id;
-    const { name, email, phone, address, users } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      address,
+      website,
+      headline,
+      about,
+      state,
+      city,
+      country,
+    } = req.body;
 
     // Validate required fields
     if (!name || !email || !phone || !address) {
@@ -98,19 +190,72 @@ const updatePrimaryCompany = expressAsyncHandler(
     let company = await Company.findById(companyId);
 
     // Check if company exists
-    if (!company || company.isDeleted || company.admin !== req.user._id) {
+    if (
+      !company ||
+      company.isDeleted ||
+      !company.admin.includes(req.user._id)
+    ) {
       return next(new ErrorHandler("Company not found", 404));
     }
 
-    // Update company fields
-    company.name = name;
-    company.email = email;
-    company.phone = phone;
-    company.address = address;
-    company.members = users;
+    const companyData: any = {
+      name,
+      email,
+      phone,
+      address: [{ address, city, state, country }],
+      website,
+      headline,
+      about,
+    };
+
+    if (req.files) {
+      // Handle logo and banner images if provided
+      const logo = req.files["logo"] ? req.files["logo"][0] : null;
+      const banner = req.files["banner"] ? req.files["banner"][0] : null;
+
+      if (logo) {
+        const b64 = Buffer.from(logo.buffer).toString("base64");
+        let dataURI = "data:" + logo.mimetype + ";base64," + b64;
+        const logoUpload = await cloudinary.uploader.upload(dataURI, {
+          folder: "social/companies/logo",
+          resource_type: "image",
+        });
+        if (logoUpload) {
+          company.avatar?.public_id &&
+            (await cloudinary.uploader.destroy(company.avatar.public_id || ""));
+          companyData.avatar = {
+            public_id: logoUpload.public_id,
+            url: logoUpload.secure_url,
+          };
+        }
+      }
+
+      if (banner) {
+        const b64 = Buffer.from(banner.buffer).toString("base64");
+        let dataURI = "data:" + banner.mimetype + ";base64," + b64;
+        const bannerUpload = await cloudinary.uploader.upload(dataURI, {
+          folder: "social/companies/banner",
+          resource_type: "image",
+        });
+        if (bannerUpload) {
+          company.bannerImage?.public_id &&
+            (await cloudinary.uploader.destroy(
+              company.bannerImage.public_id || ""
+            ));
+          companyData.bannerImage = {
+            public_id: bannerUpload.public_id,
+            url: bannerUpload.secure_url,
+          };
+        }
+      }
+    }
 
     // Save the updated company
-    company = await company.save();
+    company = await Company.findByIdAndUpdate(companyId, companyData, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
 
     // Handle case when company update fails
     if (!company) {
@@ -183,10 +328,32 @@ const getCompanyPosts = expressAsyncHandler(
       return next(new ErrorHandler("Internal error", 500));
     }
 
+    let isFollowing = false;
+    if (req.user) {
+      // Check if the user is following the company
+      isFollowing = company.followers.some(
+        (follower) => follower._id.toString() === req.user._id.toString()
+      );
+    }
+
+    const postsWithIsLike = company.posts.map((post: any) => {
+      const isLiked = post.likes.some(
+        (like: any) => like._id.toString() === req.user?._id.toString()
+      );
+      return {
+        ...post.toObject(),
+        isLiked,
+        isFollowing,
+      };
+    });
+
     // Return success response with company's posts
     res.status(200).json({
       success: true,
-      posts: company.posts,
+      company: {
+        ...company.toObject(),
+        posts: postsWithIsLike,
+      },
       message: "Posts fetched successfully",
     });
   }
@@ -253,22 +420,24 @@ const followCompany = expressAsyncHandler(
       return next(new ErrorHandler("Already following this company", 400));
     }
 
-    // Add company to user's following list
+    user.companies.push(company._id as any);
 
     try {
-      company.admin.map(async (admin) => {
-        if (admin._id.toString() !== req.user._id.toString()) {
-          const notification = await Notification.create({
-            sender: req.user._id,
-            recipient: admin._id,
-            type: "follow",
-            message: `${req.user.name} followed your company ${company.name}`,
-            relatedId: company._id,
-            url: req.user.url,
-            company: companyId,
-          });
-        }
-      });
+      await Notification.create(
+        company.admin.map(async (admin) => {
+          if (admin._id.toString() !== req.user._id.toString()) {
+            return {
+              sender: req.user._id,
+              recipient: admin._id,
+              type: "follow",
+              message: `${req.user.name} followed your company ${company.name}`,
+              relatedId: company._id,
+              url: req.user.url,
+              company: companyId,
+            };
+          }
+        })
+      );
     } catch (error) {}
 
     user.updateOne({
@@ -413,8 +582,83 @@ const getCommonFollowers = expressAsyncHandler(
   }
 );
 
+const updateBanner = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { remove } = req.body;
+
+    const { id } = req.params;
+
+    let company = await Company.findById(id);
+
+    if (!company) {
+      return next(new ErrorHandler("Company not found", 404));
+    }
+
+    if (remove === "true") {
+      if (company.bannerImage && company.bannerImage.public_id) {
+        await cloudinary.uploader.destroy(company.bannerImage.public_id);
+      }
+      company = await Company.findByIdAndUpdate(
+        id,
+        { bannerImage: { public_id: "", url: "" } },
+        {
+          new: true,
+          runValidators: true,
+          useFindAndModify: false,
+        }
+      );
+
+      return next(
+        res.status(200).json({
+          success: true,
+          message: "Banner removed successfully",
+          company,
+        })
+      );
+    }
+
+    if (!req.file) {
+      return next(new ErrorHandler("Please upload a banner image", 403));
+    }
+
+    if (company.bannerImage && company.bannerImage.public_id) {
+      await cloudinary.uploader.destroy(company.bannerImage.public_id);
+    }
+
+    let form: any = {
+      bannerImage: { public_id: "", url: "" },
+    };
+
+    if (req.file) {
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+      let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+      try {
+        const data = await cloudinary.uploader.upload(dataURI, {
+          folder: "social/companies/banner",
+          resource_type: "image",
+        });
+        form.bannerImage = { public_id: data.public_id, url: data.secure_url };
+      } catch (error: any | unknown) {
+        return next(new ErrorHandler(error, 501));
+      }
+    }
+
+    company = await Company.findByIdAndUpdate(company._id, form, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Banner updated successfully",
+      company,
+    });
+  }
+);
+
 export {
-  createComapany,
+  createCompany,
   getAllCompanies,
   getSingleCompany,
   updatePrimaryCompany,
@@ -424,4 +668,5 @@ export {
   getCompanyFollowers,
   followCompany,
   unfollowCompany,
+  updateBanner,
 };

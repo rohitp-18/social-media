@@ -9,11 +9,19 @@ import Notification from "../model/notificationModel";
 import Group from "../model/groupModel";
 import Company from "../model/companyModel";
 import Media from "../model/mediaModel";
+import { isArray, isNullOrUndefined } from "util";
 
 const createPost = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { location, postType, content, tags, privacyControl, externalLinks } =
-      req.body;
+    const {
+      location,
+      postType,
+      content,
+      tags,
+      privacyControl,
+      externalLinks,
+      origin,
+    } = req.body;
 
     // Check if all required fields are present
     if (!location || !postType || !content) {
@@ -24,104 +32,170 @@ const createPost = expressAsyncHandler(
       return next(new ErrorHandler("You can only upload 5 images", 400));
     }
 
+    if (postType === "group") {
+      let group = await Group.findOne({ _id: origin, isDeleted: false });
+      if (!group || group.isDeleted) {
+        return next(new ErrorHandler("Group not found", 404));
+      }
+      if (
+        group.members.some(
+          (member: any) => member._id.toString() === req.user._id.toString()
+        ) === false ||
+        group.admin.some(
+          (admin: any) => admin._id.toString() === req.user._id.toString()
+        ) === false
+      )
+        return next(new ErrorHandler("Group not found", 404));
+    } else if (postType === "company") {
+      let company = await Company.findOne({ _id: origin, isDeleted: false });
+      if (!company || company.isDeleted) {
+        return next(new ErrorHandler("Company not found", 404));
+      }
+      if (
+        company.admin.some(
+          (admin: any) => admin._id.toString() === req.user._id.toString()
+        ) === false
+      ) {
+        return next(new ErrorHandler("Company not found", 404));
+      }
+    }
+
     // Initialize postData object with fields from request body
     const postData: any = {
       location,
       postType,
       userId: req.user._id,
       privacyControl,
-      externalLinks: JSON.parse(externalLinks),
+      externalLinks: await JSON.parse(externalLinks),
       content,
       tags,
+      origin,
+      images: [],
+      video: null,
     };
-
-    // Create the post in the database using the prepared postData
-    const post = await Post.create(postData);
-
-    // If post creation fails, return an error
-    if (!post) {
-      return next(new ErrorHandler("Internal error", 500));
-    }
-
     // Handle image uploads if files are present in the request
     if (req.files) {
       await Promise.all(
-        req.files.map(async (val: any, i: number) => {
+        await req.files.map(async (val: any, i: number) => {
           // Convert file buffer to base64 string
           const b64 = Buffer.from(val.buffer).toString("base64");
           // Create data URI for Cloudinary upload
           let dataURI = "data:" + val.mimetype + ";base64," + b64;
-          try {
-            // Upload image to Cloudinary
-            const data = await cloudinary.uploader.upload(dataURI, {
-              folder: `post/${req.user.username}/${post._id}`, // Organize uploads by user and post name
-              height: 200,
-              crop: "pad",
-            });
-            // Add uploaded image info to postData
-            if (val.mimetype === "video/*") {
-              const b64 = Buffer.from(val.buffer).toString("base64");
-              let dataURI = "data:" + val.mimetype + ";base64," + b64;
-              try {
-                const data = await cloudinary.uploader.upload(dataURI, {
-                  folder: `post/${req.user.username}/${post._id}`,
-                  resource_type: "video",
-                });
-                console.log(data);
-                post.video = {
-                  public_id: data.public_id,
-                  url: data.secure_url,
-                };
-              } catch (error: any | unknown) {
-                return next(new ErrorHandler(error, 501));
-              }
-            } else {
-              post.images.push({
+
+          console.log(val.mimetype);
+          // Upload image to Cloudinary
+          if (val.mimetype.startsWith("image/")) {
+            try {
+              const data = await cloudinary.uploader.upload(dataURI, {
+                folder: `post/${req.user.username}`, // Organize uploads by user and post name
+                height: 200,
+                crop: "pad",
+              });
+              postData.images.push({
                 public_id: data.public_id,
                 url: data.secure_url,
                 order: i, // Maintain original file order
               });
+            } catch (error: any | unknown) {
+              return next(new ErrorHandler(error, 501));
             }
-          } catch (error: any | unknown) {
-            // Handle upload errors
-            return next(new ErrorHandler(error, 501));
+          } else if (val.mimetype.startsWith("video/")) {
+            const b64 = Buffer.from(val.buffer).toString("base64");
+            let dataURI = "data:" + val.mimetype + ";base64," + b64;
+            try {
+              const data = await cloudinary.uploader.upload(dataURI, {
+                folder: `post/${req.user.username}`,
+                resource_type: "video",
+              });
+              postData.video = {
+                public_id: data.public_id,
+                url: data.secure_url,
+              };
+            } catch (error: any | unknown) {
+              return next(new ErrorHandler(error.message, 501));
+            }
+          } else {
+            return next(new ErrorHandler("Unsupported file type", 400));
           }
         })
       );
     }
 
-    // send notification to following users and if its a group post then send to all group members if its a comapny post then send to all company members
+    const post = await Post.create(postData);
+    if (!post) {
+      return next(new ErrorHandler("Failed to create post", 500));
+    }
+
+    // send notification to following users and if its a group post then send to all group members if its a company post then send to all company members
     try {
-      const user = await User.findById(req.user._id)
-        .populate("following", "name email")
-        .populate("connections", "name email");
-      if (!user) throw new ErrorHandler("User not found", 404);
-      user.followers.map(async (follower: any) => {
-        await Notification.create({
-          recipient: follower._id,
-          sender: user._id,
-          type: "post",
-          message: `${user.name} has created a new post`,
+      const company =
+        postType === "company"
+          ? await Company.findOne({ _id: origin, isDeleted: false })
+          : null;
+      const group =
+        postType === "group"
+          ? await Group.findOne({ _id: origin, isDeleted: false })
+          : null;
+
+      if (postType === "group" && group === null) {
+        return next(new ErrorHandler("Group not found", 404));
+      }
+      if (postType === "company" && company === null) {
+        return next(new ErrorHandler("Company not found", 404));
+      }
+      const combinedUsers = [
+        ...req.user.followers,
+        ...req.user.connections,
+        ...(postType === "group" && group
+          ? [...group.members, ...group.admin]
+          : []),
+        ...(postType === "company" && company
+          ? [...company.members, ...company.admin, ...company.followers]
+          : []),
+        ...post.tags,
+      ];
+      const listOfUsers = combinedUsers
+        .filter((u) => u.toString() !== req.user._id.toString())
+        .filter(
+          (u, index, self) =>
+            index === self.findIndex((item) => item.toString() === u.toString())
+        );
+
+      if (company !== null && postType === "company") {
+        company.posts.push({ post: post._id, user: req.user._id });
+        await company.save();
+      }
+
+      if (group !== null && postType === "group") {
+        group.posts.push({ post: post._id, user: req.user._id });
+        await group.save();
+      }
+
+      await Notification.create(
+        listOfUsers.map((u: any) => ({
+          recipient: u,
+          sender: req.user._id,
           post: post._id,
-          url: `/post/${post._id}`,
-        });
-      });
-      user.connections.map(async (connection: any) => {
-        await Notification.create({
-          recipient: connection._id,
-          sender: user._id,
           type: "post",
-          message: `${user.name} has created a new post`,
-          post: post._id,
-          url: `/post/${post._id}`,
-        });
-      });
+          message:
+            postType === "user"
+              ? `${req.user.name} has created a new post`
+              : `${req.user.name} has created a new ${postType} post of ${
+                  postType === "group" ? group?.name : company?.name
+                }`,
+          link: `/post/${post._id}`,
+          relatedId: post._id,
+          refModel: "post",
+        }))
+      );
     } catch (error) {
+      await post.save();
       console.log(error);
+      return next(new ErrorHandler("Failed to send notifications", 500));
     }
 
     try {
-      if (post.video) {
+      if (post.video?.url) {
         await Media.create({
           user: req.user._id,
           type: "video",
@@ -130,246 +204,19 @@ const createPost = expressAsyncHandler(
           post: post._id,
         });
       } else {
-        await Promise.all(
-          post.images.map(async (img: any) => {
-            await Media.create({
-              user: req.user._id,
-              type: "image",
-              url: img.url,
-              thumbnail: img.url,
-              post: post._id,
-            });
-          })
+        await Media.create(
+          post.images.map((img: any) => ({
+            user: req.user._id,
+            type: "image",
+            url: img.url,
+            thumbnail: img.url,
+            post: post._id,
+          }))
         );
       }
-    } catch (error) {}
-
-    // Return success response with created post object
-    res.status(200).json({
-      success: true,
-      post,
-      message: "post created successfully",
-    });
-  }
-);
-
-// create group or company post
-const createGroupPost = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { location, externalLinks, postType, content } = req.body;
-
-    // Check if all required fields are present
-    if (!location || !externalLinks || !postType) {
-      return next(new ErrorHandler("please fill all required fields", 400));
-    }
-
-    // Initialize postData object with fields from request body
-    const postData: any = {
-      location,
-      externalLinks,
-      postType,
-      userId: req.user._id,
-      content,
-    };
-
-    // Handle image uploads if files are present in the request
-    if (req.files) {
-      Promise.all(
-        req.files.map(async (val: any, i: number) => {
-          // Convert file buffer to base64 string
-          const b64 = Buffer.from(val.buffer).toString("base64");
-          // Create data URI for Cloudinary upload
-          let dataURI = "data:" + val.mimetype + ";base64," + b64;
-          try {
-            // Upload image to Cloudinary
-            const data = await cloudinary.uploader.upload(dataURI, {
-              folder: `post/${req.user.username}/${post._id}`, // Organize uploads by user and post name
-              height: 200,
-              crop: "pad",
-            });
-            // Add uploaded image info to postData
-            postData.images = {
-              public_id: data.public_id,
-              url: data.secure_url,
-              order: i, // Maintain original file order
-            };
-          } catch (error: any | unknown) {
-            // Handle upload errors
-            return next(new ErrorHandler(error, 501));
-          }
-        })
-      );
-    }
-
-    const group = await Group.findById(req.params.id).populate("members", [
-      "name email",
-    ]);
-
-    if (!group) {
-      return next(new ErrorHandler("Group not found", 404));
-    }
-
-    const isAdmin = group.admin.some(
-      (admin) => admin._id.toString() === req.user._id.toString()
-    );
-
-    if (!isAdmin) {
-      return next(
-        new ErrorHandler("You are not authorized to create a post", 401)
-      );
-    }
-
-    // Add group ID to postData
-    postData.groupId = group._id;
-    postData.postType = "group"; // Set post type to group
-
-    // Create the post in the database using the prepared postData
-    const post = await Post.create(postData);
-
-    try {
-      group.members.forEach(async (member: any) => {
-        // Send notification to each group member
-        const notification = await Notification.create({
-          recipient: member._id,
-          sender: req.user._id,
-          type: "post",
-          message: `${req.user.name} has created a new post in ${group.name}`,
-          post: post._id,
-          url: `/post/${post._id}`,
-        });
-      });
-      group.admin.forEach(async (admin: any) => {
-        // Send notification to each group member
-        if (admin._id.toString() !== req.user._id.toString()) return;
-        const notification = await Notification.create({
-          recipient: admin._id,
-          sender: req.user._id,
-          type: "post",
-          message: `${req.user.name} has created a new post in ${group.name}`,
-          post: post._id,
-          url: `/post/${post._id}`,
-        });
-      });
-    } catch (error) {}
-
-    // If post creation fails, return an error
-    if (!post) {
-      return next(new ErrorHandler("Internal error", 500));
-    }
-
-    // Return success response with created post object
-    res.status(200).json({
-      success: true,
-      post,
-      message: "post created successfully",
-    });
-  }
-);
-
-const companyPost = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { location, externalLinks, postType, content, images } = req.body;
-
-    // Check if all required fields are present
-    if (!location || !externalLinks || !postType) {
-      return next(new ErrorHandler("please fill all required fields", 400));
-    }
-
-    // Initialize postData object with fields from request body
-    const postData: any = {
-      location,
-      externalLinks,
-      postType,
-      userId: req.user._id,
-      content,
-      images: images || [],
-    };
-
-    // Handle image uploads if files are present in the request
-    if (req.files) {
-      Promise.all(
-        req.files.map(async (val: any, i: number) => {
-          // Convert file buffer to base64 string
-          const b64 = Buffer.from(val.buffer).toString("base64");
-          // Create data URI for Cloudinary upload
-          let dataURI = "data:" + val.mimetype + ";base64," + b64;
-          try {
-            // Upload image to Cloudinary
-            const data = await cloudinary.uploader.upload(dataURI, {
-              folder: `post/${req.user.username}/${post._id}`, // Organize uploads by user and post name
-              height: 200,
-              crop: "pad",
-            });
-            // Add uploaded image info to postData
-            postData.images.push({
-              public_id: data.public_id,
-              url: data.secure_url,
-              order: i, // Maintain original file order
-            });
-          } catch (error: any | unknown) {
-            // Handle upload errors
-            return next(new ErrorHandler(error, 501));
-          }
-        })
-      );
-    }
-
-    const company = await Company.findById(req.params.id).populate("members", [
-      "name email",
-    ]);
-
-    if (!company || company.isDeleted) {
-      return next(new ErrorHandler("Group not found", 404));
-    }
-
-    const isAdmin = company.admin.some(
-      (admin) => admin._id.toString() === req.user._id.toString()
-    );
-
-    if (!isAdmin) {
-      return next(
-        new ErrorHandler("You are not authorized to create a post", 401)
-      );
-    }
-
-    // Add group ID to postData
-    postData.groupId = company._id;
-    postData.postType = "company"; // Set post type to group
-
-    // Create the post in the database using the prepared postData
-    const post = await Post.create(postData);
-
-    try {
-      company.members.forEach(async (member: any) => {
-        // Send notification to each group member
-        const notification = await Notification.create({
-          recipient: member._id,
-          sender: req.user._id,
-          type: "post",
-          message: `${req.user.name} has created a new post in ${company.name}`,
-          post: post._id,
-          url: `/post/${post._id}`,
-        });
-      });
-      company.admin.forEach(async (admin: any) => {
-        // Send notification to each group member
-        if (admin._id.toString() !== req.user._id.toString()) return;
-        const notification = await Notification.create({
-          recipient: admin._id,
-          sender: req.user._id,
-          type: "post",
-          message: `${req.user.name} has created a new post in ${company.name}`,
-          post: post._id,
-          url: `/post/${post._id}`,
-        });
-      });
-    } catch (error) {}
-    // Handle notification errors silently
-
-    // If post creation fails, return an error
-
-    if (!post) {
-      return next(new ErrorHandler("Internal error", 500));
+    } catch (error) {
+      await post.save();
+      return next(new ErrorHandler("Failed to save media", 500));
     }
 
     // Return success response with created post object
@@ -388,9 +235,10 @@ const companyPost = expressAsyncHandler(
 const getAllPosts = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     // Retrieve all posts and populate with user details
+
     let posts = await Post.find({ isDeleted: false }).populate(
       "userId",
-      "name email"
+      "name email avatar headline"
     );
 
     // Handle case when posts retrieval fails
@@ -422,10 +270,9 @@ const getSinglePost = expressAsyncHandler(
     const postId = req.params.id;
 
     // Find post by ID and include user details
-    const post = await Post.findById(postId).populate(
-      "userId",
-      "name email avatar headline"
-    );
+    const post = await Post.findById(postId)
+      .populate("userId", "name email avatar headline")
+      .populate("origin", "name avatar headline username isDeleted ");
 
     // Handle case when post is not found
     if (!post || post.isDeleted) {
@@ -513,6 +360,7 @@ const updatePost = expressAsyncHandler(
       privacyControl,
       externalLinks,
       images,
+      video,
     } = req.body;
 
     // Check if all required fields are present
@@ -538,7 +386,7 @@ const updatePost = expressAsyncHandler(
     if (req.files) {
       await Promise.all(
         req.files.map(async (val: any, i: number) => {
-          if (val.mimetype === "video/*") {
+          if (val.mimepostType === "video/*") {
             const b64 = Buffer.from(val.buffer).toString("base64");
             let dataURI = "data:" + val.mimetype + ";base64," + b64;
             const data = await cloudinary.uploader.upload(dataURI, {
@@ -711,39 +559,6 @@ const getProfilePosts = expressAsyncHandler(
     if (!posts) {
       return next(new ErrorHandler("posts not found", 404));
     }
-
-    // await Promise.all(
-    //   posts.map(async (post) => {
-    //     if (post.video) {
-    //       const tempMedia = await Media.findOne({ url: post.video.url });
-    //       console.log(tempMedia, !tempMedia);
-    //       if (!tempMedia) {
-    //         await Media.create({
-    //           user: tempUser._id,
-    //           type: "video",
-    //           url: post.video.url,
-    //           thumbnail: post.video,
-    //           post: post._id,
-    //         });
-    //       }
-    //     } else {
-    //       await Promise.all(
-    //         post.images.map(async (img) => {
-    //           const tempMedia = await Media.findOne({ url: img.url });
-    //           if (!tempMedia) {
-    //             await Media.create({
-    //               user: tempUser._id,
-    //               type: "image",
-    //               url: img.url,
-    //               thumbnail: img.url,
-    //               post: post._id,
-    //             });
-    //           }
-    //         })
-    //       );
-    //     }
-    //   })
-    // );
     let isFollowing;
 
     if (req.user) {
@@ -819,6 +634,40 @@ const toggleSavePost = expressAsyncHandler(
   }
 );
 
+const getFeedPosts = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user._id;
+
+    // Find all posts from users the current user is following
+    const userIds = [
+      ...req.user.following,
+      ...req.user.connections,
+      req.user._id,
+    ];
+
+    const posts = await Post.find({
+      userId: { $in: userIds },
+      isDeleted: false,
+    })
+      .populate("userId", "_id name headline avatar")
+      .sort({ createdAt: -1 });
+
+    const postsWithIsLike = posts.map((post: any) => {
+      const isLike = post.likes.includes(req.user?._id);
+      return { ...post.toObject(), isLike };
+    });
+
+    if (!postsWithIsLike || postsWithIsLike.length === 0) {
+      return next(new ErrorHandler("No posts found", 404));
+    }
+
+    // Return success response
+    res.status(200).json({
+      success: true,
+      posts: postsWithIsLike,
+    });
+  }
+);
 // Exporting all the functions to be used in the routes
 export {
   createPost,
@@ -833,4 +682,5 @@ export {
   // profile
   getProfilePosts,
   toggleSavePost,
+  getFeedPosts,
 };

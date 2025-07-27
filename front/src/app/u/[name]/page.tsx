@@ -36,6 +36,7 @@ import ProjectCard from "@/components/profile/profileProjectCard";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { PrimaryLoader } from "@/components/loader";
 
 function ProfilePage({ params }: { params: { name: string } }) {
   const [editIntro, setEditIntro] = useState(false);
@@ -65,8 +66,14 @@ function ProfilePage({ params }: { params: { name: string } }) {
       setIsUser(profile?.user._id === user?._id);
     }
   }, [dispatch, user]);
+
+  if (loading) {
+    return <PrimaryLoader />;
+  }
+
   return (
     <>
+      {user ? <Navbar /> : <IntroNavbar />}
       {profile && (
         <>
           {editIntro && isUser && (
@@ -420,10 +427,10 @@ function ProfilePage({ params }: { params: { name: string } }) {
                     )}
                   </Card>
                   {/* Interest card */}
-                  {(profile.user.topVoice.length > 0 ||
-                    profile.user.schools.length > 0 ||
-                    profile.user.newsLetter.length > 0 ||
-                    profile.user.companies.length > 0) && (
+                  {(profile.user.topVoice?.length > 0 ||
+                    profile.user.schools?.length > 0 ||
+                    profile.user.newsLetter?.length > 0 ||
+                    profile.user.companies?.length > 0) && (
                     <Interest isUser={isUser} />
                   )}
                 </section>

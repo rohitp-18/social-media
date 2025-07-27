@@ -45,8 +45,16 @@ import { Input } from "./ui/input";
 import Comments from "./postComponents/comments";
 import ShareDialog from "./postComponents/shareDialog";
 import { timeAgo } from "@/lib/functions";
+import Link from "next/link";
 
-function Post({ cardClass, post, isFollowing, setEdit, setSelect }: any) {
+function Post({
+  cardClass,
+  post,
+  isFollowing,
+  setEdit,
+  setSelect,
+  comment,
+}: any) {
   const [isLike, setIsLike] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [share, setShare] = useState(false);
@@ -56,13 +64,15 @@ function Post({ cardClass, post, isFollowing, setEdit, setSelect }: any) {
   const router = useRouter();
 
   const editHandler = () => {
-    if (setEdit && setSelect) {
+    if (setEdit && !setSelect) {
       setEdit(true);
       setSelect(post);
-    } else {
+    } else if (post && post.type === "user") {
       router.push(
         `/u/${user?.username}/details/activity?edit=true&post=${post._id}`
       );
+    } else {
+      router.push(`/post/${post._id}/update`);
     }
   };
 
@@ -102,187 +112,253 @@ function Post({ cardClass, post, isFollowing, setEdit, setSelect }: any) {
     return;
   }, [post, user]);
 
-  return (
-    // <Card className="card max-w-[500px] border border-1 border-zinc-800 justify-center items-center bg-card text-card-foreground">
-    <>
-      {post && (
-        <Card className={cn("w-[500px]", cardClass)}>
-          {post.userId && (
-            <CardHeader className="flex flex-row justify-between items-start gap-2 py-4">
-              <div className="flex items-start gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage
-                    src={post.userId?.avatar?.url}
-                    alt={post.userId?.name || "User"}
-                  />
-                  <AvatarFallback>
-                    <User className="w-6 h-6" />
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="font-semibold text-lg">{post.userId?.name}</h2>
-                  <p className="text-sm opacity-90 -mt-1">
-                    {post.userId?.headline}
-                  </p>
-                  <div className="text-xs opacity-70 leading-none flex items-center gap-1">
-                    <span>{post.createdAt ? timeAgo(post.createdAt) : ""}</span>
-                    <span className="text-xs flex items-center">
-                      <Earth className="w-3 h-3" />
-                    </span>
-                  </div>
+  if (!post) {
+    return null; // Handle case where post is not available
+  }
 
-                  <Button
-                    className="w-min mt-2.5 flex md:hidden px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
-                    variant={"outline"}
-                    size={"sm"}
-                  >
-                    Follow
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                {isFollowing && user?._id !== post.userId?._id && (
-                  <Button
-                    className="w-min md:ml-8 hidden md:flex px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
-                    variant={"outline"}
-                    size={"sm"}
-                  >
-                    Follow
-                  </Button>
-                )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger>
-                    <MoreVerticalIcon className="h-5 w-5" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="mt-2 p-2 bg-background rounded-lg shadow-lg">
-                    <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
-                      Save post
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
-                      Copy link
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
-                      Report post
-                    </DropdownMenuItem>
-                    {user?._id === post.userId?._id && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={editHandler}
-                          className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm text-blue-500"
-                        >
-                          Edit post
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm text-red-500">
-                          Delete post
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
+  const CommentPreview = ({ comment }: any) => {
+    <div className="flex items-center gap-2 mb-3">
+      <Avatar className="h-8 w-8">
+        <AvatarImage
+          src={comment.user.avatar?.url}
+          alt={comment.user.name || "User"}
+        />
+        <AvatarFallback>
+          {comment.user.name?.charAt(0).toUpperCase() || (
+            <User className="w-3 h-3" />
           )}
-          <hr />
-          <CardContent className="py-6">
-            <CardDescription className="text-opacity-90">
-              {post?.content}
-            </CardDescription>
-            <div className="flex flex-wrap gap-2 mt-4">
-              {post.images && post.images.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {post.images.map((image: any, index: number) => (
-                    <img
-                      key={index}
-                      src={image.url}
-                      alt={`Post image ${index + 1}`}
-                      className="w-full h-auto rounded-lg"
-                    />
-                  ))}
-                </div>
-              )}
-              {post.video && (
-                <video
-                  className="w-full h-auto rounded-lg mt-4"
-                  controls
-                  src={post.video.url}
-                >
-                  Your browser does not support the video tag.
-                </video>
-              )}
-            </div>
-          </CardContent>
-          {/* <hr className="pb-1" /> */}
-          {/* <CardContent className="flex justify-between py-1 pt-0 items-center gap-4">
-            <div className="flex gap-2">
-              <div className="flex items-center gap-1 text-xs">
-                <span>{likeCount}</span>
-                <span className="font-semibold">Likes</span>
-              </div>
-            </div>
-            <div></div>
-          </CardContent> */}
-          <hr className="pt-3 pb-1" />
-
-          <CardFooter className="pb-3">
-            <div className="flex w-full justify-between">
-              <div
-                onClick={(e) => toggleLike(e)}
-                className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
-              >
-                <Heart
-                  className={`h-5 w-5 ${
-                    isLike
-                      ? "fill-red-600 stroke-red-600 border-none"
-                      : "fill-none"
-                  }`}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex flex-col">
+        <span className="text-sm font-semibold">{comment.user.name}</span>
+        <span className="text-xs text-gray-600">
+          {timeAgo(comment.createdAt)}
+        </span>
+      </div>
+      {comment.content}
+    </div>;
+  };
+  return (
+    <Card className={cn("w-[500px] max-w-full", cardClass)}>
+      {post.postType !== "user" && post.origin && (
+        <>
+          <CardHeader className="flex flex-col md:flex-row justify-between items-start gap-2 p-2 pb-1">
+            <Link
+              href={`/${post.postType}/${post.origin._id}`}
+              className="flex items-center gap-3 hover:underline"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage
+                  src={post.origin.avatar?.url}
+                  alt={post.origin.name || "User"}
                 />
-                <h4 className="text-sm opacity-80">
-                  {likeCount > 0 ? likeCount : "Likes"}
-                </h4>
+                <AvatarFallback>
+                  {post.origin.name?.charAt(0).toUpperCase() || (
+                    <User className="w-3 h-3" />
+                  )}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="font-semibold text-sm">{post.origin.name}</h2>
+                <p className="text-xs text-gray-600">{post.origin.headline}</p>
               </div>
-              <Comments postId={post._id} />
-              <div
-                onClick={() => setShare(!share)}
-                className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
-              >
-                <Send className="h-5 w-5" />
-                <h4 className="text-sm opacity-80">Share</h4>
-              </div>
-              {share && (
-                <ShareDialog
-                  post={post}
-                  open={share}
-                  setOpen={(val: boolean) => setShare(val)}
-                />
-              )}
-              <div
-                onClick={() => toggleSavePost(post._id)}
-                className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
-              >
-                <svg
-                  className={`w-5 h-5 ${
-                    isSaved ? "fill-foreground" : "fill-background"
-                  }`}
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  fill="none"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-5-7 5V5z"
-                  />
-                </svg>
-                <h4 className="text-sm opacity-80">
-                  {isSaved ? "Saved" : "Save"}
-                </h4>
-              </div>
-            </div>
-          </CardFooter>
-        </Card>
+            </Link>
+          </CardHeader>
+          <Separator className="my-2" />
+        </>
       )}
-    </>
+      <CardHeader className="flex flex-row justify-between items-start gap-2 py-3">
+        <Link
+          href={`/u/${post.userId?.username}`}
+          className="flex items-start gap-3"
+        >
+          <Avatar className="h-12 w-12">
+            <AvatarImage
+              src={post.userId?.avatar?.url}
+              alt={post.userId?.name || "User"}
+            />
+            <AvatarFallback>
+              <User className="w-6 h-6" />
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="font-semibold text-lg">{post.userId?.name}</h2>
+            <p className="text-sm opacity-90 -mt-1">{post.userId?.headline}</p>
+            <div className="text-xs opacity-70 leading-none flex items-center gap-1">
+              <span>{post.createdAt ? timeAgo(post.createdAt) : ""}</span>
+              <span className="text-xs flex items-center">
+                <Earth className="w-3 h-3" />
+              </span>
+            </div>
+
+            <Button
+              className="w-min mt-2.5 flex md:hidden px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
+              variant={"outline"}
+              size={"sm"}
+            >
+              Follow
+            </Button>
+          </div>
+        </Link>
+        <div className="flex items-center gap-3">
+          {isFollowing && user?._id !== post.userId?._id && (
+            <Button
+              className="w-min md:ml-8 hidden md:flex px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
+              variant={"outline"}
+              size={"sm"}
+            >
+              Follow
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <MoreVerticalIcon className="h-5 w-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="mt-2 p-2 bg-background rounded-lg shadow-lg">
+              <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
+                Save post
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
+                Copy link
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
+                Report post
+              </DropdownMenuItem>
+              {user?._id === post.userId?._id && (
+                <>
+                  <DropdownMenuItem
+                    onClick={editHandler}
+                    className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm text-blue-500"
+                  >
+                    Edit post
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm text-red-500">
+                    Delete post
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardHeader>
+      <hr />
+      <CardContent className="py-6">
+        <CardDescription className="text-opacity-90">
+          {post?.content}
+        </CardDescription>
+        <div className="flex flex-wrap gap-2 mt-4">
+          {post.images && post.images.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {post.images.map((image: any, index: number) => (
+                <img
+                  loading="lazy"
+                  key={index}
+                  src={image.url}
+                  alt={`Post image ${index + 1}`}
+                  className="w-full h-auto rounded-lg"
+                />
+              ))}
+            </div>
+          )}
+          {post.video && (
+            <video
+              className="w-full min-h-[300px] rounded-lg mt-4"
+              controls
+              src={post.video.url}
+            >
+              Your browser does not support the video tag.
+            </video>
+          )}
+        </div>
+      </CardContent>
+      <hr className="pt-3 pb-1" />
+
+      <CardFooter className="pb-3">
+        <div className="flex w-full justify-between">
+          <div
+            onClick={(e) => toggleLike(e)}
+            className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
+          >
+            <Heart
+              className={`h-5 w-5 ${
+                isLike ? "fill-red-600 stroke-red-600 border-none" : "fill-none"
+              }`}
+            />
+            <h4 className="text-sm opacity-80">
+              {likeCount > 0 ? likeCount : "Likes"}
+            </h4>
+          </div>
+          <Comments postId={post._id} />
+          <div
+            onClick={() => setShare(!share)}
+            className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
+          >
+            <Send className="h-5 w-5" />
+            <h4 className="text-sm opacity-80">Share</h4>
+          </div>
+          {share && (
+            <ShareDialog
+              post={post}
+              open={share}
+              setOpen={(val: boolean) => setShare(val)}
+            />
+          )}
+          <div
+            onClick={() => toggleSavePost(post._id)}
+            className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
+          >
+            <svg
+              className={`w-5 h-5 ${
+                isSaved ? "fill-foreground" : "fill-background"
+              }`}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              fill="none"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-5-7 5V5z"
+              />
+            </svg>
+            <h4 className="text-sm opacity-80">{isSaved ? "Saved" : "Save"}</h4>
+          </div>
+        </div>
+      </CardFooter>
+      {comment && (
+        <CardContent className="border-t pt-4">
+          <div className="flex items-start gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage
+                src={comment.user.avatar?.url}
+                alt={comment.user.name || "User"}
+              />
+              <AvatarFallback>
+                {comment.user.name?.charAt(0).toUpperCase() || (
+                  <User className="w-4 h-4" />
+                )}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col w-full">
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                  <span className="text-md font-semibold text-gray-900">
+                    {comment.user.name}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {comment.user.headline} • {timeAgo(comment.createdAt)}
+                  </span>
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-gray-800 leading-relaxed">
+                {comment.content}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
   );
 }
 

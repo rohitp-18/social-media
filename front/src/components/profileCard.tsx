@@ -20,6 +20,7 @@ function ProfileCard() {
             <CardHeader className="p-0 rounded-2xl pb-3 flex flex-row justify-between items-center gap-2">
               <div className="flex flex-col relative w-full">
                 <img
+                  loading="lazy"
                   src={user.bannerImage ? user.bannerImage.url : back}
                   alt="background"
                   className="w-full aspect-[4/1] flex-shrink-0 rounded-t-lg"

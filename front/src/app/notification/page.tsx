@@ -3,19 +3,62 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/userNavbar";
 // import Image from "next/image";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 // import back from "@/assets/back.png";
-import { EllipsisIcon, User } from "lucide-react";
+import { EllipsisIcon, User, UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // import { ToggleGroup } from "@/components/ui/toggle-group";
 import FooterS from "@/components/footerS";
 import ProfileCard from "@/components/profileCard";
+import axios from "@/store/axios";
+import { toast } from "sonner";
+import { isAxiosError } from "axios";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { timeAgo } from "@/lib/functions";
+import { PrimaryLoader, SecondaryLoader } from "@/components/loader";
+import Link from "next/link";
 
 function Page() {
   const [value, setValue] = useState("all");
+  const [notifications, setNotifications] = useState([]);
+  const [nLoading, setNLoading] = useState(true);
+
+  const { user, loading, login } = useSelector(
+    (state: RootState) => state.user
+  );
+
+  async function fetchNotifications() {
+    try {
+      setNLoading(true);
+      const { data } = await axios.get("/notifications/all");
+
+      setNotifications(data.notifications);
+    } catch (error) {
+      toast.error(
+        isAxiosError(error)
+          ? error.response?.data.message
+          : "Something went wrong",
+        { position: "top-center" }
+      );
+    } finally {
+      setNLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  if (loading || !user) {
+    return <PrimaryLoader />;
+  }
+
   return (
     <>
+      <Navbar />
+
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container mx-auto">
           {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}
@@ -71,94 +114,55 @@ function Page() {
                 </ToggleGroup>
               </div> */}
               <Card className="p-0 rounded-xl">
-                <CardContent className="flex rounded-xl flex-col p-0">
-                  {[
-                    {
-                      id: 1,
-                      avatar: "",
-                      fallback: <User />,
-                      title:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis inventore provident",
-                      description:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Beatae, ex.",
-                      extra:
-                        "Lorem ipsum dolor sit amet consectetur, adipisicing elit.",
-                      time: "16h",
-                      highlight: true,
-                    },
-                    {
-                      id: 2,
-                      avatar: "",
-                      fallback: null,
-                      title:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis inventore provident",
-                      description:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Beatae, ex.",
-                      extra:
-                        "Lorem ipsum dolor sit amet consectetur, adipisicing elit.",
-                      time: "16h",
-                      highlight: false,
-                    },
-                    {
-                      id: 3,
-                      avatar: "",
-                      fallback: null,
-                      title:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis inventore provident",
-                      description:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Beatae, ex.",
-                      extra:
-                        "Lorem ipsum dolor sit amet consectetur, adipisicing elit.",
-                      time: "16h",
-                      highlight: false,
-                    },
-                    {
-                      id: 4,
-                      avatar: "",
-                      fallback: null,
-                      title:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis inventore provident",
-                      description:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Beatae, ex.",
-                      extra:
-                        "Lorem ipsum dolor sit amet consectetur, adipisicing elit.",
-                      time: "16h",
-                      highlight: false,
-                    },
-                  ].map((item, idx, arr) => (
-                    <Fragment key={item.id}>
-                      <div
-                        className={`w-full min-h-10 justify-between items-center ${
-                          item.highlight
-                            ? "rounded-t-xl p-3 bg-blue-100"
-                            : "px-3 py-5"
-                        } flex gap-2`}
-                      >
-                        <div className="flex gap-4 items-center">
-                          <Avatar className="w-12 h-12">
-                            <AvatarImage src={item.avatar} />
-                            <AvatarFallback>{item.fallback}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col gap-1">
-                            <h3 className="text-sm">{item.title}</h3>
-                            <span className="text-sm opacity-70">
-                              {item.description}
+                <CardContent className="flex rounded-xl flex-col gap-1 p-0 min-h-60">
+                  {nLoading ? (
+                    <SecondaryLoader />
+                  ) : notifications.length > 0 ? (
+                    notifications.map((notification: any, i: number) => (
+                      <Fragment key={notification.id}>
+                        <div
+                          className={`w-full min-h-10 hover:bg-gray-50 justify-between items-center ${
+                            notification.read
+                              ? "rounded-t-xl p-3 bg-blue-100"
+                              : "px-3 py-5"
+                          } flex gap-2`}
+                        >
+                          <Link
+                            href={notification.url || ""}
+                            className="flex gap-4 items-center"
+                          >
+                            <Avatar className="w-12 h-12">
+                              <AvatarImage src={notification.sender.avatar} />
+                              <AvatarFallback>
+                                {notification.sender.name.charAt(0) || (
+                                  <UserIcon />
+                                )}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-medium">
+                                {notification.sender.name}
+                              </span>
+                              <span className="text-xs opacity-70">
+                                {notification.message}
+                              </span>
+                            </div>
+                          </Link>
+                          <div className="h-full flex flex-col justify-center items-center gap-1">
+                            <span className="text-xs opacity-70">
+                              {timeAgo(notification.createdAt) || ""}
                             </span>
-                            <span className="text-xs opacity-50 -mt-1">
-                              {item.extra}
-                            </span>
+                            <EllipsisIcon className="opacity-80 text-sm" />
                           </div>
                         </div>
-                        <div className="h-full flex flex-col justify-center items-center gap-1">
-                          <span className="text-xs opacity-70">
-                            {item.time}
-                          </span>
-                          <EllipsisIcon className="opacity-80 text-sm" />
-                        </div>
-                      </div>
-                      {idx < arr.length - 1 && <hr />}
-                    </Fragment>
-                  ))}
+                        {i < notifications.length - 1 && <hr />}
+                      </Fragment>
+                    ))
+                  ) : (
+                    <div className="flex justify-center items-center w-full h-40">
+                      <span className="text-gray-500">No notifications</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </section>

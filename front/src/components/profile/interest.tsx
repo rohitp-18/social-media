@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,14 +12,67 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, Dot, Plus } from "lucide-react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { ArrowRight, Building2, Dot, Plus } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import Link from "next/link";
+import {
+  resetcompany,
+  toggleFollowCompany,
+} from "@/store/company/companySlice";
+import { toast } from "sonner";
 
 function Interest({ isUser }: { isUser: boolean }) {
   const [interest, setInterest] = useState("companies");
+  const [companies, setCompanies] = useState<any[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
 
-  const { profile } = useSelector((state: RootState) => state.user);
+  const { profile, user } = useSelector((state: RootState) => state.user);
+
+  const handleFollowCompany = async (companyId: string, follow: boolean) => {
+    if (!user) return;
+    try {
+      await dispatch(toggleFollowCompany({ companyId, follow })).unwrap();
+      setCompanies((prev) =>
+        prev.map((company: any) => {
+          if (company._id === companyId) {
+            if (follow) {
+              return {
+                ...company,
+                followers: [...company.followers, user._id],
+              };
+            } else {
+              return {
+                ...company,
+                followers: company.followers.filter(
+                  (follower: string) => follower !== user._id
+                ),
+              };
+            }
+          }
+          return company;
+        })
+      );
+      toast.success(
+        follow
+          ? "You are now following this company."
+          : "You have unfollowed this company.",
+        { position: "top-center" }
+      );
+      dispatch(resetcompany());
+    } catch (error: any) {
+      toast.error(error.message, {
+        position: "top-center",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (profile?.user?.companies) {
+      setCompanies(profile.user.companies);
+    }
+  }, [profile]);
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -31,10 +84,10 @@ function Interest({ isUser }: { isUser: boolean }) {
         <div className="flex gap-3"></div>
       </CardHeader>
       <CardContent className="-mt-4">
-        {profile.user.topVoice.lenght > 0 ||
-        profile.user.schools.lenght > 0 ||
-        profile.user.newsLetter.lenght > 0 ||
-        profile.user.companies.lenght > 0 ? (
+        {profile.user.topVoice.length > 0 ||
+        profile.user.schools.length > 0 ||
+        profile.user.newsLetter.length > 0 ||
+        profile.user.companies.length > 0 ? (
           <Tabs onValueChange={(value) => setInterest(value)} value={interest}>
             <TabsList className="flex gap-3 pb-0 rounded-none transition-all bg-transparent border-b border-foreground/40 items-center justify-start">
               {profile.user.topVoice.length > 0 && (
@@ -50,7 +103,7 @@ function Interest({ isUser }: { isUser: boolean }) {
                   Top voices
                 </TabsTrigger>
               )}
-              {profile.user.topVoice.length > 0 && (
+              {profile.user.companies.length > 0 && (
                 <TabsTrigger
                   style={{ boxShadow: "none" }}
                   className={
@@ -63,7 +116,7 @@ function Interest({ isUser }: { isUser: boolean }) {
                   Companies
                 </TabsTrigger>
               )}
-              {profile.user.topVoice.length > 0 && (
+              {profile.user.groups.length > 0 && (
                 <TabsTrigger
                   style={{ boxShadow: "none" }}
                   className={
@@ -76,7 +129,7 @@ function Interest({ isUser }: { isUser: boolean }) {
                   Groups
                 </TabsTrigger>
               )}
-              {profile.user.topVoice.length > 0 && (
+              {profile.user.newsLetter.length > 0 && (
                 <TabsTrigger
                   style={{ boxShadow: "none" }}
                   className={
@@ -89,7 +142,7 @@ function Interest({ isUser }: { isUser: boolean }) {
                   News Letter
                 </TabsTrigger>
               )}
-              {profile.user.topVoice.length > 0 && (
+              {profile.user.schools.length > 0 && (
                 <TabsTrigger
                   style={{ boxShadow: "none" }}
                   className={
@@ -136,34 +189,59 @@ function Interest({ isUser }: { isUser: boolean }) {
                 ))}
               </div>
             </TabsContent>
-            <TabsContent value="comment">
-              <div className="flex flex-col gap-2 py-2 justify-start">
-                {[0, 1, 2, 3, 4].map((_, i) => (
-                  <Fragment key={i}>
-                    <div className="text-xs pt-2">
-                      <div className="opacity-70 flex gap-2">
-                        <span className="font-normal">Your Name</span>
-                        <span>commented on a post</span>
-                        <span>
-                          <Dot className="w-4 h-4 inline -mr-1.5" /> 3w
+            <TabsContent value="companies">
+              <div className="flex px-4 flex-wrap md:gap-12 py-2 gap-4 justify-stretch">
+                {companies.map((company: any, i: number) => (
+                  <div
+                    key={company._id}
+                    className="flex min-w-[250px] items-start gap-2"
+                  >
+                    <Link href={`/company/${company._id}`}>
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={company.avatar?.url} />
+                        <AvatarFallback>
+                          {company.name.charAt(0) || (
+                            <Building2 className="w-6 h-6" />
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Link>
+                    <div className="flex flex-col justify-start">
+                      <Link href={`/company/${company._id}`}>
+                        <h3 className="font-semibold text-[15px] leading-tight">
+                          {company.name}
+                        </h3>
+                        <p className="text-[13px] opacity-90 flex items-center gap-1">
+                          {company.headline || "No description available"}
+                        </p>
+                        <span className="text-sm py-2 opacity-70 leading-none flex items-center gap-1">
+                          {company.followers.length || 0} followers
                         </span>
-                      </div>
-                      <p className="text-sm pb-2 pt-1">
-                        Lorem ipsum dolor, sit amet consectetur adipisicing
-                        elit. Saepe architecto quibusdam esse inventore
-                        reiciendis corporis dicta dolorum natus quis
-                        repudiandae?
-                      </p>
+                      </Link>
+                      <Button
+                        variant={"outline"}
+                        className={`flex items-center mt-2 px-3 w-32 rounded-full ${
+                          !company.followers.includes(profile.user._id)
+                            ? "bg-primary text-primary-foreground"
+                            : ""
+                        }`}
+                        size={"sm"}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleFollowCompany(
+                            company._id,
+                            !company.followers.includes(profile.user._id)
+                          );
+                        }}
+                      >
+                        {company.followers.includes(profile.user._id)
+                          ? "Following"
+                          : "Follow"}
+                      </Button>
                     </div>
-                    <hr />
-                  </Fragment>
+                  </div>
                 ))}
               </div>
-              {/* <div className="min-h-20 flex justify-center items-center">
-            <span className="opacity-70 font-normal text-sm">
-              No Comments Found
-            </span>
-          </div> */}
             </TabsContent>
             <TabsContent value="image">
               <div className="min-h-20 flex justify-center items-center">

@@ -129,13 +129,9 @@ const postSchema = new mongoose.Schema(
       enum: ["group", "company", "user"],
       default: "user",
     },
-    groupId: {
+    origin: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "group",
-    },
-    companyId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "company",
+      refPath: "postType",
     },
     createdAt: { type: Date, default: new Date(Date.now()) },
     updatedAt: [{ type: Date, default: new Date(Date.now()) }],

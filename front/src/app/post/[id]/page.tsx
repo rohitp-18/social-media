@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { getSinglePost } from "@/store/user/userPostSlice";
-import PostForm from "@/components/forms/postForm";
+import PostForm from "@/components/forms/userPostForm";
 import { Dialog } from "@/components/ui/dialog";
 import Wrapper from "@/app/u/[name]/details/_wrapper";
 

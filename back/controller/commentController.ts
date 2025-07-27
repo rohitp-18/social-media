@@ -88,7 +88,7 @@ const getAllComments = expressAsyncHandler(
     // Fetch all top-level comments (not replies) for the post
     const comments = await Comment.find({
       post: postId,
-      parent: { $exists: false },
+      parent: null,
       isDeleted: false,
     })
       .populate("user", "name email avatar")

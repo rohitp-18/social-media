@@ -9,17 +9,27 @@ import {
   getMyJobs,
   searchJob,
   getCompanyJobs,
+  introductionJobs,
+  recommendedJobs,
+  toggleSaveJob,
+  toggleActiveJob,
 } from "../controller/jobController";
 
 const router = Router();
 
 router.post("/create", auth, createJob);
 router.get("/all", getAllJobs);
+router.get("/intro", introductionJobs);
 router.get("/search", searchJob);
-router.get("/:id", getJob);
-router.delete("/delete/:id", auth, deleteJob);
-router.put("/update/:id", auth, updateJob);
+router.get("/recommended", auth, recommendedJobs);
+router
+  .route("/job/:id")
+  .get(getJob)
+  .put(auth, updateJob)
+  .delete(auth, deleteJob);
 router.get("/myjobs", auth, getMyJobs);
 router.get("/company/:id", auth, getCompanyJobs);
+router.put("/save/:jobId", auth, toggleSaveJob);
+router.put("/active/:jobId", auth, toggleActiveJob);
 
 export default router;

@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/userNavbar";
+import axios from "@/store/axios";
+import { RootState } from "@/store/store";
+import { isAxiosError } from "axios";
 import {
   CalendarDays,
   MoreHorizontal,
@@ -16,11 +19,95 @@ import {
   Users,
   Users2,
 } from "lucide-react";
-import React, { useState } from "react";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 function Page() {
   const [value, setValue] = useState("updates");
-  const [type, setType] = useState("all"); // catch up tab name
+  const [networkLoading, setNetworkLoading] = useState(false);
+  const [updates, setUpdates] = useState<any[]>([]);
+  const [meet, setMeet] = useState<any[]>([]);
+
+  const { user, loading, login } = useSelector(
+    (state: RootState) => state.user
+  );
+
+  async function getUpdates() {
+    try {
+      const { data } = await axios.get("/invitations/all");
+
+      setUpdates(data.invitations);
+    } catch (error) {
+      toast.error(
+        isAxiosError(error)
+          ? error.response?.data.message
+          : "Something went wrong"
+      );
+    } finally {
+      setNetworkLoading(false);
+    }
+  }
+
+  async function updateInvitationStatus(
+    invitationId: string,
+    status: "accepted" | "rejected"
+  ) {
+    try {
+      const { data } = await axios.put(`/invitations/${invitationId}`, {
+        status,
+      });
+      toast.success(data.message, {
+        position: "top-center",
+      });
+      setUpdates((prev) =>
+        prev.map((update) =>
+          update._id === invitationId ? { ...update, status } : update
+        )
+      );
+    } catch (error) {
+      toast.error(
+        isAxiosError(error)
+          ? error.response?.data.message
+          : "Something went wrong"
+      );
+    }
+  }
+
+  async function getMeet() {
+    try {
+      const { data } = await axios.get("/notifications/meet");
+      setMeet(data.notifications);
+    } catch (error) {
+      toast.error(
+        isAxiosError(error)
+          ? error.response?.data.message
+          : "Something went wrong"
+      );
+    } finally {
+      setNetworkLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (value === "updates") {
+      setNetworkLoading(true);
+      getUpdates();
+    } else {
+      setNetworkLoading(true);
+      getMeet();
+    }
+  }, [value]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Navbar />
@@ -108,90 +195,118 @@ function Page() {
               </div>
 
               {value === "updates" ? (
-                <div className="flex flex-col justify-start">
-                  <Card></Card>
-                </div>
+                <Card className="p-3">
+                  <div className="flex flex-col gap-3">
+                    {networkLoading ? (
+                      <div className="flex justify-center items-center h-20">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+                      </div>
+                    ) : updates.length === 0 ? (
+                      <div className="flex justify-center items-center h-20">
+                        <p className="text-gray-500">No updates available</p>
+                      </div>
+                    ) : (
+                      updates.map((update: any, i) => (
+                        <div
+                          key={update._id}
+                          className="flex justify-between gap-3 items-center p-3 rounded-md hover:bg-gray-100 bg-white dark:bg-gray-800 transition-all duration-200"
+                        >
+                          <Link
+                            href={update.link}
+                            className="flex items-center gap-3"
+                          >
+                            <Avatar className="w-12 h-12 transition-colors duration-200 group-hover:bg-white hover:bg-white">
+                              <AvatarImage
+                                src={update.targetId.avatar?.url}
+                                className="w-12 h-12"
+                              />
+                              <AvatarFallback className="w-12 h-12">
+                                <User2 className="w-12 h-12 p-1" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <h4 className="font-semibold text-base">
+                                {update.targetId.name}
+                              </h4>
+                              <p className="opacity-70 text-sm">
+                                {update.message}
+                              </p>
+                              {update.status === "accepted" ? (
+                                <p className="text-sm text-green-600">
+                                  Accepted
+                                </p>
+                              ) : update.status === "rejected" ? (
+                                <p className="text-sm text-red-600">Rejected</p>
+                              ) : null}
+                            </div>
+                          </Link>
+                          {update.status === "pending" ? (
+                            <div className="flex gap-3 items-center">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="p-1 bg-green-600 text-white rounded-md hover:bg-green-700"
+                                onClick={() =>
+                                  updateInvitationStatus(update._id, "accepted")
+                                }
+                                aria-label="Accept invitation"
+                              >
+                                Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="p-1 rounded-md"
+                                onClick={() =>
+                                  updateInvitationStatus(update._id, "rejected")
+                                }
+                                aria-label="Reject invitation"
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          ) : null}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </Card>
               ) : (
                 <Card className="p-3">
-                  <Tabs value={type} onValueChange={(val) => setType(val)}>
-                    <TabsList className="flex gap-3 bg-transparent items-center justify-start">
-                      <Button
-                        variant={type === "all" ? "default" : "outline"}
-                        className="rounded-full"
-                        onClick={() => setType("all")}
-                      >
-                        All
-                      </Button>
-                      <Button
-                        variant={type === "job" ? "default" : "outline"}
-                        className="rounded-full"
-                        onClick={() => setType("job")}
-                      >
-                        Job Change
-                      </Button>
-                      <Button
-                        variant={type === "birthday" ? "default" : "outline"}
-                        className="rounded-full"
-                        onClick={() => setType("birthday")}
-                      >
-                        Birthdays
-                      </Button>
-                      <Button
-                        variant={type === "work" ? "default" : "outline"}
-                        className="rounded-full"
-                        onClick={() => setType("work")}
-                      >
-                        Work anniversaries
-                      </Button>
-                      <Button
-                        variant={type === "education" ? "default" : "outline"}
-                        className="rounded-full"
-                        onClick={() => setType("education")}
-                      >
-                        Education
-                      </Button>
-                    </TabsList>
-                    <TabsContent value="all">
-                      <div className="flex p-3 flex-col gap-3">
-                        {[0, 1, 3, 2, 4, 5].map((_, i) => (
-                          <>
-                            <div className="flex justify-between gap-3 items-center">
-                              <div className="flex justify-start gap-3 items-center">
-                                <Avatar>
-                                  <AvatarImage src="" />
-                                  <AvatarFallback>
-                                    <User2 className="w-10 h-10 p-1" />
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex flex-col justify-start items-start">
-                                  <h4 className="font-semibold text-sm">
-                                    Your Name
-                                  </h4>
-                                  <p className="opacity-70 -mt-0.5 -mb-2 text-sm">
-                                    Celebrated Your's birthday on 26th march
-                                  </p>
-                                  <Button
-                                    size={"sm"}
-                                    className="p-0"
-                                    variant={"link"}
-                                  >
-                                    message send
-                                  </Button>
-                                </div>
-                              </div>
-                              <MoreHorizontal className="w-5 h-5 opacity-80" />
+                  <div className="flex p-3 flex-col gap-3">
+                    {[0, 1, 3, 2, 4, 5].map((_, i) => (
+                      <>
+                        <div className="flex justify-between gap-3 items-center">
+                          <div className="flex justify-start gap-3 items-center">
+                            <Avatar>
+                              <AvatarImage src="" />
+                              <AvatarFallback>
+                                <User2 className="w-10 h-10 p-1" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col justify-start items-start">
+                              <h4 className="font-semibold text-sm">
+                                Your Name
+                              </h4>
+                              <p className="opacity-70 -mt-0.5 -mb-2 text-sm">
+                                Celebrated Your's birthday on 26th march
+                              </p>
+                              <Button
+                                size={"sm"}
+                                className="p-0"
+                                variant={"link"}
+                              >
+                                message send
+                              </Button>
                             </div>
+                          </div>
+                          <MoreHorizontal className="w-5 h-5 opacity-80" />
+                        </div>
 
-                            <hr />
-                          </>
-                        ))}
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="job"></TabsContent>
-                    <TabsContent value="birthday"></TabsContent>
-                    <TabsContent value="work"></TabsContent>
-                    <TabsContent value="education"></TabsContent>
-                  </Tabs>
+                        <hr />
+                      </>
+                    ))}
+                  </div>
                 </Card>
               )}
 

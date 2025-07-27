@@ -3,6 +3,7 @@ import {
   createPost,
   deletePost,
   getAllPosts,
+  getFeedPosts,
   getProfilePosts,
   getSinglePost,
   toggleLike,
@@ -16,6 +17,7 @@ import checkAuth from "../middleware/checkAuth";
 const router = Router();
 
 router.get("/", checkAuth, getAllPosts);
+router.get("/feed", checkAuth, getFeedPosts);
 router.post("/create", auth, upload.array("images"), createPost);
 router.get("/profile/:id", checkAuth, getProfilePosts);
 router

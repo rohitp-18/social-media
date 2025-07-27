@@ -1,3 +1,5 @@
+"use client";
+
 import Navbar from "@/components/userNavbar";
 import {
   User,
@@ -6,7 +8,7 @@ import {
   Newspaper,
 } from "lucide-react";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect } from "react";
 import back from "@/assets/back.png";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -20,8 +22,33 @@ import {
 import { DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
 import FooterS from "@/components/footerS";
 import ProfileCard from "@/components/profileCard";
+import axios from "@/store/axios";
+import { toast } from "sonner";
+import { isAxiosError } from "axios";
+import { SocialPost } from "@/assets/icons";
 
 function Page() {
+  const [posts, setPosts] = React.useState([]);
+
+  async function fetchPosts() {
+    try {
+      const { data } = await axios.get("/posts/feed");
+      setPosts(data.posts);
+    } catch (error) {
+      toast.error(
+        (isAxiosError(error) && error.response?.data?.message) ||
+          "Failed to fetch posts",
+        {
+          position: "top-center",
+        }
+      );
+    }
+  }
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
   return (
     <>
       <Navbar />
@@ -69,13 +96,13 @@ function Page() {
                     <LuImage className="w-4 h-4" color="blue" />
                     <span className="">Media</span>
                   </div>
-                  <div className="flex justify-center items-center gap-2">
+                  {/* <div className="flex justify-center items-center gap-2">
                     <CalendarDaysIcon color="red" className="w-4 h-4" />
                     <span className="">Event</span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-center items-center gap-2">
-                    <Newspaper color="red" className="w-4 h-4" />
-                    <span className="">Article</span>
+                    <SocialPost color="red" className="w-4 h-4" />
+                    <span className="">Post</span>
                   </div>
                 </div>
               </Card>
@@ -98,7 +125,9 @@ function Page() {
                   ))}
                 </CardContent>
               </Card>
-              <Post cardClass="w-full" post={{ title: "title" }} />
+              {posts.map((post: any) => (
+                <Post key={post._id} cardClass="w-full" post={post} />
+              ))}
             </section>
             <aside className="min-h-screen flex-shrink-0 md:block hidden w-64">
               <div className="bg-background flex flex-col gap-2 h-min rounded-xl shadow-2xl p-3">

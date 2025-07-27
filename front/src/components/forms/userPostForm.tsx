@@ -44,7 +44,7 @@ function PostForm({
 }) {
   const [content, setContent] = useState<string>("");
   const [video, setVideo] = useState<any>();
-  const [newVideo, setNewVideo] = useState<any>();
+  const [newVideo, setNewVideo] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<any>();
   const [tags, setTags] = useState<any[]>([]);
   const [images, setImages] = useState<any[]>([]);
@@ -108,8 +108,9 @@ function PostForm({
       return;
     }
 
-    newImages.forEach((image) => formData.append("images", image));
-    newVideo && formData.append("video", newVideo);
+    newImages.length > 0 &&
+      newImages.forEach((image) => formData.append("images", image));
+    newVideo && formData.append("images", newVideo);
 
     // Dispatch the form data
     dispatch(createPost(formData));
@@ -140,7 +141,7 @@ function PostForm({
     if (file) {
       const url = URL.createObjectURL(file);
       setVideoPreview(url);
-      setNewVideo(file.name);
+      setNewVideo(file);
     }
   }
 
@@ -149,7 +150,7 @@ function PostForm({
     setTagName("");
     setContent("");
     setVideo("");
-    setNewVideo("");
+    setNewVideo(null);
     setImagePreview([]);
     setNewImages([]);
     setTags([]);
@@ -221,7 +222,7 @@ function PostForm({
                   placeholder="Write your post content here..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="resize-none border-none focus-visible:ring-0 focus-visible:border-none"
+                  className="resize-none border focus-visible:ring-0"
                   rows={10}
                 />
               </div>
@@ -258,8 +259,7 @@ function PostForm({
                         variant="destructive"
                         onClick={() => {
                           setVideoPreview("");
-                          setNewVideo("");
-                          console.log("videoPreview", videoPreview);
+                          setNewVideo(null);
                         }}
                         className="absolute top-2 right-2 z-10"
                       >
@@ -336,6 +336,7 @@ function PostForm({
                             <X className="h-2.5 w-2.5 text-white" />
                           </Button>
                           <img
+                            loading="lazy"
                             src={preview}
                             alt={`Preview ${index}`}
                             className="w-full h-auto rounded-md"
@@ -358,6 +359,7 @@ function PostForm({
                             <X className="h-2.5 w-2.5 text-white" />
                           </Button>
                           <img
+                            loading="lazy"
                             src={preview}
                             alt={`Preview ${index}`}
                             className="w-full h-auto rounded-md"

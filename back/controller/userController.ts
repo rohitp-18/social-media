@@ -12,6 +12,7 @@ import Comment from "../model/commentModel";
 import Media from "../model/mediaModel";
 import Experience from "../model/experienceModel";
 import Education from "../model/educationModel";
+import { forgotPasswordEmail } from "../config/sendEmail";
 
 const getUsers = expressAsyncHandler(async (req: Request, res: Response) => {
   sendToken(res, req.user);
@@ -122,8 +123,7 @@ const updateProfile = expressAsyncHandler(
       let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
       try {
         const data = await cloudinary.uploader.upload(dataURI, {
-          folder: `vip/user/${name}`,
-          height: 200,
+          folder: `social/user/${name}`,
           crop: "pad",
         });
         form = {
@@ -214,7 +214,7 @@ const updateBanner = expressAsyncHandler(
       let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
       try {
         const data = await cloudinary.uploader.upload(dataURI, {
-          folder: `vip/user/${user.name}`,
+          folder: `social/user/${user.name}`,
           height: 200,
           crop: "pad",
         });
@@ -248,8 +248,8 @@ const getUserProfile = expressAsyncHandler(
 
     const user = await User.findOne({ username: req.params.id })
       .populate("skills.skill", "name")
-      .populate("groups", "name")
-      .populate("companies", "name")
+      .populate("groups", "name avatar headline description")
+      .populate("companies", "name headline avatar followers")
       .populate("followers", "name avatar headline username")
       .populate("following", "name avatar headline username");
 
@@ -284,6 +284,8 @@ const getUserProfile = expressAsyncHandler(
     const media = await Media.find({ user: user._id, isDeleted: false }).limit(
       10
     );
+
+    await user.save();
 
     res.status(200).json({
       success: true,
@@ -447,7 +449,8 @@ const userActivities = expressAsyncHandler(
       .sort({
         createdAt: -1,
       })
-      .populate("userId", "name headline bannerImage avatar");
+      .populate("userId", "name headline bannerImage username avatar")
+      .populate("origin", "name headline bannerImage avatar");
 
     const comments = await Comment.find({
       user: user._id,
@@ -456,7 +459,26 @@ const userActivities = expressAsyncHandler(
       .sort({
         createdAt: -1,
       })
-      .populate("user", "name headline bannerImage avatar");
+      .populate("user", "name headline bannerImage avatar")
+      .populate("parent");
+
+    const commentsWithPosts = await Promise.all(
+      comments.map(async (comment) => {
+        await Post.populate(comment, {
+          path: "post",
+          populate: [
+            {
+              path: "userId",
+              select: "name headline bannerImage avatar",
+            },
+            {
+              path: "origin",
+              select: "name headline bannerImage avatar",
+            },
+          ],
+        });
+      })
+    );
 
     const images = await Media.find({
       user: user._id,
@@ -606,6 +628,120 @@ const followUser = expressAsyncHandler(
   }
 );
 
+const changePassword = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+
+    if (!isMatch) {
+      return next(new ErrorHandler("Current password is incorrect", 400));
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  }
+);
+
+const forgotPassword = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, link } = req.body;
+
+    if (!email || !link) {
+      return next(new ErrorHandler("Email and reset link are required", 400));
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    // Generate a reset token and send it to the user's email
+    const resetToken = await (user as any).getResetPasswordToken();
+
+    await user.save({ validateBeforeSave: false });
+
+    const resetUrl = `${link}/password/forgot/${resetToken}`;
+
+    (req as any).body.resetUrl = resetUrl;
+
+    forgotPasswordEmail(req, res, next);
+  }
+);
+
+const checkForgotPassword = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { token } = req.query;
+
+    if (!token) {
+      return next(new ErrorHandler("Token is required", 403));
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return next(new ErrorHandler("Invalid or expired token", 403));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Token is valid",
+      userId: user._id,
+    });
+  }
+);
+
+const changeForgotPassword = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { token } = req.query;
+    const { newPassword, confirmPassword } = req.body;
+
+    if (!token || !newPassword || !confirmPassword) {
+      return next(new ErrorHandler("Please fill all required fields", 403));
+    }
+
+    if (newPassword !== confirmPassword) {
+      return next(new ErrorHandler("Passwords do not match", 403));
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return next(new ErrorHandler("Invalid or expired token", 403));
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+      user,
+    });
+  }
+);
+
 export {
   getUsers,
   loginUser,
@@ -622,4 +758,8 @@ export {
   userActivities,
   recommendationsUser,
   followUser,
+  changePassword,
+  forgotPassword,
+  checkForgotPassword,
+  changeForgotPassword,
 };

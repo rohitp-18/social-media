@@ -18,7 +18,7 @@ interface UserState {
 
 const initialState: UserState = {
   user: null,
-  loading: false,
+  loading: true,
   error: null,
   login: false,
   updated: false,
@@ -169,7 +169,6 @@ const userSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // login user
     builder
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
@@ -194,7 +193,7 @@ const userSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.loading = false;
-        state.login = false;
+        state.login = true;
         state.message = action.payload?.message || "Registration successful";
       })
       .addCase(registerUser.rejected, (state, action) => {
@@ -210,6 +209,7 @@ const userSlice = createSlice({
       .addCase(getUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.loading = false;
+        state.login = true;
       })
       .addCase(getUser.rejected, (state, action: any) => {
         state.loading = false;
@@ -235,6 +235,7 @@ const userSlice = createSlice({
       .addCase(logout.fulfilled, (state, action) => {
         state.loading = false;
         state.logout = true;
+        state.login = false;
         state.user = null;
         state.message = "Logout successful";
       })

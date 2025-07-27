@@ -4,6 +4,7 @@ import {
   Bell,
   ChevronDown,
   Home,
+  MessageCircleMore,
   Moon,
   Newspaper,
   Search,
@@ -30,10 +31,12 @@ import { AppDispatch, RootState } from "@/store/store";
 import { clearError, logout, resetUser } from "@/store/user/userSlice";
 import { toast } from "sonner";
 import Link from "next/link";
+import { isAxiosError } from "axios";
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { setTheme, theme } = useTheme();
+
   const [drop, setDrop] = useState(false);
   const [search, setSearch] = useState("");
   const [searchDrop, setSearchDrop] = useState(false);
@@ -57,7 +60,12 @@ const Navbar: React.FC = () => {
       router.push("/login");
     }
     if (error) {
-      toast.success("Logout successfully", { position: "top-center" });
+      toast.success(
+        isAxiosError(error)
+          ? error.response?.data.message
+          : "Something went wrong",
+        { position: "top-center" }
+      );
       dispatch(clearError());
     }
   }, [logout2, error]);
@@ -116,6 +124,15 @@ const Navbar: React.FC = () => {
             <span className="md:block hidden text-sm"> Jobs</span>
           </Link>
           <Link
+            href="/chat"
+            className={` no-underline hover:underline flex flex-col items-center ${
+              pathname === "/chat" ? "font-bold" : ""
+            }`}
+          >
+            <MessageCircleMore className="w-[1rem] h-[1rem]" />
+            <span className="md:block hidden text-sm"> Messages</span>
+          </Link>
+          <Link
             href="/notification"
             className={` no-underline hover:underline flex flex-col items-center ${
               pathname === "/notification" ? "font-bold" : ""
@@ -172,9 +189,6 @@ const Navbar: React.FC = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Link href="/terms">Terms & conditions</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/lang">Language</Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <hr />

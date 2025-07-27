@@ -118,7 +118,7 @@ function Experience({
                   variant={"outline"}
                   className="flex text-primary border-primary hover:text-primary items-center rounded-full"
                 >
-                  kLink Add Experience
+                  Add Experience
                 </Button>
               </Link>
             )}

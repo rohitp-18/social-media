@@ -9,6 +9,7 @@ import Project from "../model/projectModel";
 import Group from "../model/groupModel";
 import Job from "../model/jobModel";
 import Skill from "../model/skillModel";
+import { Types } from "mongoose";
 
 const getAllSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -61,14 +62,13 @@ const getAllSearch = expressAsyncHandler(
     const companies = await Company.find({
       $or: [
         { name: { $regex: q, $options: "i" } },
+        { headline: { $regex: q, $options: "i" } },
         { location: { $regex: q, $options: "i" } },
         { website: { $regex: q, $options: "i" } },
-        { bio: { $regex: q, $options: "i" } },
+        { about: { $regex: q, $options: "i" } },
       ],
       isDeleted: false,
-    })
-      .populate("skills", "name _id")
-      .limit(10);
+    }).limit(10);
 
     const posts = await Post.find({
       $or: [
@@ -323,21 +323,38 @@ const getCompaniesSearch = expressAsyncHandler(
 
 const getPostsSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q, page } = req.query;
-
-    if (!q) {
-      return next(new ErrorHandler("Please provide a search query", 400));
-    }
+    const { q, page, sort, limit } = req.query;
 
     const posts = await Post.find({
-      $or: [
-        { title: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } },
-        { tags: { $regex: q, $options: "i" } },
-      ],
+      ...(q
+        ? {
+            $or: [
+              { content: { $regex: q, $options: "i" } },
+              ...(Types.ObjectId.isValid(q as string)
+                ? [{ hashtags: new Types.ObjectId(q as string) }]
+                : []),
+            ],
+          }
+        : {}),
+      isDeleted: false,
     })
       .skip((Number(page) - 1) * 20)
-      .limit(20);
+      .limit(Number(limit) || 20)
+      .sort(
+        sort === "recent"
+          ? { createdAt: -1 }
+          : sort === "popular"
+          ? { totalLikes: -1 }
+          : sort === "relevant"
+          ? { score: { $meta: "textScore" } }
+          : {}
+      )
+      .populate("userId", "name email avatar headline");
+
+    const postsWithIsLike = posts.map((post: any) => {
+      const isLike = post.likes.includes(req.user?._id);
+      return { ...post.toObject(), isLike };
+    });
 
     if (posts.length === 0) {
       return next(new ErrorHandler("No results found", 404));
@@ -345,7 +362,7 @@ const getPostsSearch = expressAsyncHandler(
 
     res.status(200).json({
       success: true,
-      posts,
+      posts: postsWithIsLike,
     });
   }
 );

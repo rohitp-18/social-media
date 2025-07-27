@@ -10,7 +10,6 @@ const jobSchema = new mongoose.Schema(
     company: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "company",
-      unique: true,
       required: true,
     },
     user: {
@@ -18,9 +17,16 @@ const jobSchema = new mongoose.Schema(
       ref: "user",
       required: true,
     },
-    location: {
+    location: [
+      {
+        type: String,
+        require: true,
+      },
+    ],
+    workType: {
       type: String,
-      require: true,
+      enum: ["onsite", "remote", "hybrid"],
+      default: "onsite",
     },
     type: {
       type: String,
@@ -28,41 +34,72 @@ const jobSchema = new mongoose.Schema(
       default: "full-time",
     },
     salary: {
-      type: Number,
+      type: String,
       require: true,
     },
     experience: {
       type: String,
       require: true,
     },
-    skills: [
-      {
-        type: String,
-      },
-    ],
     category: {
       type: String,
+      enum: [
+        "software",
+        "marketing",
+        "design",
+        "finance",
+        "human-resources",
+        "sales",
+        "operations",
+        "customer-service",
+        "legal",
+        "healthcare",
+        "education",
+        "engineering",
+        "it",
+        "other",
+      ],
       require: true,
     },
     preferredSkills: [
       {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "skill",
       },
     ],
     essentialSkills: [
       {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "skill",
       },
     ],
     noOfOpening: {
       type: Number,
       require: true,
     },
+    applications: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "applyJob",
+      },
+    ],
     questions: [
       {
         ques: { type: String, require: true },
         type: { type: String },
-        options: [{ ans: String }],
+        options: [{ type: String }],
+      },
+    ],
+    savedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+      },
+    ],
+    applyBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
       },
     ],
     isDeleted: {

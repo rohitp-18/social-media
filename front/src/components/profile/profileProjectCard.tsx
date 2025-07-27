@@ -82,6 +82,7 @@ function ProjectCard({ isUser }: { isUser: boolean }) {
                   >
                     {project.media.map((image: any, i: number) => (
                       <img
+                        loading="lazy"
                         className="h-16 md:w-32 md:h-20 rounded-lg"
                         src={image.url}
                         alt={project.name}

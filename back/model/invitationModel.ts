@@ -5,13 +5,15 @@ export enum InvitationStatus {
   PENDING = "pending",
   ACCEPTED = "accepted",
   REJECTED = "rejected",
-  EXPIRED = "expired",
 }
 
 // Define the invitation type options
 export enum InvitationType {
   GROUP = "group",
   COMPANY = "company",
+  EVENT = "event",
+  JOB = "job",
+  CONNECTION = "connection",
 }
 
 // Interface for the Invitation document
@@ -22,26 +24,24 @@ export interface IInvitation extends Document {
   type: InvitationType;
   status: InvitationStatus;
   message?: string;
+  link?: string;
+  targetId?: mongoose.Schema.Types.ObjectId;
+  refModel?: string;
   createdAt: Date;
   expiresAt?: Date;
+  unread?: boolean;
 }
 
 // Create the invitation schema
 const InvitationSchema: Schema = new Schema({
   sender: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "user",
     required: true,
-  },
-  recipientEmail: {
-    type: String,
-    required: true,
-    trim: true,
-    lowercase: true,
   },
   recipientUser: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "user",
   },
   type: {
     type: String,
@@ -52,6 +52,18 @@ const InvitationSchema: Schema = new Schema({
     type: String,
     enum: Object.values(InvitationStatus),
     default: InvitationStatus.PENDING,
+  },
+  link: {
+    type: String,
+    trim: true,
+  },
+  refModel: {
+    type: String,
+    trim: true,
+  },
+  targetId: {
+    type: mongoose.Schema.Types.ObjectId,
+    refPath: "refModel",
   },
   message: {
     type: String,
@@ -65,14 +77,6 @@ const InvitationSchema: Schema = new Schema({
     type: Date,
   },
 });
-
-// Create indexes for faster queries
-InvitationSchema.index(
-  { recipientEmail: 1, targetId: 1, type: 1 },
-  { unique: true }
-);
-InvitationSchema.index({ status: 1 });
-InvitationSchema.index({ expiresAt: 1 });
 
 // Export the model
 const Invitation = mongoose.model<IInvitation>("Invitation", InvitationSchema);

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { CheckCheck, Reply, Send, User2 } from "lucide-react";
+import { CheckCheck, Reply, Send, User2, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import axios from "@/store/axios";
 import { toast } from "sonner";
@@ -28,12 +28,16 @@ function Chatbox({
   setUpdatedChats?: any;
 }) {
   const [loading, setLoading] = useState<boolean>(false);
+  const [unreadMessage, setUnreadMessage] = useState<any>(null);
   const [message, setMessage] = useState<string>("");
   const [replyTo, setReplyTo] = useState<any>(null);
 
   const { user } = useSelector((state: RootState) => state.user);
 
+  // fetch messages from the server
   async function fetchMessages() {
+    if (!selectedChat || !selectedChat._id || !user) return;
+    if (loading) return; // Prevent multiple fetches if already loading
     try {
       setLoading(true);
       const { data } = await axios.get(`/chat/fetch/${selectedChat._id}`);
@@ -70,6 +74,7 @@ function Chatbox({
     }
   }
 
+  // handle the message submission
   const handleFormSubmit = useCallback(
     async (e: any) => {
       e.preventDefault();
@@ -94,7 +99,6 @@ function Chatbox({
         socket.emit("send_message", data.message);
         setUpdatedChats(data.message);
       } catch (error: any) {
-        console.log(error);
         toast.error(error.response?.data.message || "Internal Error", {
           position: "top-center",
         });
@@ -146,8 +150,46 @@ function Chatbox({
               msg.readBy.includes(member)
             );
 
+            // check messages readed by you or not
+            if (!unreadMessage) {
+              // check message is unread from you
+              if (
+                msg.sender._id !== user._id &&
+                !msg.readBy.includes(user._id)
+              ) {
+                setUnreadMessage(msg._id);
+              }
+            }
+
+            // Scroll to the original message when a reply preview is clicked
+            const handleReplyClick = () => {
+              const el = document.getElementById(
+                `chat-message-${msg.replyTo?._id}`
+              );
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                // Highlight the message and fade it out
+                el.classList.add(
+                  "bg-blue-100",
+                  "dark:bg-blue-800",
+                  "rounded-lg"
+                );
+                setTimeout(() => {
+                  el.classList.remove(
+                    "bg-blue-100",
+                    "dark:bg-blue-800",
+                    "rounded-lg"
+                  );
+                }, 2000);
+              }
+            };
+
             return (
-              <React.Fragment key={index}>
+              <div
+                className="transition-all duration-300 relative"
+                id={`chat-message-${msg._id}`}
+                key={msg._id}
+              >
                 {isNewDay && (
                   <div className="flex justify-center my-2">
                     <span className="bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-1 rounded-full text-xs font-medium">
@@ -156,6 +198,14 @@ function Chatbox({
                         month: "short",
                         day: "numeric",
                       })}
+                    </span>
+                  </div>
+                )}
+                {/* unread messages */}
+                {unreadMessage === msg._id && msg.sender._id !== user._id && (
+                  <div className="flex justify-center my-2">
+                    <span className="bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-xs font-medium">
+                      New Messages
                     </span>
                   </div>
                 )}
@@ -186,14 +236,42 @@ function Chatbox({
                     >
                       {/* Reply preview */}
                       {msg.replyTo && (
-                        <div className="mb-1 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-xs text-gray-700 dark:text-gray-200 border-l-4 border-blue-400">
+                        <div
+                          onClick={handleReplyClick}
+                          className="mb-1 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-xs text-gray-700 dark:text-gray-200 border-l-4 border-blue-400 cursor-pointer"
+                          title="Scroll to original message"
+                        >
                           <span className="font-semibold">
                             {msg.replyTo.sender?.name || "Unknown"}:
                           </span>
                           {msg.replyTo.content}
                         </div>
                       )}
-                      <span className="flex-1 h-[18.5px]">{msg.content}</span>
+                      <span className="flex-1 h-[18.5px] break-words whitespace-normal">
+                        {(msg.content as string)
+                          .split(/(https?:\/\/[^\s]+)/g)
+                          .map((part: string, index: number) => {
+                            if (part.match(/https?:\/\/[^\s]+/)) {
+                              return (
+                                <a
+                                  key={index}
+                                  href={part}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:underline text-green-300 hover:text-green-200 transition-colors"
+                                  aria-label={`Visit ${part}`}
+                                >
+                                  {part}
+                                </a>
+                              );
+                            }
+                            return (
+                              <React.Fragment key={index}>
+                                {part}
+                              </React.Fragment>
+                            );
+                          })}
+                      </span>
                       <span
                         className={`${
                           isOwn ? "pr-[64px]" : "pr-[42px]"
@@ -217,7 +295,7 @@ function Chatbox({
                           >
                             <CheckCheck
                               className={`w-3.5 h-3.5 inline ${
-                                msgReaded ? "text-black" : "text-blue-100"
+                                msgReaded ? "text-white" : "text-black"
                               }`}
                             />
                             <br />
@@ -226,38 +304,8 @@ function Chatbox({
                       </span>
                       {/* React/Reply buttons */}
                       <div className="absolute -top-7 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {/* Reaction button */}
-                        <button
-                          type="button"
-                          className="bg-white dark:bg-gray-700 border rounded-full p-1 shadow hover:bg-gray-100 dark:hover:bg-gray-600"
-                          title="React"
-                          onClick={() => {
-                            // Simple emoji reaction example
-                            const emoji = prompt("React with emoji:");
-                            if (emoji) {
-                              // You can implement a more robust reaction system as needed
-                              setAllMessages((prev: any[]) =>
-                                prev.map((m, i) =>
-                                  i === index
-                                    ? {
-                                        ...m,
-                                        reactions: [
-                                          ...(m.reactions || []),
-                                          { user: user._id, emoji },
-                                        ],
-                                      }
-                                    : m
-                                )
-                              );
-                            }
-                          }}
-                        >
-                          <span role="img" aria-label="React">
-                            😊
-                          </span>
-                        </button>
                         {/* Reply button */}
-                        <button
+                        <Button
                           type="button"
                           className="bg-white dark:bg-gray-700 border rounded-full p-1 shadow hover:bg-gray-100 dark:hover:bg-gray-600"
                           title="Reply"
@@ -265,22 +313,9 @@ function Chatbox({
                             setReplyTo(msg);
                           }}
                         >
-                          <Reply className="w-4 h-4" />
-                        </button>
+                          <Reply className="w-4 h-4 text-black dark:text-white" />
+                        </Button>
                       </div>
-                      {/* Show reactions */}
-                      {msg.reactions && msg.reactions.length > 0 && (
-                        <div className="flex gap-1 mt-1">
-                          {msg.reactions.map((r: any, i: number) => (
-                            <span
-                              key={i}
-                              className="inline-block px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-600 text-xs"
-                            >
-                              {r.emoji}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                   {isOwn && showAvatar ? (
@@ -296,7 +331,7 @@ function Chatbox({
                     <span className="w-10"></span>
                   )}
                 </div>
-              </React.Fragment>
+              </div>
             );
           })
         ) : (
@@ -313,10 +348,32 @@ function Chatbox({
           onSubmit={handleFormSubmit}
         >
           {replyTo && (
-            <div className="flex gap-2 h-5 justify-start absolute -top-5 left-0 w-full">
-              <h3 className="font-medium text-sm">
-                {replyTo.sender?.avatar?.url || replyTo.sender.name}
-              </h3>
+            <div className="flex gap-2 h-12 justify-between items-center p-2 rounded-t-lg bg-gray-200 dark:bg-gray-700 absolute -top-14 left-0 w-full">
+              <div className="flex items-center justify-center h-8 rounded-full">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={replyTo.sender.avatar?.url} />
+                  <AvatarFallback>
+                    {replyTo.sender.name.charAt(0).toUpperCase() || (
+                      <User2 className="w-6 h-6" />
+                    )}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col ml-2">
+                  <h3 className="font-medium text-sm">{replyTo.sender.name}</h3>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {replyTo.content}
+                  </span>
+                </div>
+              </div>
+              {/* close the reply */}
+              <Button
+                type="button"
+                onClick={() => setReplyTo(null)}
+                title="Cancel reply"
+                className="flex items-center gap-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              </Button>
             </div>
           )}
           <Input

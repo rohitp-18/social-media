@@ -4,38 +4,64 @@ import ErrorHandler from "../utils/errorHandler";
 import Group from "../model/groupModel";
 import { v2 as cloudinary } from "cloudinary";
 import Notification from "../model/notificationModel";
+import Post from "../model/postModel";
 
 const createGroup = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { groupName, groupDescription } = req.body;
+    const { name, about, headline, website, location, email } = req.body;
 
-    if (!groupName || !groupDescription) {
+    if (!name || !email) {
       return next(new ErrorHandler("Please provide all fields", 400));
     }
 
-    let groupImage;
+    const groupData: any = {
+      name,
+      about,
+      headline,
+      website,
+      location,
+      email,
+      admin: [req.user._id],
+      members: [req.user._id],
+    };
 
-    if (req.file) {
-      const b64 = Buffer.from(req.file.buffer).toString("base64");
-      let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-      try {
-        const data = await cloudinary.uploader.upload(dataURI, {
-          folder: `vip/user/${name}`,
-          height: 200,
-          crop: "pad",
+    if (req.files) {
+      const logo = req.files["logo"] ? req.files["logo"][0].path : null;
+      const banner = req.files["banner"] ? req.files["banner"][0].path : null;
+
+      if (logo) {
+        const logoUpload = await cloudinary.uploader.upload(logo, {
+          folder: "social/group/logo",
+          resource_type: "image",
         });
-        groupImage = { public_id: data.public_id, url: data.secure_url };
-      } catch (error: any | unknown) {
-        return next(new ErrorHandler(error, 501));
+        if (logoUpload) {
+          groupData.avatar = {
+            public_id: logoUpload.public_id,
+            url: logoUpload.secure_url,
+          };
+        }
+      }
+
+      if (banner) {
+        const bannerUpload = await cloudinary.uploader.upload(banner, {
+          folder: "social/group/banner",
+          resource_type: "image",
+        });
+
+        if (bannerUpload) {
+          groupData.bannerImage = {
+            public_id: bannerUpload.public_id,
+            url: bannerUpload.secure_url,
+          };
+        }
       }
     }
 
-    const group = await Group.create({
-      groupName,
-      groupDescription,
-      groupImage,
-      members: [req.user._id],
-    });
+    const group = await Group.create(groupData);
+
+    if (!group) {
+      return next(new ErrorHandler("Internal Error", 500));
+    }
 
     res.status(201).json({
       success: true,
@@ -67,18 +93,31 @@ const fetchGroup = expressAsyncHandler(
     const groupId = req.params.id;
 
     const group = await Group.findById(groupId)
-      .populate("members", "-password")
-      .populate("admin", "-password")
-      .sort({ updatedAt: -1 });
+      .populate("members", "name avatar username headline")
+      .populate("admin", "name avatar username headline")
+      .populate("requests.user", "name avatar username headline");
 
     if (!group) {
       return next(new ErrorHandler("Group not found", 404));
     }
 
+    const posts = await Post.find({ origin: groupId, isDeleted: false })
+      .populate("userId", "name email avatar username bannerImage")
+      .populate("likes", "name email avatar username bannerImage")
+      .populate("comment", "name headline avatar username bannerImage")
+      .populate("origin", "name headline avatar username bannerImage")
+      .sort({ createdAt: -1 });
+
     res.status(200).json({
       success: true,
       message: "Group fetched successfully",
       group,
+      users: {
+        admin: group.admin,
+        requests: group.requests,
+        members: group.members,
+      },
+      posts,
     });
   }
 );
@@ -93,7 +132,7 @@ const deleteGroup = expressAsyncHandler(
       return next(new ErrorHandler("Group not found", 404));
     }
 
-    if (group.deleted) {
+    if (group.isDeleted) {
       return next(new ErrorHandler("Group already deleted", 404));
     }
 
@@ -119,32 +158,58 @@ const deleteGroup = expressAsyncHandler(
 const updateGroup = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const groupId = req.params.id;
-    const { groupName, groupDescription } = req.body;
+    const { name, about, headline, website, location, email } = req.body;
 
-    if (!groupName || !groupDescription) {
-      return next(new ErrorHandler("Please provide all fields", 400));
+    if (!name || !email) {
+      return next(
+        new ErrorHandler(`please provide ${!name ? "name" : "email"}`, 400)
+      );
     }
 
-    let groupImage;
+    const groupData: any = {
+      name,
+      about,
+      headline,
+      website,
+      location,
+      email,
+    };
 
-    if (req.file) {
-      const b64 = Buffer.from(req.file.buffer).toString("base64");
-      let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-      try {
-        const data = await cloudinary.uploader.upload(dataURI, {
-          folder: `vip/user/${name}`,
-          height: 200,
-          crop: "pad",
+    if (req.files) {
+      const logo = req.files["logo"] ? req.files["logo"][0].path : null;
+      const banner = req.files["banner"] ? req.files["banner"][0].path : null;
+
+      if (logo) {
+        const logoUpload = await cloudinary.uploader.upload(logo, {
+          folder: "social/group/logo",
+          resource_type: "image",
         });
-        groupImage = { public_id: data.public_id, url: data.secure_url };
-      } catch (error: any | unknown) {
-        return next(new ErrorHandler(error, 501));
+        if (logoUpload) {
+          groupData.avatar = {
+            public_id: logoUpload.public_id,
+            url: logoUpload.secure_url,
+          };
+        }
+      }
+
+      if (banner) {
+        const bannerUpload = await cloudinary.uploader.upload(banner, {
+          folder: "social/group/banner",
+          resource_type: "image",
+        });
+
+        if (bannerUpload) {
+          groupData.bannerImage = {
+            public_id: bannerUpload.public_id,
+            url: bannerUpload.secure_url,
+          };
+        }
       }
     }
 
     const group = await Group.findByIdAndUpdate(
       groupId,
-      { groupName, groupDescription, groupImage },
+      { ...groupData },
       { new: true, runValidators: true, useFindAndModify: false }
     );
 
@@ -160,47 +225,12 @@ const updateGroup = expressAsyncHandler(
   }
 );
 
-const addMember = expressAsyncHandler(
+const removeMember = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const groupId = req.params.id;
     const { userId } = req.body;
 
-    if (!userId) {
-      return next(new ErrorHandler("Please provide all fields", 400));
-    }
-
-    const group = await Group.findById(groupId).populate("admin", "-password");
-
-    if (!group) {
-      return next(new ErrorHandler("Group not found", 404));
-    }
-
-    const isAdmin = group.admin.some(
-      (admin) => admin._id.toString() === req.user._id.toString()
-    );
-
-    if (!isAdmin) {
-      return next(
-        new ErrorHandler("You are not authorized to add members", 403)
-      );
-    }
-
-    group.members.push(userId);
-    await group.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Member added successfully",
-      group,
-    });
-  }
-);
-
-const removeMember = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const groupId = req.params.id;
-
-    const group = await Group.findById(groupId).populate("admin", "-password");
+    const group = await Group.findById(groupId).populate("admin");
 
     if (!group) {
       return next(new ErrorHandler("Group not found", 404));
@@ -217,7 +247,7 @@ const removeMember = expressAsyncHandler(
     }
 
     group.members = group.members.filter(
-      (member: any) => member.toString() !== req.user._id.toString()
+      (member: any) => member.toString() !== userId.toString()
     );
     await group.save();
 
@@ -233,9 +263,9 @@ const leaveGroup = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const groupId = req.params.id;
 
-    const group = await Group.findById(groupId).populate("admin", "-password");
+    const group = await Group.findById(groupId);
 
-    if (!group || group.deleted) {
+    if (!group || group.isDeleted) {
       return next(new ErrorHandler("Group not found", 404));
     }
 
@@ -243,15 +273,6 @@ const leaveGroup = expressAsyncHandler(
       (member: any) => member.toString() !== req.user._id.toString()
     );
 
-    if (group.members.length === 0) {
-      await group.deleteOne({ _id: groupId });
-      return next(
-        res.status(200).json({
-          success: true,
-          message: "Left and deleted group successfully",
-        })
-      );
-    }
     await group.save();
 
     res.status(200).json({
@@ -262,162 +283,11 @@ const leaveGroup = expressAsyncHandler(
   }
 );
 
-const deleteGroupImage = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const groupId = req.params.id;
-
-    const group = await Group.findById(groupId).populate("admin", "-password");
-
-    if (!group) {
-      return next(new ErrorHandler("Group not found", 404));
-    }
-
-    if (!group.avatar?.public_id) {
-      return next(new ErrorHandler("Group image not found", 404));
-    }
-
-    await cloudinary.uploader.destroy(group.avatar.public_id);
-
-    group.avatar = undefined;
-    await group.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Group image deleted successfully",
-      group,
-    });
-  }
-);
-
-const deleteBannerImage = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const groupId = req.params.id;
-
-    const group = await Group.findById(groupId).populate("admin", "-password");
-
-    if (!group) {
-      return next(new ErrorHandler("Group not found", 404));
-    }
-
-    if (!group.bannerImage?.public_id) {
-      return next(new ErrorHandler("Group banner image not found", 404));
-    }
-
-    await cloudinary.uploader.destroy(group.bannerImage.public_id);
-
-    group.bannerImage = undefined;
-    await group.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Group banner image deleted successfully",
-      group,
-    });
-  }
-);
-
-const addGroupBannerImage = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const groupId = req.params.id;
-
-    const group = await Group.findById(groupId).populate("admin", "-password");
-
-    if (!group || group.deleted) {
-      return next(new ErrorHandler("Group not found", 404));
-    }
-
-    const isAdmin = group.admin.some(
-      (admin) => admin._id.toString() === req.user._id.toString()
-    );
-
-    if (!isAdmin) {
-      return next(
-        new ErrorHandler("You are not authorized to add banner image", 403)
-      );
-    }
-
-    if (!req.file) {
-      return next(new ErrorHandler("Please provide a banner image", 400));
-    }
-
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
-    let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-    let bannerImage;
-    try {
-      const data = await cloudinary.uploader.upload(dataURI, {
-        folder: `vip/user/${group.name}`,
-        height: 200,
-        crop: "pad",
-      });
-      bannerImage = { public_id: data.public_id, url: data.secure_url };
-    } catch (error: any | unknown) {
-      return next(new ErrorHandler(error, 501));
-    }
-
-    group.bannerImage = bannerImage;
-    await group.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Group banner image added successfully",
-      group,
-    });
-  }
-);
-
-const addGroupImage = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const groupId = req.params.id;
-
-    const group = await Group.findById(groupId).populate("admin", "-password");
-
-    if (!group || group.deleted) {
-      return next(new ErrorHandler("Group not found", 404));
-    }
-
-    const isAdmin = group.admin.some(
-      (admin) => admin._id.toString() === req.user._id.toString()
-    );
-
-    if (!isAdmin) {
-      return next(
-        new ErrorHandler("You are not authorized to add group image", 403)
-      );
-    }
-
-    if (!req.file) {
-      return next(new ErrorHandler("Please provide a group image", 400));
-    }
-
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
-    let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-    let groupImage;
-    try {
-      const data = await cloudinary.uploader.upload(dataURI, {
-        folder: `vip/user/${group.name}`,
-        height: 200,
-        crop: "pad",
-      });
-      groupImage = { public_id: data.public_id, url: data.secure_url };
-    } catch (error: any | unknown) {
-      return next(new ErrorHandler(error, 501));
-    }
-
-    group.avatar = groupImage;
-    await group.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Group image added successfully",
-      group,
-    });
-  }
-);
-
 // request to join group
 const requestToJoinGroup = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const groupId = req.params.id;
+    const { message } = req.body;
 
     const group = await Group.findById(groupId).populate("admin", "-password");
 
@@ -431,40 +301,50 @@ const requestToJoinGroup = expressAsyncHandler(
       );
     }
 
-    if (group.requests.includes(req.user._id)) {
-      return next(new ErrorHandler("You have already sent a request", 400));
-    }
+    const isRequested = group.requests.some(
+      (request: any) => request.user.toString() === req.user._id.toString()
+    );
 
-    group.requests.push(req.user._id);
+    if (isRequested) {
+      group.requests.pull({ user: req.user._id });
+    } else {
+      group.requests.push({ user: req.user._id, message });
+    }
 
     await group.save();
 
     res.status(200).json({
       success: true,
-      message: "Request sent successfully",
+      message: isRequested
+        ? "Request cancelled successfully"
+        : "Request sent successfully",
       group,
+      requested: !isRequested,
+      user: req.user,
     });
   }
 );
 
 // accept group request
-const acceptGroupRequest = expressAsyncHandler(
+const updateGroupRequest = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const groupId = req.params.id;
-    const { userId } = req.body;
+    const { userId, status } = req.body;
 
-    if (!userId) {
-      return next(new ErrorHandler("Please provide all fields", 400));
+    if (!userId || !status) {
+      return next(
+        new ErrorHandler(`Please provide ${!userId ? "userId" : "status"}`, 400)
+      );
     }
 
-    const group = await Group.findById(groupId).populate("admin", "-password");
+    const group = await Group.findById(groupId);
 
     if (!group) {
       return next(new ErrorHandler("Group not found", 404));
     }
 
     const isAdmin = group.admin.some(
-      (admin) => admin._id.toString() === req.user._id.toString()
+      (admin) => admin.toString() === req.user._id.toString()
     );
 
     if (!isAdmin) {
@@ -473,23 +353,23 @@ const acceptGroupRequest = expressAsyncHandler(
       );
     }
 
-    group.members.push(userId);
-    group.requests.pull(userId);
+    if (status === "accepted") {
+      group.members.push(userId);
+    }
+
+    group.requests.pull({ user: req.user._id });
 
     await group.save();
 
-    try {
-      group.admin.forEach(async (admin) => {
-        await Notification.create({
-          sender: req.user._id,
-          recipient: admin._id,
-          group: group._id,
-          type: "group",
-          message: `${req.user.name} has accepted ${userId} to join the group ${group.name}`,
-          url: req.user.url,
-        });
-      });
-    } catch (error) {}
+    if (status === "rejected") {
+      return next(
+        res.status(200).json({
+          success: true,
+          message: "Request rejected successfully",
+          group,
+        })
+      );
+    }
 
     try {
       Notification.create({
@@ -497,8 +377,8 @@ const acceptGroupRequest = expressAsyncHandler(
         recipient: userId,
         group: group._id,
         type: "group",
-        message: `You have been accepted to join the group ${group.name}`,
-        url: group.url,
+        message: `You are now a member of the group ${group.name}`,
+        url: `/group/${group._id}`,
       });
     } catch (error) {}
 
@@ -506,87 +386,6 @@ const acceptGroupRequest = expressAsyncHandler(
       success: true,
       message: "Request accepted successfully",
       group,
-    });
-  }
-);
-
-// reject group request
-const rejectGroupRequest = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const groupId = req.params.id;
-    const { userId } = req.body;
-
-    if (!userId) {
-      return next(new ErrorHandler("Please provide all fields", 400));
-    }
-
-    const group = await Group.findById(groupId).populate("admin", "-password");
-
-    if (!group) {
-      return next(new ErrorHandler("Group not found", 404));
-    }
-
-    const isAdmin = group.admin.some(
-      (admin) => admin._id.toString() === req.user._id.toString()
-    );
-
-    if (!isAdmin) {
-      return next(
-        new ErrorHandler("You are not authorized to reject requests", 403)
-      );
-    }
-
-    group.requests.pull(userId);
-
-    await group.save();
-
-    try {
-      Notification.create({
-        sender: req.user._id,
-        recipient: userId,
-        url: group.url,
-        group: group._id,
-        type: "group",
-        message: `You have been rejected from joining the group ${group.name}`,
-      });
-    } catch (error) {}
-
-    res.status(200).json({
-      success: true,
-      message: "Request rejected successfully",
-      group,
-    });
-  }
-);
-
-// get all requests
-const getAllRequests = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const groupId = req.params.id;
-
-    const group = await Group.findById(groupId).populate(
-      "request",
-      "-password"
-    );
-
-    if (!group) {
-      return next(new ErrorHandler("Group not found", 404));
-    }
-
-    const isAdmin = group.admin.some(
-      (admin) => admin._id.toString() === req.user._id.toString()
-    );
-
-    if (!isAdmin) {
-      return next(
-        new ErrorHandler("You are not authorized to get requests", 403)
-      );
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Requests fetched successfully",
-      requests: group.requests,
     });
   }
 );
@@ -662,16 +461,9 @@ export {
   fetchGroup,
   deleteGroup,
   updateGroup,
-  addMember,
   removeMember,
   leaveGroup,
-  deleteGroupImage,
-  deleteBannerImage,
-  addGroupBannerImage,
-  addGroupImage,
   //request
   requestToJoinGroup,
-  acceptGroupRequest,
-  rejectGroupRequest,
-  getAllRequests,
+  updateGroupRequest,
 };

@@ -61,7 +61,6 @@ const searchPeoples = createAsyncThunk(
   "allSearch/searchPeoples",
   async (query: any, thunkAPI) => {
     try {
-      console.log(query);
       const { data } = await axios.get("/search/people", {
         params: query,
       });

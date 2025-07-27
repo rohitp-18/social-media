@@ -10,17 +10,26 @@ const comapnySchema = new mongoose.Schema(
       type: String,
       require: true,
     },
+    headline: {
+      type: String,
+    },
+    about: {
+      type: String,
+    },
     totalFollowers: { type: Number, default: 0 },
+    totalEmployees: { type: Number, default: 0 },
+    totalMembers: { type: Number, default: 0 },
     posts: [
       {
         post: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
-          unique: true,
-          ref: "post",
+          ref: "posts",
         },
-        type: {
-          type: String,
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          ref: "user",
         },
       },
     ],
@@ -30,7 +39,6 @@ const comapnySchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
-        unique: true,
       },
     ],
     address: [
@@ -38,7 +46,6 @@ const comapnySchema = new mongoose.Schema(
         city: { type: String, required: true },
         state: { type: String, required: true },
         country: { type: String, required: true },
-        pincode: { type: Number, required: true },
         address: { type: String, required: true },
       },
     ],
@@ -46,7 +53,6 @@ const comapnySchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
-        unique: true,
       },
     ],
     phone: {
@@ -61,19 +67,15 @@ const comapnySchema = new mongoose.Schema(
     },
     members: [
       {
-        _id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
-          unique: true,
-          required: true,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+        required: true,
       },
     ],
     jobs: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "job",
-        unique: true,
         required: true,
       },
     ],

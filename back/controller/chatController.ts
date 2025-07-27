@@ -2,69 +2,105 @@ import { NextFunction, Request, Response } from "express";
 import expressAsyncHandler from "express-async-handler";
 import Chat from "../model/chatModel";
 import ErrorHandler from "../utils/errorHandler";
-import { v2 as cloudinary } from "cloudinary";
 import Message from "../model/messageModel";
 import Group from "../model/groupModel";
 import Notification from "../model/notificationModel";
 import User from "../model/userModel";
 
-const createChat = expressAsyncHandler(
+const sendMessage = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.body;
+    const { chat, userId, content, image, video, audio, document, reply } =
+      req.body;
 
-    const chat = await Chat.findOne({
-      isGroupChat: false,
-      $and: [
-        { members: { $elemMatch: { $eq: req.user._id } } },
-        { members: { $elemMatch: { $eq: userId } } },
-      ],
-    })
-      .populate("members", "-password")
-      .populate("lastMessage");
-    console.log(23, "Chat search");
-
-    if (chat) {
-      console.log(26, "Chat already exists", chat);
-
+    // Ensure sender is provided and either chat or a direct recipient ID is provided
+    if (!chat && !userId) {
       return next(
-        res.status(200).json({
-          success: true,
-          chat,
-          message: "Chat already exists",
-        })
+        new ErrorHandler("Sender and chat or userId are required", 403)
       );
     }
 
-    // create notfication
+    let chatDoc: any;
 
-    const newChat = await Chat.create({
-      chatId: req.user._id + userId,
-      members: [req.user._id, userId],
-    });
+    // If chat is provided, fetch and validate it
+    if (chat) {
+      chatDoc = await Chat.findById(chat);
+      if (!chatDoc || chatDoc.isDeleted) {
+        return next(new ErrorHandler("Chat not found", 404));
+      }
+    } else {
+      // For direct messages, try to find an existing chat between req.user and userId
+      chatDoc = await Chat.findOne({
+        isGroupChat: false,
+        $and: [
+          { members: { $elemMatch: { $eq: req.user._id } } },
+          { members: { $elemMatch: { $eq: userId } } },
+        ],
+      })
+        .populate("members", "-password")
+        .populate("lastMessage");
 
-    console.log(44, newChat);
-    if (!newChat) {
-      return next(new ErrorHandler("Chat not created", 500));
+      // If no chat exists, create a new one and generate a notification
+      if (!chatDoc) {
+        chatDoc = await Chat.create({
+          chatId: req.user._id + userId,
+          members: [req.user._id, userId],
+        });
+
+        const notification = await Notification.create({
+          sender: req.user._id,
+          recipient: userId,
+          type: "chat",
+          message: `${req.user.name} started a chat with you`,
+          relatedId: chatDoc._id,
+        });
+
+        if (!notification) {
+          return next(new ErrorHandler("Notification not created", 500));
+        }
+
+        chatDoc = await chatDoc.populate("members", "-password");
+      }
     }
 
-    const notification = await Notification.create({
-      sender: req.user._id,
-      recipient: userId,
-      type: "chat",
-      message: `${req.user.name} started a chat with you`,
-      relatedId: newChat._id,
-    });
-
-    if (!notification) {
-      return next(new ErrorHandler("Notification not created", 500));
+    // Validate that there's message content or media
+    if (!content && !image && !video && !audio && !document && !reply) {
+      return next(
+        new ErrorHandler("Please provide message content or media", 403)
+      );
     }
 
-    const populatedChat = await newChat.populate("members", "-password");
+    // Prepare message data based on provided fields
+    const messageData: any = { sender: req.user._id, chat: chatDoc._id };
+    if (content) messageData.content = content;
+    if (image) messageData.image = image;
+    if (video) messageData.video = video;
+    if (audio) messageData.audio = audio;
+    if (document) messageData.document = document;
+    if (reply) messageData.reply = reply;
+
+    // Create the message
+    const message = await Message.create(messageData);
+    if (!message) {
+      return next(new ErrorHandler("Message not created", 500));
+    }
+
+    // Mark the message as read by the sender and update the chat's last message
+    message.readBy.push(req.user._id);
+    await message.save();
+
+    chatDoc.lastMessage = message._id;
+    await chatDoc.save();
+
+    const populatedMessage = await Message.findById(message._id)
+      .populate("sender", "name avatar username")
+      .populate("chat", "members");
 
     res.status(200).json({
       success: true,
-      chat: populatedChat,
-      message: "Chat created successfully",
+      message: populatedMessage,
+      info: chat
+        ? "Message sent in existing chat"
+        : "Chat created and message sent",
     });
   }
 );
@@ -194,70 +230,6 @@ const deleteChat = expressAsyncHandler(
   }
 );
 
-const createMessage = expressAsyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { sender, chat, content, image, video, audio, document, reply } =
-      req.body;
-    if (!sender || !chat) {
-      return next(new ErrorHandler("cannot send a message", 403));
-    }
-
-    // check if chat exists
-    const chatExists = await Chat.findById(chat);
-    if (!chatExists || chatExists.isDeleted) {
-      return next(new ErrorHandler("Chat not found", 404));
-    }
-
-    if (!chatExists.members.includes(sender)) {
-      return next(new ErrorHandler("You are not a member of this chat", 403));
-    }
-
-    if (!content && !image && !video && !audio && !document) {
-      return next(new ErrorHandler("Please fill all required fields", 403));
-    }
-
-    // check message is text content or image or video or audio or document
-    let message: any;
-    if (content) {
-      message = await Message.create({ sender, chat, content });
-    }
-    if (image) {
-      message = await Message.create({ sender, chat, image });
-    }
-    if (video) {
-      message = await Message.create({ sender, chat, video });
-    }
-    if (audio) {
-      message = await Message.create({ sender, chat, audio });
-    }
-    if (document) {
-      message = await Message.create({ sender, chat, document });
-    }
-    if (reply) {
-      message = await Message.create({ sender, chat, reply });
-    }
-
-    if (!message) {
-      return next(new ErrorHandler("Message not created", 500));
-    }
-
-    message.readBy.push(sender);
-    await message.save();
-
-    chatExists.lastMessage = message._id;
-    await chatExists.save();
-
-    const populatedMessage = await Message.findById(message._id)
-      .populate("sender", "name avatar username")
-      .populate("chat", "members");
-
-    res.status(200).json({
-      message: populatedMessage,
-      success: true,
-    });
-  }
-);
-
 const readMessage = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { chatId, messageId } = req.body;
@@ -349,12 +321,11 @@ const createReplyMessage = expressAsyncHandler(
 );
 
 export {
-  createChat,
+  sendMessage,
   fetchChats,
   fetchChat,
   deleteChat,
   //
-  createMessage,
   readMessage,
   createReplyMessage,
 };

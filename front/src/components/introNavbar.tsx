@@ -20,6 +20,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Input } from "./ui/input";
 import Link from "next/link";
+import { SocialPost } from "@/assets/icons";
 
 const Navbar: React.FC = () => {
   const [search, setSearch] = React.useState("");
@@ -66,25 +67,25 @@ const Navbar: React.FC = () => {
             <Home className="w-[1rem] h-[1rem]" /> Home
           </Link>
           <Link
-            href="/new"
+            href="/intro/users"
             className={`no-underline hover:underline flex flex-col items-center ${
-              pathname === "/new" ? "font-bold" : ""
+              pathname === "/intro/users" ? "font-bold" : ""
             }`}
           >
             <Users className="w-[1rem] h-[1rem]" /> Users
           </Link>
           <Link
-            href="/transactions"
+            href="/intro/posts"
             className={` no-underline hover:underline flex flex-col items-center ${
-              pathname === "/transactions" ? "font-bold" : ""
+              pathname === "/intro/posts" ? "font-bold" : ""
             }`}
           >
-            <Newspaper className="w-[1rem] h-[1rem]" /> Articles
+            <SocialPost className="w-[1rem] h-[1rem]" /> Posts
           </Link>
           <Link
-            href="/transactions"
+            href="/intro/jobs"
             className={` no-underline hover:underline flex flex-col items-center ${
-              pathname === "/transactions" ? "font-bold" : ""
+              pathname === "/intro/jobs" ? "font-bold" : ""
             }`}
           >
             <BriefcaseBusiness className="w-[1rem] h-[1rem]" /> Jobs

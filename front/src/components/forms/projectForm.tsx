@@ -375,6 +375,7 @@ function ProjectForm({
             {newMediaPreview.map((preview, index) => (
               <div key={index} className="relative">
                 <img
+                  loading="lazy"
                   src={preview}
                   alt={`Preview ${index + 1}`}
                   className="h-20 object-cover rounded"
@@ -391,6 +392,7 @@ function ProjectForm({
             {media.map((m: any, index) => (
               <div key={index} className="relative">
                 <img
+                  loading="lazy"
                   src={m.url}
                   alt={`Media ${index + 1}`}
                   className="h-20 object-cover rounded"
