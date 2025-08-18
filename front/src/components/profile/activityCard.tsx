@@ -238,7 +238,6 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                                         key={i}
                                         src={img.url}
                                         alt={img.name}
-                                        loading="lazy"
                                         className={`object-cover w-full rounded-lg ${
                                           post.images.length === 1
                                             ? ""
@@ -374,7 +373,6 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                           loading="lazy"
                           src={img.url}
                           alt={img.name}
-                          loading="lazy"
                           className="object-cover w-full h-full"
                         />
                       </div>

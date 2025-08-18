@@ -3,7 +3,7 @@
 import Navbar from "@/components/userNavbar";
 import IntroNavbar from "@/components/introNavbar";
 import { AppDispatch, RootState } from "@/store/store";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import RecommendCompany from "@/components/recommend/recommendCompany";
 import RecommendedJobs from "@/components/recommend/recommendedJobs";
@@ -14,7 +14,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   clearError,
   deleteJobAction,
@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { PrimaryLoader, SecondaryLoader } from "@/components/loader";
 import { toast } from "sonner";
+import CompanyCard from "@/components/company/companyCard";
 
 function Page() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -50,6 +51,7 @@ function Page() {
   const dispatch = useDispatch<AppDispatch>();
   const { id } = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useSelector((state: RootState) => state.user);
   const { job, saved, error, loading, message } = useSelector(
     (state: RootState) => state.jobs
@@ -96,6 +98,15 @@ function Page() {
   const HandleJobButtons: React.FC<HandleJobButtonsProps> = ({ deleteJob }) => {
     const [open, setOpen] = useState(false);
 
+    const saveJobAction = useCallback(() => {
+      if (!user) {
+        router.push(`/login?back=${pathname}`);
+        return;
+      }
+
+      dispatch(toggleSaveJobAction({ save: !isSaved, jobId: id as string }));
+    }, [router, pathname, user]);
+
     return (
       <div className="flex items-center gap-2 mt-2">
         <Button disabled={!job.isActive} variant="default">
@@ -110,14 +121,7 @@ function Page() {
             <Link href={`/jobs/${id}/update`}>Edit Job</Link>
           </Button>
         )}
-        <Button
-          variant="outline"
-          onClick={() =>
-            dispatch(
-              toggleSaveJobAction({ save: !isSaved, jobId: id as string })
-            )
-          }
-        >
+        <Button variant="outline" onClick={saveJobAction}>
           {isSaved ? "Unsave Job" : "Save Job"}
         </Button>
         {isAdmin && deleteJob && (
@@ -169,6 +173,7 @@ function Page() {
           <section className="md:grid grid-cols-[300px_1fr_300px] block mx-auto max-w-7xl min-h-screen gap-2">
             <aside className="md:flex flex-col gap-3 shrink hidden h-min">
               <RecommendedJobs company={job.company._id} />
+              <CompanyCard company={job.company} />
             </aside>
             <Card className="md:flex flex-col gap-3 h-min">
               <CardHeader className="flex flex-col justify-between gap-3 items-start space-y-4">

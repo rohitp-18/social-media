@@ -79,6 +79,10 @@ const postSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    commentCount: {
+      type: Number,
+      default: 0,
+    },
     savedBy: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -125,7 +129,6 @@ const postSchema = new mongoose.Schema(
     },
     postType: {
       type: String,
-      // check post is group post, comapny post or user post
       enum: ["group", "company", "user"],
       default: "user",
     },
@@ -138,6 +141,19 @@ const postSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+postSchema.pre("save", function (next) {
+  if (this.isModified("likes")) {
+    this.likeCount = Array.isArray(this.likes) ? this.likes.length : 0;
+  }
+  if (this.isModified("comment")) {
+    this.commentCount = Array.isArray(this.comment) ? this.comment.length : 0;
+  }
+  if (this.isModified("savedBy")) {
+    this.savedCount = Array.isArray(this.savedBy) ? this.savedBy.length : 0;
+  }
+  next();
+});
 
 const Post = mongoose.model("post", postSchema);
 

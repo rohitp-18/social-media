@@ -259,7 +259,7 @@ function CompanyTabs({ tab }: { tab: string }) {
           {posts.length > 0 ? (
             posts.map((post: any) => (
               <Fragment key={post._id}>
-                <Post key={post._id} post={post} />
+                <Post cardClass={"w-full"} post={post} />
               </Fragment>
             ))
           ) : (
@@ -343,7 +343,11 @@ function CompanyTabs({ tab }: { tab: string }) {
             </CardContent>
           </Card>
           {posts?.length > 0 &&
-            posts.map((post: any) => <Post key={post.id} post={post} />)}
+            posts.map((post: any) => (
+              <Fragment key={post._id}>
+                <Post cardClass={"w-full"} post={post} />
+              </Fragment>
+            ))}
         </section>
       )}
     </>

@@ -30,13 +30,14 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/userNavbar";
 import IntroNavbar from "@/components/introNavbar";
-import { RootState } from "@/store/store";
+import { AppDispatch, RootState } from "@/store/store";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { resetSkill, searchSkill } from "@/store/skill/skillSlice";
 
 function Page() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState<{ [key: string]: string }>({});
   const [type, setType] = useState("all");
   const [index, setIndex] = useState(0);
   const [query, setQuery] = useState("");
@@ -45,9 +46,10 @@ function Page() {
   const pathname = usePathname();
   const searchParam = useSearchParams();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
 
-  const { skills, posts, projects, peoples, groups, companies } = useSelector(
-    (state: RootState) => state.search
+  const { searchSkills, searchLoading } = useSelector(
+    (state: RootState) => state.skill
   );
   const { user } = useSelector((state: RootState) => state.user);
 
@@ -75,15 +77,13 @@ function Page() {
   };
 
   const urlChange = () => {
-    const url = new URLSearchParams(window.location.search);
-    url.set("type", type);
-    window.history.replaceState(null, "", `/search?${url.toString()}`);
+    router.push(`/search?${searchParam.toString()}`);
   };
 
   useEffect(() => {
     const q = searchParam.get("q");
     const t = searchParam.get("type");
-    console.log(q);
+    if (q == query && t == type) return;
     if (q) {
       router.push(
         `/search?q=${encodeURIComponent(q)}&type=${encodeURIComponent(
@@ -92,327 +92,340 @@ function Page() {
       );
       setQuery(q);
     }
-  }, [pathname, router]);
+  }, [pathname, router, searchParam]);
 
-  const searchFilters = [
-    { value: "all", label: "All" },
-    {
-      value: "people",
-      label: "People",
-      filters: [
-        {
-          key: "location",
-          title: "Location",
-          search: true,
-          options: [
-            { value: "USA", label: "USA" },
-            { value: "Canada", label: "Canada" },
-            { value: "UK", label: "UK" },
-            { value: "Australia", label: "Australia" },
-            { value: "Germany", label: "Germany" },
-            { value: "India", label: "India" },
-          ],
-        },
-        // {
-        //   key: "connections",
-        //   title: "Connections",
-        //   options: [
-        //     { value: "1", label: "1st" },
-        //     { value: "2", label: "2nd" },
-        //     { value: "3", label: "3rd" },
-        //   ],
-        // },
-        // for future updates
-        // {
-        //   key: "industry",
-        //   title: "Industry",
-        //   options: [
-        //     { value: "it_industry", label: "IT industry" },
-        //     { value: "other_industry", label: "Other industry" },
-        //   ],
-        // },
-        // {
-        //   key: "company",
-        //   title: "Company",
-        //   options: [
-        //     { value: "company1", label: "Company 1" },
-        //     { value: "company2", label: "Company 2" },
-        //   ],
-        // },
-        {
-          key: "skill",
-          title: "Skills",
-          options: skills.map((skill) => ({
-            value: skill._id,
-            label: skill.name,
-          })),
-        },
-        {
-          key: "sort",
-          title: "Sort by",
-          options: [
-            { value: "relevant", label: "Relevance" },
-            { value: "recent", label: "Most recent" },
-            { value: "connections", label: "Most connections" },
-            { value: "popular", label: "Popular" },
-          ],
-        },
-      ],
-    },
-    {
-      value: "jobs",
-      label: "Jobs",
-      apply: true,
-      filters: [
-        {
-          key: "date_posted",
-          title: "Date posted",
-          options: [
-            { value: "past_day", label: "Past 24 hours" },
-            { value: "past_week", label: "Past week" },
-            { value: "past_month", label: "Past month" },
-            { value: "past_year", label: "Past year" },
-          ],
-        },
-        {
-          key: "sort",
-          title: "Sort by",
-          options: [
-            { value: "relevant", label: "Most relevant" },
-            { value: "recent", label: "Most recent" },
-            { value: "liked", label: "Most liked" },
-            { value: "commented", label: "Most commented" },
-          ],
-        },
-        {
-          key: "experience_level",
-          title: "Experience Level",
-          options: [
-            { value: "0", label: "Entry level" },
-            { value: "1", label: "Intermediate" },
-            { value: "2", label: "Associate" },
-            { value: "3", label: "Senior" },
-            { value: "4", label: "Professional" },
-          ],
-        },
-        {
-          title: "Company",
-          key: "company",
-          search: true,
-          options: [
-            { value: "company1", label: "Company 1" },
-            { value: "company2", label: "Company 2" },
-          ],
-        },
-        {
-          title: "Work Type",
-          key: "workType",
-          options: [
-            { value: "remote", label: "Remote" },
-            { value: "hybrid", label: "Hybrid" },
-            { value: "office", label: "Office" },
-          ],
-        },
-        {
-          title: "Location",
-          key: "location",
-          search: true,
-          options: [{ value: "India", label: "India" }],
-        },
-      ],
-    },
-    {
-      value: "posts",
-      label: "Posts",
-      filters: [
-        {
-          title: "Type",
-          key: "contain",
-          options: [
-            { value: "text", label: "Text" },
-            { value: "image", label: "Image" },
-            { value: "video", label: "Video" },
-          ],
-        },
-        {
-          title: "Timeframe",
-          key: "timeframe",
-          options: [
-            { value: "past_day", label: "Past 24 hours" },
-            { value: "past_week", label: "Past week" },
-            { value: "past_month", label: "Past month" },
-            { value: "past_year", label: "Past year" },
-          ],
-        },
-        {
-          title: "Sort by",
-          key: "sort",
-          options: [
-            { value: "relevant", label: "Most relevant" },
-            { value: "recent", label: "Most recent" },
-            { value: "liked", label: "Most liked" },
-            { value: "commented", label: "Most commented" },
-          ],
-        },
-      ],
-    },
-    {
-      value: "groups",
-      label: "Groups",
-      apply: true,
-      filters: [
-        {
-          title: "Location",
-          key: "location",
-          search: true,
-          options: [
-            { value: "USA", label: "USA" },
-            { value: "Canada", label: "Canada" },
-            { value: "UK", label: "UK" },
-            { value: "Australia", label: "Australia" },
-            { value: "Germany", label: "Germany" },
-            { value: "India", label: "India" },
-          ],
-        },
-        // {
-        //   title: "Industry",
-        //   key: "industry",
-        //   options: [
-        //     { value: "it_industry", label: "IT industry" },
-        //     { value: "other_industry", label: "Other industry" },
-        //   ],
-        // },
-        // {
-        //   title: "Company",
-        //   options: [
-        //     { value: "company1", label: "Company 1" },
-        //     { value: "company2", label: "Company 2" },
-        //   ],
-        // },
-        // {
-        //   title: "Members",
-        //   key: "members",
-        //   options: [
-        //     { value: "member1", label: "Member 1" },
-        //     { value: "member2", label: "Member 2" },
-        //   ],
-        // },
-        {
-          title: "Skills",
-          key: "skill",
-          options: skills.map((skill) => ({
-            value: skill._id,
-            label: skill.name,
-          })),
-        },
-        {
-          title: "Sort by",
-          key: "sort",
-          options: [
-            { value: "relevant", label: "Most relevant" },
-            { value: "recent", label: "Most recent" },
-            { value: "members", label: "Most members" },
-          ],
-        },
-      ],
-    },
-    {
-      value: "companies",
-      label: "Companies",
-      filters: [
-        {
-          title: "location",
-          key: "location",
-          search: true,
-          options: [
-            { value: "USA", label: "USA" },
-            { value: "Canada", label: "Canada" },
-            { value: "UK", label: "UK" },
-            { value: "Australia", label: "Australia" },
-            { value: "Germany", label: "Germany" },
-            { value: "India", label: "India" },
-          ],
-        },
-        {
-          title: "Industry",
-          key: "industry",
-          options: [
-            { value: "it_industry", label: "IT industry" },
-            { value: "other_industry", label: "Other industry" },
-          ],
-        },
-        {
-          title: "size",
-          key: "size",
-          options: [
-            { value: "small", label: "Small" },
-            { value: "medium", label: "Medium" },
-            { value: "large", label: "Large" },
-          ],
-        },
-        {
-          title: "Sort by",
-          key: "sort",
-          options: [
-            { value: "relevant", label: "Most relevant" },
-            { value: "recent", label: "Most recent" },
-            { value: "employees", label: "Most employees" },
-          ],
-        },
-      ],
-    },
-    {
-      value: "projects",
-      label: "Projects",
-      filters: [
-        {
-          title: "Skills",
-          search: true,
-          options: skills.map((skill) => ({
-            value: skill._id,
-            label: skill.name,
-          })),
-        },
-        {
-          title: "No of Members",
-          key: "members",
-          options: [
-            { value: "1", label: "1" },
-            { value: "2", label: "2" },
-            { value: "3", label: "3" },
-            { value: "4", label: "4" },
-            { value: "5", label: "5" },
-          ],
-        },
+  const searchFilters = useMemo(
+    () => [
+      { value: "all", label: "All" },
+      {
+        value: "people",
+        label: "People",
+        filters: [
+          {
+            key: "location",
+            title: "Location",
+            search: true,
+            options: [
+              { value: "USA", label: "USA" },
+              { value: "Canada", label: "Canada" },
+              { value: "UK", label: "UK" },
+              { value: "Australia", label: "Australia" },
+              { value: "Germany", label: "Germany" },
+              { value: "India", label: "India" },
+            ],
+          },
+          // {
+          //   key: "connections",
+          //   title: "Connections",
+          //   options: [
+          //     { value: "1", label: "1st" },
+          //     { value: "2", label: "2nd" },
+          //     { value: "3", label: "3rd" },
+          //   ],
+          // },
+          // for future updates
+          // {
+          //   key: "industry",
+          //   title: "Industry",
+          //   options: [
+          //     { value: "it_industry", label: "IT industry" },
+          //     { value: "other_industry", label: "Other industry" },
+          //   ],
+          // },
+          // {
+          //   key: "company",
+          //   title: "Company",
+          //   options: [
+          //     { value: "company1", label: "Company 1" },
+          //     { value: "company2", label: "Company 2" },
+          //   ],
+          // },
+          {
+            key: "skill",
+            title: "Skills",
+            search: true,
+            options: searchSkills.map((skill) => ({
+              value: skill._id,
+              label: skill.name,
+            })),
+          },
+          {
+            key: "sort",
+            title: "Sort by",
+            options: [
+              { value: "relevant", label: "Relevance" },
+              { value: "recent", label: "Most recent" },
+              { value: "connections", label: "Most connections" },
+              { value: "popular", label: "Popular" },
+            ],
+          },
+        ],
+      },
+      {
+        value: "jobs",
+        label: "Jobs",
+        apply: true,
+        filters: [
+          {
+            key: "date_posted",
+            title: "Date posted",
+            options: [
+              { value: "past_day", label: "Past 24 hours" },
+              { value: "past_week", label: "Past week" },
+              { value: "past_month", label: "Past month" },
+              { value: "past_year", label: "Past year" },
+            ],
+          },
+          {
+            key: "sort",
+            title: "Sort by",
+            options: [
+              { value: "relevant", label: "Most relevant" },
+              { value: "recent", label: "Most recent" },
+              { value: "liked", label: "Most liked" },
+              { value: "commented", label: "Most commented" },
+            ],
+          },
+          {
+            key: "experience_level",
+            title: "Experience Level",
+            options: [
+              { value: "0", label: "Entry level" },
+              { value: "1", label: "Intermediate" },
+              { value: "2", label: "Associate" },
+              { value: "3", label: "Senior" },
+              { value: "4", label: "Professional" },
+            ],
+          },
+          {
+            title: "Company",
+            key: "company",
+            search: true,
+            options: [
+              { value: "company1", label: "Company 1" },
+              { value: "company2", label: "Company 2" },
+            ],
+          },
+          {
+            title: "Work Type",
+            key: "workType",
+            options: [
+              { value: "remote", label: "Remote" },
+              { value: "hybrid", label: "Hybrid" },
+              { value: "office", label: "Office" },
+            ],
+          },
+          {
+            title: "Location",
+            key: "location",
+            search: true,
+            options: [{ value: "India", label: "India" }],
+          },
+        ],
+      },
+      {
+        value: "posts",
+        label: "Posts",
+        filters: [
+          {
+            title: "Content Type",
+            key: "contentType",
+            options: [
+              { value: "all", label: "All" },
+              { value: "text", label: "Text" },
+              { value: "image", label: "Image" },
+              { value: "video", label: "Video" },
+            ],
+          },
+          {
+            title: "Post Type",
+            key: "postType",
+            options: [
+              { value: "all", label: "All" },
+              { value: "user", label: "User" },
+              { value: "group", label: "Group" },
+              { value: "company", label: "Company" },
+            ],
+          },
+          {
+            title: "Timeframe",
+            key: "timeframe",
+            options: [
+              { value: "24h", label: "Past 24 hours" },
+              { value: "7d", label: "Past week" },
+              { value: "30d", label: "Past month" },
+              { value: "1y", label: "Past year" },
+            ],
+          },
+          {
+            title: "Sort by",
+            key: "sort",
+            options: [
+              { value: "relevant", label: "Most relevant" },
+              { value: "recent", label: "Most recent" },
+              { value: "liked", label: "Most liked" },
+              { value: "comments", label: "Most commented" },
+            ],
+          },
+        ],
+      },
+      {
+        value: "groups",
+        label: "Groups",
+        apply: true,
+        filters: [
+          {
+            title: "Location",
+            key: "location",
+            search: true,
+            options: [
+              { value: "USA", label: "USA" },
+              { value: "Canada", label: "Canada" },
+              { value: "UK", label: "UK" },
+              { value: "Australia", label: "Australia" },
+              { value: "Germany", label: "Germany" },
+              { value: "India", label: "India" },
+            ],
+          },
+          // {
+          //   title: "Industry",
+          //   key: "industry",
+          //   options: [
+          //     { value: "it_industry", label: "IT industry" },
+          //     { value: "other_industry", label: "Other industry" },
+          //   ],
+          // },
+          // {
+          //   title: "Company",
+          //   options: [
+          //     { value: "company1", label: "Company 1" },
+          //     { value: "company2", label: "Company 2" },
+          //   ],
+          // },
+          // {
+          //   title: "Members",
+          //   key: "members",
+          //   options: [
+          //     { value: "member1", label: "Member 1" },
+          //     { value: "member2", label: "Member 2" },
+          //   ],
+          // },
+          {
+            title: "Skills",
+            key: "skill",
+            search: true,
+            options: searchSkills.map((skill) => ({
+              value: skill._id,
+              label: skill.name,
+            })),
+          },
+          {
+            title: "Sort by",
+            key: "sort",
+            options: [
+              { value: "relevant", label: "Most relevant" },
+              { value: "recent", label: "Most recent" },
+              { value: "members", label: "Most members" },
+            ],
+          },
+        ],
+      },
+      {
+        value: "companies",
+        label: "Companies",
+        filters: [
+          {
+            title: "location",
+            key: "location",
+            search: true,
+            options: [
+              { value: "USA", label: "USA" },
+              { value: "Canada", label: "Canada" },
+              { value: "UK", label: "UK" },
+              { value: "Australia", label: "Australia" },
+              { value: "Germany", label: "Germany" },
+              { value: "India", label: "India" },
+            ],
+          },
+          {
+            title: "Industry",
+            key: "industry",
+            options: [
+              { value: "it_industry", label: "IT industry" },
+              { value: "other_industry", label: "Other industry" },
+            ],
+          },
+          {
+            title: "size",
+            key: "size",
+            options: [
+              { value: "small", label: "Small" },
+              { value: "medium", label: "Medium" },
+              { value: "large", label: "Large" },
+            ],
+          },
+          {
+            title: "Sort by",
+            key: "sort",
+            options: [
+              { value: "relevant", label: "Most relevant" },
+              { value: "recent", label: "Most recent" },
+              { value: "employees", label: "Most employees" },
+            ],
+          },
+        ],
+      },
+      {
+        value: "projects",
+        label: "Projects",
+        filters: [
+          {
+            title: "Skills",
+            key: "skill",
+            search: true,
+            options: searchSkills.map((skill) => ({
+              value: skill._id,
+              label: skill.name,
+            })),
+          },
+          {
+            title: "No of Members",
+            key: "members",
+            options: [
+              { value: "1", label: "1" },
+              { value: "2", label: "2" },
+              { value: "3", label: "3" },
+              { value: "4", label: "4" },
+              { value: "5", label: "5" },
+            ],
+          },
 
-        {
-          title: "Sort by",
-          key: "sort",
-          options: [
-            { value: "relevant", label: "Most relevant" },
-            { value: "recent", label: "Most recent" },
-            { value: "members", label: "Most members" },
-          ],
-        },
-      ],
-    },
-  ];
+          {
+            title: "Sort by",
+            key: "sort",
+            options: [
+              { value: "relevant", label: "Most relevant" },
+              { value: "recent", label: "Most recent" },
+              { value: "members", label: "Most members" },
+            ],
+          },
+        ],
+      },
+    ],
+    [searchSkills]
+  );
 
   useEffect(() => {
     const selectedFilter = searchFilters.find(
       (filter) => filter.value === type
     );
     urlChange();
-    setIndex(
-      searchFilters.indexOf(selectedFilter!) < 0
-        ? 0
-        : searchFilters.indexOf(selectedFilter!)
-    );
+    setIndex(selectedFilter ? searchFilters.indexOf(selectedFilter) : 0);
   }, [type, searchFilters]);
 
   useEffect(() => {
     setSelectValues({ q: query });
-    window.history.replaceState(null, "", `/search?q=${query}`);
+    router.push(`/search?q=${query}&type=${type}`);
   }, [type, query]);
 
   return (
@@ -454,37 +467,59 @@ function Page() {
                 )}
 
                 <div className="flex gap-5 w-full items-center">
-                  {((type === "posts" && posts.length > 0) ||
-                    (type === "projects" && projects.length > 0) ||
-                    (type === "people" && peoples.length > 0) ||
-                    (type === "groups" && groups.length > 0) ||
-                    (type === "companies" && companies.length > 0)) &&
-                    searchFilters[index].filters?.map((f) => (
-                      <div key={f.title} className="flex flex-col">
-                        {/* <label className="text-sm font-semibold">{f.title}</label> */}
-                        <Select
-                          value={selectValues[f.title] || ""}
-                          onValueChange={(value) =>
-                            handleSelectChange(f, value)
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder={f.title} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {f.search && (
+                  {searchFilters[index].filters?.map((f) => (
+                    <div
+                      key={f.key || f.title}
+                      className="flex flex-col min-w-[160px]"
+                    >
+                      {/* <Label className="text-xs font-medium mb-1">
+                        {f.title}
+                      </Label> */}
+                      <Select
+                        value={selectValues[f.key || f.title] || ""}
+                        onValueChange={(value) => handleSelectChange(f, value)}
+                      >
+                        <SelectTrigger className="w-full min-w-[140px]">
+                          <SelectValue placeholder={f.title} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {f.search && (
+                              <div className="px-2 py-1">
                                 <Input
-                                  value={search}
-                                  type="text"
-                                  placeholder="Search..."
+                                  value={search[f.key || f.title] || ""}
+                                  onChange={(e) => {
+                                    if (f.key == "skill") {
+                                      dispatch(searchSkill(e.target.value));
+                                    }
+                                    setSearch((prev) => ({
+                                      ...prev,
+                                      [f.key || f.title]: e.target.value,
+                                    }));
+                                  }}
+                                  type="search"
+                                  placeholder={`Search ${
+                                    f.title?.toLowerCase() || ""
+                                  }...`}
                                   className="p-2 w-full mb-2 border rounded-md"
-                                  onChange={(e) => setSearch(e.target.value)}
                                 />
-                              )}
-                            </SelectGroup>
-                            <SelectGroup>
-                              {f.options.map((option) => (
+                              </div>
+                            )}
+                            {f.options
+                              .filter((option) => {
+                                if (!f.search || !search) return true;
+                                const searchTerm =
+                                  search[f.key || f.title]?.toLowerCase() || "";
+                                return (
+                                  option?.label
+                                    ?.toLowerCase()
+                                    .includes(searchTerm) ||
+                                  option?.value
+                                    ?.toLowerCase()
+                                    .includes(searchTerm)
+                                );
+                              })
+                              .map((option) => (
                                 <SelectItem
                                   key={option.value}
                                   value={option.value}
@@ -492,11 +527,11 @@ function Page() {
                                   {option.label}
                                 </SelectItem>
                               ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
 
                   {searchFilters[index].apply && (
                     <>
@@ -521,6 +556,19 @@ function Page() {
                     </>
                   )}
                 </div>
+                {Object.keys(searchFilters).length > 0 && (
+                  <Button
+                    variant={"outline"}
+                    onClick={() => {
+                      setSearch({});
+                      dispatch(resetSkill());
+                      setSelectValues({ q: query, type });
+                    }}
+                    className="text-opacity-50"
+                  >
+                    Clear filters
+                  </Button>
+                )}
               </CardContent>
             ) : (
               <CardContent className="flex gap-3 py-3">

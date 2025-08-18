@@ -38,10 +38,10 @@ import {
   getProfileExperiences,
 } from "@/store/user/experienceSlice";
 import { Separator } from "@/components/ui/separator";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-function Page({ params }: { params: { name: string } }) {
+function Page() {
   const [select, setSelect] = useState<any>(null);
   const [create, setCreate] = useState(false);
   const [edit, setEdit] = useState(false);
@@ -49,6 +49,7 @@ function Page({ params }: { params: { name: string } }) {
   const [isUser, setIsUser] = useState(false);
 
   const searchParams = useSearchParams();
+  const { name } = useParams();
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error, experiences } = useSelector(
     (state: RootState) => state.experience
@@ -62,11 +63,11 @@ function Page({ params }: { params: { name: string } }) {
   }
 
   useEffect(() => {
-    Promise.resolve(params).then((res) => {
-      setUsername(decodeURIComponent(String(res.name)));
-      dispatch(getProfileExperiences(decodeURIComponent(String(res.name))));
-    });
-  }, [params]);
+    if (name) {
+      setUsername(name as string);
+      dispatch(getProfileExperiences(name as string));
+    }
+  }, [name]);
 
   useEffect(() => {
     if (user) {

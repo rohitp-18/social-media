@@ -272,7 +272,7 @@ const getSinglePost = expressAsyncHandler(
     // Find post by ID and include user details
     const post = await Post.findById(postId)
       .populate("userId", "name email avatar headline")
-      .populate("origin", "name avatar headline username isDeleted ");
+      .populate("origin", "name avatar headline username isDeleted");
 
     // Handle case when post is not found
     if (!post || post.isDeleted) {

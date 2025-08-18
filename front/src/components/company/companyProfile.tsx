@@ -133,9 +133,14 @@ function CompanyProfile({ tab, setTab }: { tab: string; setTab: any }) {
               <DropdownMenuContent>
                 <DropdownMenuGroup>
                   <DropdownMenuItem>
-                    <Link href={"/company/new"}>
+                    <Link className="flex gap-3" href={"/company/new"}>
                       <Plus className="w-4 h-4" />
                       <div className="">Create page</div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href={`/company/${company._id}/invitation`}>
+                      <div className="">Send Invitation</div>
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>

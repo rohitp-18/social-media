@@ -13,7 +13,7 @@ const router = Router();
 
 router.post("/create", auth, createComment);
 router.post("/reply", auth, createReply);
-router.get("/all/:postId", auth, getAllComments);
+router.get("/all/:postId", getAllComments);
 router.get("/user/", auth, getUserCommentedPosts);
 router.get("/like/:id", auth, toggleLikeComment);
 router.delete("/:id", auth, deleteComment);

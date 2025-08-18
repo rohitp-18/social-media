@@ -40,17 +40,23 @@ function Page() {
       <Navbar />
       <section className="container lg:max-w-[1100px] mx-auto py-6">
         <section className="grid grid-cols-[1fr_300px]  gap-4">
-          {posts.length > 0 ? (
-            posts.map((post: any) => <Post key={post.id} post={post} />)
-          ) : (
-            <Card className="flex flex-col max-w-screen-md w-full gap-3 overflow-auto">
-              <CardContent className="flex flex-col gap-2 py-5">
-                <div className="text-center flex justify-center items-center text-gray-500">
-                  No posts available at the moment.
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <div className="flex flex-col max-w-screen-md w-full gap-3 md:gap-5 overflow-auto">
+            {posts.length > 0 ? (
+              posts.map((post: any) => (
+                <Fragment key={post._id}>
+                  <Post post={post} cardClass="w-full" />
+                </Fragment>
+              ))
+            ) : (
+              <Card className="flex flex-col max-w-screen-md w-full gap-3 overflow-auto">
+                <CardContent className="flex flex-col gap-2 py-5">
+                  <div className="text-center flex justify-center items-center text-gray-500">
+                    No posts available at the moment.
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
           <aside>
             <FooterS />
           </aside>

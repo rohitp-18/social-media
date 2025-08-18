@@ -270,9 +270,14 @@ function GroupProfile() {
               <DropdownMenuContent>
                 <DropdownMenuGroup>
                   <DropdownMenuItem>
-                    <Link href={"/group/create"}>
+                    <Link className="flex gap-2" href={"/group/create"}>
                       <Plus className="w-4 h-4" />
                       <div className="">Create Group</div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href={`/group/${group._id}/invitation`}>
+                      <div className="">Send Invitation</div>
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>

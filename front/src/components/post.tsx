@@ -100,6 +100,17 @@ function Post({
     }
   }
 
+  async function copyLink(postId: string) {
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/post/${postId}`
+      );
+      toast.success("Link copied to clipboard", { position: "top-center" });
+    } catch (error) {
+      toast.error("Failed to copy link", { position: "top-center" });
+    }
+  }
+
   useEffect(() => {
     if (post && user) {
       if (post.likes) {
@@ -218,7 +229,10 @@ function Post({
               <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
                 Save post
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
+              <DropdownMenuItem
+                onClick={() => copyLink(post._id)}
+                className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm"
+              >
                 Copy link
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
@@ -262,7 +276,7 @@ function Post({
           )}
           {post.video && (
             <video
-              className="w-full min-h-[300px] rounded-lg mt-4"
+              className="w-full min-h-[200px] max-h-96 rounded-lg mt-4"
               controls
               src={post.video.url}
             >

@@ -18,6 +18,7 @@ import {
   forgotPassword,
   changeForgotPassword,
   checkForgotPassword,
+  introUsers,
 } from "../controller/userController";
 import { auth } from "../middleware/auth";
 import upload from "../config/multer";
@@ -43,5 +44,6 @@ router.put("/change-password", auth, changePassword);
 router.put("/forgot-password/apply", checkAuth, forgotPassword);
 router.get("/forgot-password/verify", checkAuth, checkForgotPassword);
 router.post("/forgot-password/change", checkAuth, changeForgotPassword);
+router.get("/intro", introUsers);
 
 export default router;

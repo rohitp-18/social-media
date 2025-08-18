@@ -1,24 +1,41 @@
 "use client";
 
 import store from "@/store/store";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useTransition } from "react";
 import { Provider } from "react-redux";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { getUser } from "@/store/user/userSlice";
-import Navbar from "@/components/userNavbar";
-import IntroNavbar from "@/components/introNavbar";
 import { io } from "socket.io-client";
 import type { Socket } from "socket.io-client";
 import { SocketProvider, useSocket } from "@/store/utils/socketContext";
+import { PrimaryLoader, SecondaryLoader } from "@/components/loader";
 
 interface MiddlewareProps {
   children: React.ReactNode;
 }
 
 const Middleware: React.FC<MiddlewareProps> = ({ children }) => {
+  // const [loading, setLoading] = useState(false);
+
   const { user } = store.getState().user;
   const { socket, disconnectSocket, connectSocket, error } = useSocket();
+
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // useEffect(() => {
+  //   setLoading(true);
+
+  //   // Small delay to ensure loader is visible
+  //   const timeout = setTimeout(() => {
+  //     setLoading(false);
+  //   }, 500); // adjust as needed
+
+  //   return () => clearTimeout(timeout);
+  // }, [pathname]);
 
   useEffect(() => {
     store.dispatch(getUser());
@@ -51,7 +68,9 @@ const Middleware: React.FC<MiddlewareProps> = ({ children }) => {
     <Provider store={store}>
       <SocketProvider>
         <Toaster />
+        {/* <Suspense fallback={<SecondaryLoader />}> */}
         {children}
+        {/* </Suspense> */}
       </SocketProvider>
     </Provider>
   );

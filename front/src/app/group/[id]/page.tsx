@@ -17,6 +17,7 @@ import GroupProfile from "@/components/group/groupProfile";
 import Post from "@/components/post";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { PrimaryLoader } from "@/components/loader";
 
 function Page() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -46,6 +47,8 @@ function Page() {
       }
     }
   }, [group, user]);
+
+  if (!group) return <PrimaryLoader />;
 
   return (
     <>
@@ -82,7 +85,8 @@ function Page() {
               </section>
             </section>
             <aside className="min-h-screen flex-shrink-0 md:block hidden w-64">
-              <RecommendGroups />
+              <RecommendGroups id={group._id} />
+              <br className="my-2" />
               <RecommendUser />
             </aside>
           </section>

@@ -25,7 +25,7 @@ import {
   Trash,
   Users2,
 } from "lucide-react";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, use, useEffect, useState } from "react";
 import Wrapper from "../_wrapper";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
@@ -33,12 +33,12 @@ import { userProfile } from "@/store/user/userSlice";
 import Image from "next/image";
 import { getProfileProjects } from "@/store/user/projectSlice";
 import ProjectForm from "@/components/forms/projectForm";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import ProjectCard from "@/components/projectCard";
 import Link from "next/link";
 
-function Page({ params }: { params: { name: string } }) {
+function Page() {
   const [select, setSelect] = useState<any>(null);
   const [create, setCreate] = useState(false);
   const [edit, setEdit] = useState(false);
@@ -47,6 +47,7 @@ function Page({ params }: { params: { name: string } }) {
   const [isUser, setIsUser] = useState(false);
 
   const pathname = usePathname();
+  const { name: userName } = useParams();
   const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.user);
@@ -61,11 +62,11 @@ function Page({ params }: { params: { name: string } }) {
   }
 
   useEffect(() => {
-    Promise.resolve(params).then((res: any) => {
-      setName(decodeURIComponent(String(res.name)));
-      dispatch(getProfileProjects(decodeURIComponent(String(res.name))));
-    });
-  }, [params]);
+    if (userName) {
+      setName(userName as string);
+      dispatch(getProfileProjects(userName as string));
+    }
+  }, [userName]);
 
   useEffect(() => {
     if (user) {

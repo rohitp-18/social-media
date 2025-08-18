@@ -9,7 +9,7 @@ import { searchPosts } from "@/store/search/allSearchSlice";
 
 function PostSearch({ setType, selectValues }: any) {
   const dispatch = useDispatch<AppDispatch>();
-  const { user, loading } = useSelector((state: RootState) => state.user);
+  // const { user, loading } = useSelector((state: RootState) => state.user);
   const { posts } = useSelector((state: RootState) => state.search);
 
   useEffect(() => {

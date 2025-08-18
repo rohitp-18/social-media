@@ -21,18 +21,12 @@ import { AppDispatch, RootState } from "@/store/store";
 import { CheckCheck, MoreHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import React, {
-  use,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { io } from "socket.io-client";
 import { readMessage } from "@/store/chat/chatSlice";
 import ChatLogo from "@/components/chat/chatLogo";
 import { useSocket } from "@/store/utils/socketContext";
+import { SecondaryLoader } from "@/components/loader";
 
 function Page() {
   const [selectedChat, setSelectedChat] = useState<any>();
@@ -396,4 +390,6 @@ function Page() {
   );
 }
 
-export default Page;
+export default function ChatPage() {
+  return <Page />;
+}

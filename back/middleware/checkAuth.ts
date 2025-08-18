@@ -13,7 +13,12 @@ const checkAuth = expressAsyncHandler(
     }
 
     let _id: any;
-    _id = await jwt.verify(token, process.env.JWT_SECRET || "");
+    try {
+      _id = await jwt.verify(token, process.env.JWT_SECRET || "");
+    } catch (error) {
+      res.clearCookie("token");
+      return next();
+    }
 
     if (!_id) {
       return next();

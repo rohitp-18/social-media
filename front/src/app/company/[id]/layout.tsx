@@ -2,13 +2,7 @@ import axios from "@/store/axios";
 import { Metadata } from "next";
 import React from "react";
 
-type Props = {
-  params: {
-    id: string;
-  };
-};
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { id } = await Promise.resolve(params);
 
   try {

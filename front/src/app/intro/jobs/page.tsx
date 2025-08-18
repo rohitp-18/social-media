@@ -1,12 +1,13 @@
 "use client";
 import { User2, X } from "lucide-react";
 import axios from "@/store/axios";
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import FooterS from "@/components/footerS";
 import Navbar from "@/components/introNavbar";
+import Link from "next/link";
 
 function Page() {
   const [jobs, setJobs] = useState([]);
@@ -22,6 +23,10 @@ function Page() {
     }
   }
 
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
   return (
     <>
       <Navbar />
@@ -31,11 +36,15 @@ function Page() {
             <CardContent className="flex flex-col gap-2 py-5">
               {jobs.length > 0 ? (
                 jobs.map((job: any) => (
-                  <Fragment key={job.id}>
+                  <Link
+                    href={`/jobs/${job._id}`}
+                    className="block"
+                    key={job._id}
+                  >
                     <div className="flex gap-5 justify-between items-center">
                       <div className="flex gap-5 items-center">
                         <Avatar className="w-14 h-14">
-                          <AvatarImage src="" />
+                          <AvatarImage src={job.company.avatar?.url} />
                           <AvatarFallback>
                             <User2 className="w-14 h-14 p-3" />
                           </AvatarFallback>
@@ -45,7 +54,7 @@ function Page() {
                             {job.title}
                           </h3>
                           <span className="text-xs opacity-70">
-                            {job.company}, {job.location}
+                            {job.company.name} | {job.location}
                           </span>
                           <span className="text-xs opacity-50 pt-2">
                             {new Date(job.createdAt).toLocaleDateString(
@@ -63,8 +72,8 @@ function Page() {
                         <X className="w-5 h-5" />
                       </div>
                     </div>
-                    <hr />
-                  </Fragment>
+                    <hr className="my-2" />
+                  </Link>
                 ))
               ) : (
                 <div className="text-center flex justify-center items-center text-gray-500">

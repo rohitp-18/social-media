@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const comapnySchema = new mongoose.Schema(
+const groupSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -82,6 +82,22 @@ const comapnySchema = new mongoose.Schema(
     website: {
       type: String,
     },
+    memberCount: {
+      type: Number,
+      default: 0,
+    },
+    adminCount: {
+      type: Number,
+      default: 0,
+    },
+    postCount: {
+      type: Number,
+      default: 0,
+    },
+    requestsCount: {
+      type: Number,
+      default: 0,
+    },
     avatar: { public_id: { type: String }, url: { type: String } },
     bannerImage: { public_id: { type: String }, url: { type: String } },
     isDeleted: {
@@ -94,6 +110,19 @@ const comapnySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Group = mongoose.model("group", comapnySchema);
+groupSchema.pre("save", function (next) {
+  this.memberCount = this.members.length;
+  this.adminCount = this.admin.length;
+  this.postCount = this.posts.length;
+  this.requestsCount = this.requests.length;
+  next();
+});
+
+groupSchema.pre(/^find/, function (next) {
+  (this as mongoose.Query<any, any>).where({ isDeleted: false });
+  next();
+});
+
+const Group = mongoose.model("group", groupSchema);
 
 export default Group;

@@ -16,7 +16,6 @@ function PeopleSearch({ setType, selectValues }: any) {
 
   useEffect(() => {
     dispatch(searchPeoples(selectValues));
-    console.log(selectValues);
   }, [selectValues]);
 
   return (

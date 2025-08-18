@@ -9,11 +9,14 @@ const error = (
 ) => {
   let status = err.status || 500;
   let message = err.message || "Internal Server Error";
-  res.status(status).json({
-    success: false,
-    message,
-    stack: err.stack,
-  });
+  res
+    .status(status)
+    .json({
+      success: false,
+      message,
+      stack: err.stack,
+    })
+    .end();
 };
 
 export default error;

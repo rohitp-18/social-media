@@ -455,6 +455,69 @@ const getMembersWhoUserFollowedAndGroup = expressAsyncHandler(
   }
 );
 
+const fetchRecommendedGroups = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { groupId } = req.query;
+
+    let group;
+    if (groupId) {
+      group = await Group.findById(groupId);
+    }
+
+    // Find recommended groups based on similarity (not just exact match)
+    // We'll use $text search if indexes exist, otherwise fallback to regex similarity
+    let groups;
+    if (group) {
+      groups = await Group.find({
+        _id: { $ne: group._id },
+        $or: (() => {
+          const orArr = [];
+          if (group?.name) {
+            orArr.push({
+              name: {
+                $regex: group.name.split(" ").join("|"),
+                $options: "i",
+              },
+            });
+          }
+          if (group?.headline) {
+            orArr.push({
+              headline: {
+                $regex: group.headline.split(" ").join("|"),
+                $options: "i",
+              },
+            });
+          }
+          if (group?.location) {
+            orArr.push({
+              location: {
+                $regex: (Array.isArray(group.location)
+                  ? group.location.join(" ")
+                  : group.location
+                )
+                  .split(" ")
+                  .join("|"),
+                $options: "i",
+              },
+            });
+          }
+          return orArr;
+        })(),
+      });
+    } else {
+      groups = await Group.find(
+        req.user ? { members: { $in: [req.user._id] } } : {}
+      ).sort({ createdAt: -1 });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Recommended groups fetched successfully",
+      groups,
+    });
+  }
+);
+
 export {
   createGroup,
   fetchGroups,
@@ -466,4 +529,5 @@ export {
   //request
   requestToJoinGroup,
   updateGroupRequest,
+  fetchRecommendedGroups,
 };

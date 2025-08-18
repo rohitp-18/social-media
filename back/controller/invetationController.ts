@@ -219,7 +219,7 @@ const createInvitationForAll = expressAsyncHandler(
         message,
         url: link,
         relatedId: targetId,
-        refModel: "company",
+        refModel,
       }))
     );
 

@@ -304,7 +304,7 @@ const getJob = expressAsyncHandler(
 
     const job = await Job.findById(jobId)
       .populate("user", "name email avatar headline followers username")
-      .populate("company", "name avatar headline followers admin")
+      .populate("company", "name avatar headline followers admin address")
       .populate("preferredSkills", "name")
       .populate("essentialSkills", "name");
     if (!job || job.isDeleted) {
@@ -357,7 +357,11 @@ const getCompanyJobs = expressAsyncHandler(
 const introductionJobs = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     // find highpaying jobs
-    const jobs = await Job.find({}).sort({ salary: -1 }).limit(25);
+    const jobs = await Job.find({})
+      .sort({ salary: -1 })
+      .limit(25)
+      .populate("company", "name avatar headline followers")
+      .populate("user", "name avatar");
 
     res.status(200).json({
       success: true,

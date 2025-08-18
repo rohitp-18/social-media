@@ -64,7 +64,7 @@ const NotificationSchema: Schema = new Schema(
         "users",
         "newsletter",
         "invitations",
-        "companies",
+        "company",
         "chats",
       ],
     },

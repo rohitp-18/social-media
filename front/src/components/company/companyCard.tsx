@@ -12,17 +12,26 @@ import { Button } from "../ui/button";
 import { toggleFollowCompany } from "@/store/company/companySlice";
 import { toast } from "sonner";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
-function CompanyCard() {
+function CompanyCard({ company: propsCompany }: { company?: any }) {
   const [following, setFollowing] = useState(false);
   const [companyData, setCompanyData] = useState<any>(null);
+  const [company, setCompany] = useState<any>(null);
 
+  const router = useRouter();
+  const pathname = usePathname();
   const dispatch = useDispatch<AppDispatch>();
-  const { company } = useSelector((state: RootState) => state.company);
+  const { company: rootCompany } = useSelector(
+    (state: RootState) => state.company
+  );
   const { user } = useSelector((state: RootState) => state.user);
 
   const handleFollow = async () => {
-    if (!user) return;
+    if (!user) {
+      router.push(`/login?back=${pathname}`);
+      return;
+    }
     try {
       await dispatch(
         toggleFollowCompany({ companyId: company._id, follow: !following })
@@ -47,11 +56,21 @@ function CompanyCard() {
   useEffect(() => {
     if (company) {
       setCompanyData(company);
-      setFollowing(
-        company.followers?.some((follower: any) => follower._id === user?._id)
-      );
+      user &&
+        setFollowing(
+          company.followers?.some((follower: any) => follower._id === user?._id)
+        );
     }
   }, [company, user]);
+
+  useEffect(() => {
+    if (propsCompany) {
+      setCompany(propsCompany);
+      console.log(propsCompany);
+    } else {
+      setCompany(rootCompany);
+    }
+  }, [propsCompany, rootCompany]);
 
   if (!company || !companyData) return null;
   return (

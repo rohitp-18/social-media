@@ -23,16 +23,23 @@ const auth = expressAsyncHandler(
     }
 
     let _id: any;
-    _id = await jwt.verify(token, process.env.JWT_SECRET || "");
+    try {
+      _id = await jwt.verify(token, process.env.JWT_SECRET || "");
+    } catch (error: any) {
+      res.clearCookie("token");
+      return next(new ErrorHandler(error.message, 403));
+    }
 
     if (!_id) {
-      return next(new ErrorHandler("Please Login first", 4003));
+      res.clearCookie("token");
+      return next(new ErrorHandler("Please Login first", 403));
     }
 
     const user = await User.findById(_id);
 
     if (!user) {
-      return next(new ErrorHandler("Please Login first", 4003));
+      res.clearCookie("token");
+      return next(new ErrorHandler("Please Login first", 403));
     }
 
     req.user = user;

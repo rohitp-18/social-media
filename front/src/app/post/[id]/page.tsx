@@ -11,8 +11,9 @@ import { getSinglePost } from "@/store/user/userPostSlice";
 import PostForm from "@/components/forms/userPostForm";
 import { Dialog } from "@/components/ui/dialog";
 import Wrapper from "@/app/u/[name]/details/_wrapper";
+import { useParams } from "next/navigation";
 
-function Page({ params }: { params: { id: string } }) {
+function Page() {
   const [userName, setUserName] = useState<string | undefined>(undefined);
   const [isUser, setIsUser] = useState(false);
   const [create, setCreate] = useState(false);
@@ -24,6 +25,7 @@ function Page({ params }: { params: { id: string } }) {
   const { singlePost, loading } = useSelector(
     (state: RootState) => state.userPosts
   );
+  const { id } = useParams();
 
   function handleClose() {
     setCreate(false);
@@ -32,11 +34,11 @@ function Page({ params }: { params: { id: string } }) {
   }
 
   useEffect(() => {
-    Promise.resolve(params).then((res: any) => {
-      setUserName(decodeURIComponent(String(res.id)));
-      dispatch(getSinglePost(decodeURIComponent(String(res.id))));
-    });
-  }, [params]);
+    if (id) {
+      setUserName(id as string);
+      dispatch(getSinglePost(id as string));
+    }
+  }, [id]);
 
   useEffect(() => {
     if (userName && user) {

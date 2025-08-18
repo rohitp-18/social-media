@@ -54,7 +54,7 @@ function Page() {
     }
     if (!loading && user) {
       if (searchParams.get("back")) {
-        router.push(searchParams.get("back") as string);
+        router.push(`${searchParams.get("back")}?${searchParams.toString()}`);
       } else {
         router.push(`/u/${user.username}`);
       }

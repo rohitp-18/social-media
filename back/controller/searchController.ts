@@ -86,7 +86,8 @@ const getAllSearch = expressAsyncHandler(
       isDeleted: false,
     })
       .limit(10)
-      .populate("userId", "name avatar headline location username");
+      .populate("userId", "name avatar headline location username")
+      .populate("origin", "name avatar headline username isDeleted");
 
     const projects = await Project.find({
       $or: [
@@ -101,8 +102,9 @@ const getAllSearch = expressAsyncHandler(
 
     const groups = await Group.find({
       $or: [
-        { title: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } },
+        { name: { $regex: q, $options: "i" } },
+        { headline: { $regex: q, $options: "i" } },
+        { about: { $regex: q, $options: "i" } },
       ],
       isDeleted: false,
     }).limit(10);
@@ -116,7 +118,9 @@ const getAllSearch = expressAsyncHandler(
           : []),
       ],
       isDeleted: false,
-    }).limit(10);
+    })
+      .limit(10)
+      .populate("company", "name headline address avatar isDeleted");
 
     // extract all skills from peoples and companies projects
     const peoplesSkills = peoples.flatMap((people) => people.skills);
@@ -218,26 +222,33 @@ const getAllSearch = expressAsyncHandler(
 
 const getPeopleSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q, page, location, connections, skills, sort } = req.query;
+    const { q, page, location, connections, skill, sort } = req.query;
 
     if (!q) {
       return next(new ErrorHandler("Please provide a search query", 400));
     }
 
     let sortBy = {};
+    const userHasTextIndex = User.schema
+      .indexes()
+      .some(
+        (idx) => idx[0].hasOwnProperty("name") && idx[1].hasOwnProperty("text")
+      );
+
     if (sort === "recent") {
       sortBy = { createdAt: -1 };
     } else if (sort === "popular") {
       sortBy = { totalFollowers: -1 };
     } else if (sort === "relevant") {
-      sortBy = {
-        score: { $meta: "textScore" },
-      };
+      // Only use textScore sort if $text search is being used
+      sortBy = userHasTextIndex && q ? { score: { $meta: "textScore" } } : {};
     } else if (sort === "connections") {
       sortBy = { totalConnections: -1 };
     }
 
-    const peoples = await User.find({
+    // Determine if we should use text search and textScore sorting
+
+    let userQuery: any = {
       $or: [
         { name: { $regex: q, $options: "i" } },
         { headline: { $regex: q, $options: "i" } },
@@ -246,21 +257,33 @@ const getPeopleSearch = expressAsyncHandler(
         { "location.country": { $regex: q, $options: "i" } },
         { "location.city": { $regex: q, $options: "i" } },
         { "location.state": { $regex: q, $options: "i" } },
-        { "location.country": { $regex: q, $options: "i" } },
         { bio: { $regex: q, $options: "i" } },
         ...(location
-          ? [{ "location.city": { $regex: location, $options: "i" } }]
+          ? [
+              { "location.city": { $regex: location, $options: "i" } },
+              { "location.state": { $regex: location, $options: "i" } },
+              { "location.country": { $regex: location, $options: "i" } },
+            ]
           : []),
-        ...(location
-          ? [{ "location.state": { $regex: location, $options: "i" } }]
+        ...(skill
+          ? [{ "skills.skill": { $regex: skill, $options: "i" } }]
           : []),
-        ...(location
-          ? [{ "location.country": { $regex: location, $options: "i" } }]
-          : []),
-        ...(skills ? [{ skills: { $in: skills } }] : []),
       ],
-    })
-      .sort(sortBy)
+    };
+
+    if (sort === "relevant" && userHasTextIndex) {
+      userQuery = {
+        ...userQuery,
+        $text: { $search: q as string },
+      };
+    }
+
+    const peoples = await User.find(userQuery)
+      .sort(
+        sort === "relevant" && userHasTextIndex
+          ? { score: { $meta: "textScore" } }
+          : sortBy
+      )
       .skip((Number(page || 1) - 1) * 20)
       .limit(20);
 
@@ -268,21 +291,14 @@ const getPeopleSearch = expressAsyncHandler(
       return next(new ErrorHandler("No results found", 404));
     }
 
-    if (req.user === undefined) {
-      return next(
-        res.status(200).json({
-          success: true,
-          peoples,
+    const followingPeoples = req.user
+      ? peoples.map((people) => {
+          return {
+            ...people.toObject(),
+            isFollowing: req.user?.following.includes(people._id),
+          };
         })
-      );
-    }
-
-    const followingPeoples = peoples.map((people) => {
-      return {
-        ...people.toObject(),
-        isFollowing: req.user?.following.includes(people._id),
-      };
-    });
+      : peoples;
 
     res.status(200).json({
       success: true,
@@ -323,33 +339,124 @@ const getCompaniesSearch = expressAsyncHandler(
 
 const getPostsSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q, page, sort, limit } = req.query;
+    const { q, page, sort, limit, postType, contentType, timeframe } =
+      req.query;
 
-    const posts = await Post.find({
-      ...(q
-        ? {
-            $or: [
-              { content: { $regex: q, $options: "i" } },
-              ...(Types.ObjectId.isValid(q as string)
-                ? [{ hashtags: new Types.ObjectId(q as string) }]
-                : []),
-            ],
-          }
+    const peoples = await User.find({
+      $or: [
+        { name: { $regex: q, $options: "i" } },
+        { headline: { $regex: q, $options: "i" } },
+        { "location.city": { $regex: q, $options: "i" } },
+        { "location.state": { $regex: q, $options: "i" } },
+        { "location.country": { $regex: q, $options: "i" } },
+        { "website.link": { $regex: q, $options: "i" } },
+        { bio: { $regex: q, $options: "i" } },
+      ],
+      ...(User.schema
+        .indexes()
+        .some(
+          (idx) =>
+            idx[0].hasOwnProperty("name") && idx[1].hasOwnProperty("text")
+        )
+        ? { $text: { $search: q as string } }
         : {}),
-      isDeleted: false,
+      deleted: false,
     })
+      .populate("skills", "name _id")
+      .limit(10)
+      .sort(
+        User.schema
+          .indexes()
+          .some(
+            (idx) =>
+              idx[0].hasOwnProperty("name") && idx[1].hasOwnProperty("text")
+          )
+          ? { score: { $meta: "textScore" } }
+          : {}
+      );
+
+    const companies = await Company.find({
+      $or: [
+        { name: { $regex: q, $options: "i" } },
+        { headline: { $regex: q, $options: "i" } },
+        { location: { $regex: q, $options: "i" } },
+        { website: { $regex: q, $options: "i" } },
+        { about: { $regex: q, $options: "i" } },
+      ],
+      isDeleted: false,
+    }).limit(10);
+
+    // Build the query object for posts
+    const postQuery: any = {
+      isDeleted: false,
+    };
+
+    if (q) {
+      postQuery.$or = [
+        { content: { $regex: q, $options: "i" } },
+        ...(peoples.length > 0
+          ? [{ user: { $in: peoples.map((user) => user._id) } }]
+          : []),
+        ...(companies.length > 0
+          ? [{ company: { $in: companies.map((company) => company._id) } }]
+          : []),
+        ...(peoples.length > 0
+          ? [{ tags: { $in: peoples.map((user) => user._id) } }]
+          : []),
+      ];
+    }
+
+    if (timeframe === "24h") {
+      postQuery.createdAt = {
+        $gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      };
+    } else if (timeframe === "7d") {
+      postQuery.createdAt = {
+        $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      };
+    } else if (timeframe === "30d") {
+      postQuery.createdAt = {
+        $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      };
+    } else if (timeframe === "1y") {
+      postQuery.createdAt = {
+        $gte: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+      };
+    }
+
+    if (postType) {
+      postQuery.postType = postType;
+    }
+
+    if (contentType) {
+      if (contentType === "text") {
+        postQuery.images = [];
+        postQuery.video = {};
+      } else if (contentType === "image") {
+        postQuery.images = { $ne: [] };
+      } else if (contentType === "video") {
+        postQuery.video = { $exists: true, $ne: null };
+      }
+    }
+
+    const posts = await Post.find(postQuery)
       .skip((Number(page) - 1) * 20)
       .limit(Number(limit) || 20)
       .sort(
         sort === "recent"
           ? { createdAt: -1 }
           : sort === "popular"
-          ? { totalLikes: -1 }
+          ? { likeCount: -1 }
           : sort === "relevant"
           ? { score: { $meta: "textScore" } }
+          : sort === "liked"
+          ? { likeCount: -1 }
+          : sort === "comment"
+          ? { commentCount: -1 }
           : {}
       )
-      .populate("userId", "name email avatar headline");
+      .populate("userId", "name email avatar headline username isDeleted")
+      .populate("origin", "name avatar headline username isDeleted");
 
     const postsWithIsLike = posts.map((post: any) => {
       const isLike = post.likes.includes(req.user?._id);

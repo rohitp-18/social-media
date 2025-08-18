@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { toast } from "sonner";
 import { resetUser, toggleFollow } from "@/store/user/userSlice";
+import Link from "next/link";
 
 function RecommendUser() {
   const [users, setUsers] = useState<any[]>([]);
@@ -33,8 +34,8 @@ function RecommendUser() {
   }
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (loginUser) fetchData();
+  }, [loginUser]);
 
   useEffect(() => {
     if (changeFollow) {
@@ -42,6 +43,9 @@ function RecommendUser() {
       dispatch(resetUser());
     }
   }, [changeFollow]);
+
+  if (users.length === 0) return null;
+
   return (
     <Card className="flex flex-col gap-3">
       <CardHeader className="pb-2">
@@ -51,7 +55,10 @@ function RecommendUser() {
         {users.length > 0 &&
           users.map((user, i: number) => (
             <Fragment key={user._id}>
-              <div className="flex justify-start items-start gap-3">
+              <Link
+                href={`/u/${user.username}`}
+                className="flex justify-start items-start gap-3"
+              >
                 <Avatar className="w-10 h-10">
                   <AvatarImage src={user.avatar?.url} />
                   <AvatarFallback>
@@ -67,7 +74,10 @@ function RecommendUser() {
                     className="flex items-center mt-2 px-3 rounded-full"
                     variant={"outline"}
                     size={"sm"}
-                    onClick={() => dispatch(toggleFollow(user._id))}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dispatch(toggleFollow(user._id));
+                    }}
                   >
                     {loginUser && loginUser.following.includes(user._id) ? (
                       <Check />
@@ -79,7 +89,7 @@ function RecommendUser() {
                       : "Follow"}
                   </Button>
                 </div>
-              </div>
+              </Link>
               {i !== users.length - 1 && <hr />}
             </Fragment>
           ))}

@@ -742,6 +742,17 @@ const changeForgotPassword = expressAsyncHandler(
   }
 );
 
+const introUsers = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const users = await User.find({}).sort({ totalFollowers: -1 }).limit(20);
+
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  }
+);
+
 export {
   getUsers,
   loginUser,
@@ -762,4 +773,5 @@ export {
   forgotPassword,
   checkForgotPassword,
   changeForgotPassword,
+  introUsers,
 };

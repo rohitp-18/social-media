@@ -8,7 +8,7 @@ type Props = {
   };
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { name } = await Promise.resolve(params);
 
   try {

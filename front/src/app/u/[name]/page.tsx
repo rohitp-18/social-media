@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, use, useEffect, useState } from "react";
 import Navbar from "@/components/userNavbar";
 import IntroNavbar from "@/components/introNavbar";
 import {
@@ -37,8 +37,9 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { PrimaryLoader } from "@/components/loader";
+import { useParams } from "next/dist/client/components/navigation";
 
-function ProfilePage({ params }: { params: { name: string } }) {
+function ProfilePage() {
   const [editIntro, setEditIntro] = useState(false);
   const [editAbout, setEditAbout] = useState(false);
   const [showFullAbout, setShowFullAbout] = useState(false);
@@ -46,14 +47,15 @@ function ProfilePage({ params }: { params: { name: string } }) {
   const [userName, setUserName] = useState("");
 
   const dispatch = useDispatch<AppDispatch>();
+  const { name } = useParams();
   const { user, loading, profile } = useSelector((state: any) => state.user);
 
   useEffect(() => {
-    Promise.resolve(params).then((res: any) => {
-      dispatch(userProfile(res.name));
-      setUserName(res.name);
-    });
-  }, [params]);
+    if (name) {
+      dispatch(userProfile(name as string));
+      setUserName(name as string);
+    }
+  }, [name]);
 
   useEffect(() => {
     if (profile) {

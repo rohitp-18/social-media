@@ -9,9 +9,11 @@ import {
   leaveGroup,
   requestToJoinGroup,
   updateGroupRequest,
+  fetchRecommendedGroups,
 } from "../controller/groupController";
 import { auth } from "../middleware/auth";
 import upload from "../config/multer";
+import checkAuth from "../middleware/checkAuth";
 
 const router = Router();
 
@@ -42,5 +44,7 @@ router.post("/leave/:id", auth, leaveGroup);
 
 router.put("/request/:id", auth, requestToJoinGroup);
 router.put("/request/update/:id", auth, updateGroupRequest);
+
+router.get("/recommended", checkAuth, fetchRecommendedGroups);
 
 export default router;

@@ -26,7 +26,7 @@ import { userProfile } from "@/store/user/userSlice";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import SkillForm from "@/components/forms/skillForm";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import {
@@ -43,8 +43,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 
-function Page({ params }: { params: { name: string } }) {
-  const [name, setName] = useState("");
+function Page() {
   const [isUser, setIsUser] = useState(false);
   const [select, setSelect] = useState<any>();
   const [create, setCreate] = useState(false);
@@ -55,7 +54,7 @@ function Page({ params }: { params: { name: string } }) {
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
+  const { name } = useParams();
   const dispatch = useDispatch<AppDispatch>();
   const { profile, user } = useSelector((state: RootState) => state.user);
 
@@ -70,7 +69,7 @@ function Page({ params }: { params: { name: string } }) {
         setLoading2(false);
         setSelect(null);
         setEdit(false);
-        dispatch(userProfile(name));
+        dispatch(userProfile(name as string));
       }
 
       toast.success(data.message, {
@@ -96,11 +95,10 @@ function Page({ params }: { params: { name: string } }) {
   }
 
   useEffect(() => {
-    Promise.resolve(params).then((res: any) => {
-      setName(res.name);
-      dispatch(userProfile(res.name));
-    });
-  }, [params]);
+    if (name) {
+      dispatch(userProfile(name as string));
+    }
+  }, [name]);
 
   useEffect(() => {
     if (isUser) {
@@ -128,9 +126,9 @@ function Page({ params }: { params: { name: string } }) {
               setCreate(false);
               setEdit(false);
               setSelect(null);
-              dispatch(userProfile(name));
+              dispatch(userProfile(name as string));
             }}
-            username={name}
+            username={name as string}
             edit={edit}
             skill={select}
           />

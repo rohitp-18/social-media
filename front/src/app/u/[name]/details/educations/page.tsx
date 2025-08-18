@@ -33,7 +33,7 @@ import Wrapper from "../_wrapper";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { Separator } from "@/components/ui/separator";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   deleteEducation,
   getProfileEducations,
@@ -41,7 +41,7 @@ import {
 import EducationForm from "@/components/forms/educationForm";
 import Link from "next/link";
 
-function page({ params }: { params: { name: string } }) {
+function page() {
   const [select, setSelect] = useState<any>(null);
   const [create, setCreate] = useState(false);
   const [edit, setEdit] = useState(false);
@@ -54,6 +54,7 @@ function page({ params }: { params: { name: string } }) {
     (state: RootState) => state.education
   );
   const { user } = useSelector((state: RootState) => state.user);
+  const { name } = useParams();
 
   function handleClose(val: boolean) {
     setCreate(val);
@@ -62,11 +63,11 @@ function page({ params }: { params: { name: string } }) {
   }
 
   useEffect(() => {
-    Promise.resolve(params).then((res) => {
-      setUsername(decodeURIComponent(String(res.name)));
-      dispatch(getProfileEducations(decodeURIComponent(String(res.name))));
-    });
-  }, [params]);
+    if (name) {
+      setUsername(name as string);
+      dispatch(getProfileEducations(name as string));
+    }
+  }, [name]);
 
   useEffect(() => {
     if (user) {

@@ -32,10 +32,10 @@ import Link from "next/link";
 import { PrimaryLoader } from "@/components/loader";
 import CompanyProfile from "@/components/company/companyProfile";
 
-function Page({ params }: { params: { id: string } }) {
+function Page() {
   const [tab, setTab] = useState("");
 
-  const param = useParams();
+  const { id } = useParams();
   const pathname = usePathname();
   const dispatch = useDispatch<AppDispatch>();
   const { company, loading, error } = useSelector(
@@ -47,10 +47,8 @@ function Page({ params }: { params: { id: string } }) {
   }, [pathname]);
 
   useEffect(() => {
-    Promise.resolve(params).then((res: { id: string }) => {
-      dispatch(getSingleCompany(res.id));
-    });
-  }, [params]);
+    dispatch(getSingleCompany(id as string));
+  }, [id]);
 
   return (
     <>

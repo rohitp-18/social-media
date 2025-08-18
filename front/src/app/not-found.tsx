@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 export default function NotFound() {
   const router = useRouter();
 
-  // Optional: Automatically redirect after some time
   useEffect(() => {
     const redirectTimer = setTimeout(() => {
       router.push("/");

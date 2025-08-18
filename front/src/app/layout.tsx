@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/themeProvider";
 import Middleware from "./middler";
+import { Suspense } from "react";
+import { SecondaryLoader } from "@/components/loader";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -39,7 +41,9 @@ export default function RootLayout({
           attribute="class"
           disableTransitionOnChange
         >
-          <Middleware>{children}</Middleware>
+          <Suspense fallback={<SecondaryLoader />}>
+            <Middleware>{children}</Middleware>
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>
