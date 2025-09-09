@@ -4,7 +4,7 @@ import axios from "../axios";
 
 const searchCompaniesAction = createAsyncThunk(
   "company/searchCompanies",
-  async (searchTerm, thunkAPI) => {
+  async (searchTerm: string, thunkAPI) => {
     try {
       const { data } = await axios.get(`/company/search?search=${searchTerm}`);
       return data;

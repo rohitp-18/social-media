@@ -27,7 +27,14 @@ function ProjectCard({
   setEdit,
   username,
   showUser,
-}: any) {
+}: {
+  project: any;
+  isUser: boolean;
+  setSelect?: (val: any) => void;
+  setEdit?: (val: boolean) => void;
+  username: string;
+  showUser: boolean;
+}) {
   const [showDescription, setShowDescription] = useState<any>(null);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -79,7 +86,7 @@ function ProjectCard({
               </span>
             </div>
           </div>
-          {isUser && (
+          {isUser && setSelect && setEdit && (
             <div className="text-xs opacity-50 leading-none flex items-center gap-2">
               <Button
                 onClick={() => {
@@ -161,7 +168,7 @@ function ProjectCard({
           >
             <Avatar className="w-9 h-9 border border-primary/40 shadow-sm">
               <AvatarImage
-                src={project.user.avatar.url}
+                src={project.user.avatar?.url}
                 alt={project.user.name}
               />
               <AvatarFallback>

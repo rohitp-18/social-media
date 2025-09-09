@@ -76,6 +76,12 @@ function RecommendUser() {
                     size={"sm"}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!loginUser) {
+                        toast.error("You must be logged in to follow users", {
+                          position: "top-center",
+                        });
+                        return;
+                      }
                       dispatch(toggleFollow(user._id));
                     }}
                   >

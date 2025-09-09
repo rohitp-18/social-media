@@ -64,13 +64,14 @@ function page() {
 
   useEffect(() => {
     if (name) {
-      setUsername(name as string);
+      setUsername(decodeURIComponent(name as string));
       dispatch(getProfileEducations(name as string));
     }
   }, [name]);
 
   useEffect(() => {
     if (user) {
+      console.log(user.username, username);
       setIsUser(user.username === username);
     }
   }, [user, username]);

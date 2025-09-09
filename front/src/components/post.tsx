@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -26,8 +26,8 @@ import {
 } from "./ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -46,6 +46,8 @@ import Comments from "./postComponents/comments";
 import ShareDialog from "./postComponents/shareDialog";
 import { timeAgo } from "@/lib/functions";
 import Link from "next/link";
+import { toggleFollow } from "@/store/user/userSlice";
+import { SaveIcon } from "@/assets/icons";
 
 function Post({
   cardClass,
@@ -58,8 +60,9 @@ function Post({
   const [isLike, setIsLike] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [share, setShare] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
 
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.user);
   const router = useRouter();
 
@@ -77,6 +80,12 @@ function Post({
   };
 
   async function toggleSavePost(postId: string) {
+    if (!user) {
+      toast.error("You must be logged in to save a post", {
+        position: "top-center",
+      });
+      return;
+    }
     try {
       const { data } = await axios.put(`/posts/post/${postId}/save`, {});
       toast.success(data.message, { position: "top-center" });
@@ -88,8 +97,13 @@ function Post({
     }
   }
 
-  async function toggleLike(e: any) {
-    e.preventDefault();
+  async function toggleLike() {
+    if (!user) {
+      toast.error("You must be logged in to like a post", {
+        position: "top-center",
+      });
+      return;
+    }
 
     try {
       const { data } = await axios.put(`/posts/post/${post._id}/like`, {}, {});
@@ -110,6 +124,16 @@ function Post({
       toast.error("Failed to copy link", { position: "top-center" });
     }
   }
+
+  const handleShare = useCallback(() => {
+    if (!user) {
+      toast.error("You must be logged in to share a post", {
+        position: "top-center",
+      });
+      return;
+    }
+    setShare(true);
+  }, [user]);
 
   useEffect(() => {
     if (post && user) {
@@ -179,44 +203,68 @@ function Post({
         </>
       )}
       <CardHeader className="flex flex-row justify-between items-start gap-2 py-3">
-        <Link
-          href={`/u/${post.userId?.username}`}
-          className="flex items-start gap-3"
-        >
-          <Avatar className="h-12 w-12">
-            <AvatarImage
-              src={post.userId?.avatar?.url}
-              alt={post.userId?.name || "User"}
-            />
-            <AvatarFallback>
-              <User className="w-6 h-6" />
-            </AvatarFallback>
-          </Avatar>
+        <div className="flex flex-row items-start gap-3">
+          <Link
+            href={`/u/${post.userId.username}`}
+            className="flex items-start gap-3"
+          >
+            <Avatar className="h-12 w-12">
+              <AvatarImage
+                src={post.userId?.avatar?.url}
+                alt={post.userId?.name || "User"}
+              />
+              <AvatarFallback>
+                <User className="w-6 h-6" />
+              </AvatarFallback>
+            </Avatar>
+          </Link>
           <div>
-            <h2 className="font-semibold text-lg">{post.userId?.name}</h2>
-            <p className="text-sm opacity-90 -mt-1">{post.userId?.headline}</p>
-            <div className="text-xs opacity-70 leading-none flex items-center gap-1">
-              <span>{post.createdAt ? timeAgo(post.createdAt) : ""}</span>
-              <span className="text-xs flex items-center">
-                <Earth className="w-3 h-3" />
-              </span>
-            </div>
+            <Link href={`/u/${post.userId.username}`}>
+              <h2 className="font-semibold text-lg">{post.userId.name}</h2>
+              <p className="text-sm opacity-90 -mt-1">{post.userId.headline}</p>
+              <div className="text-xs opacity-70 leading-none flex items-center gap-1">
+                <span>{timeAgo(post.createdAt)}</span>
+                <span className="text-xs flex items-center">
+                  <Earth className="w-3 h-3" />
+                </span>
+              </div>
+            </Link>
 
-            <Button
-              className="w-min mt-2.5 flex md:hidden px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
-              variant={"outline"}
-              size={"sm"}
-            >
-              Follow
-            </Button>
+            {(!user || (isFollowing && user?._id !== post.userId._id)) && (
+              <Button
+                className="w-min mt-2.5 flex md:hidden px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
+                variant={"outline"}
+                size={"sm"}
+                onClick={(e) => {
+                  if (!user) {
+                    toast.error("You must be logged in to follow users", {
+                      position: "top-center",
+                    });
+                    return;
+                  }
+                  dispatch(toggleFollow(post.userId._id));
+                }}
+              >
+                Follow
+              </Button>
+            )}
           </div>
-        </Link>
+        </div>
         <div className="flex items-center gap-3">
-          {isFollowing && user?._id !== post.userId?._id && (
+          {(!user || (isFollowing && user?._id !== post.userId._id)) && (
             <Button
               className="w-min md:ml-8 hidden md:flex px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
               variant={"outline"}
               size={"sm"}
+              onClick={(e) => {
+                if (!user) {
+                  toast.error("You must be logged in to follow users", {
+                    position: "top-center",
+                  });
+                  return;
+                }
+                dispatch(toggleFollow(post.userId._id));
+              }}
             >
               Follow
             </Button>
@@ -226,7 +274,10 @@ function Post({
               <MoreVerticalIcon className="h-5 w-5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="mt-2 p-2 bg-background rounded-lg shadow-lg">
-              <DropdownMenuItem className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm">
+              <DropdownMenuItem
+                onClick={() => toggleSavePost(post._id)}
+                className="cursor-pointer focus-visible:outline-none py-1.5 px-1 text-sm"
+              >
                 Save post
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -258,7 +309,7 @@ function Post({
       <hr />
       <CardContent className="py-6">
         <CardDescription className="text-opacity-90">
-          {post?.content}
+          {post.content}
         </CardDescription>
         <div className="flex flex-wrap gap-2 mt-4">
           {post.images && post.images.length > 0 && (
@@ -290,7 +341,7 @@ function Post({
       <CardFooter className="pb-3">
         <div className="flex w-full justify-between">
           <div
-            onClick={(e) => toggleLike(e)}
+            onClick={() => toggleLike()}
             className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
           >
             <Heart
@@ -304,7 +355,7 @@ function Post({
           </div>
           <Comments postId={post._id} />
           <div
-            onClick={() => setShare(!share)}
+            onClick={() => handleShare()}
             className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
           >
             <Send className="h-5 w-5" />
@@ -321,21 +372,7 @@ function Post({
             onClick={() => toggleSavePost(post._id)}
             className="flex-col hover:cursor-pointer hover:scale-105 gap-1 items-center flex w-14"
           >
-            <svg
-              className={`w-5 h-5 ${
-                isSaved ? "fill-foreground" : "fill-background"
-              }`}
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              fill="none"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-5-7 5V5z"
-              />
-            </svg>
+            <SaveIcon isSaved={isSaved} />
             <h4 className="text-sm opacity-80">{isSaved ? "Saved" : "Save"}</h4>
           </div>
         </div>

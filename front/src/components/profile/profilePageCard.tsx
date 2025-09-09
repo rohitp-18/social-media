@@ -1,4 +1,10 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import {
   Card,
   CardContent,
@@ -29,6 +35,7 @@ import { toggleFollow, userProfile } from "@/store/user/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 function ProfilePageCard({
   profile,
@@ -46,6 +53,7 @@ function ProfilePageCard({
   const [loading, setLoading] = useState(false);
   const [edit, setEdit] = useState(false);
 
+  const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.user);
 
@@ -159,6 +167,14 @@ function ProfilePageCard({
       reader.readAsDataURL(file);
     }
   };
+
+  const folloHandler = useCallback(() => {
+    if (!user) {
+      router.push(`/login?back=${location.pathname}`);
+      return;
+    }
+    dispatch(toggleFollow(profile.user._id));
+  }, [user, profile]);
 
   function handleDialogClose(val: boolean) {
     setEdit(val);
@@ -359,7 +375,7 @@ function ProfilePageCard({
               <Button
                 className="flex items-center rounded-full"
                 variant={"outline"}
-                onClick={() => dispatch(toggleFollow(profile.user._id))}
+                onClick={folloHandler}
               >
                 Following
               </Button>
@@ -367,7 +383,7 @@ function ProfilePageCard({
               <Button
                 className="flex items-center rounded-full"
                 variant={"default"}
-                onClick={() => dispatch(toggleFollow(profile.user._id))}
+                onClick={folloHandler}
               >
                 <Plus /> Follow
               </Button>

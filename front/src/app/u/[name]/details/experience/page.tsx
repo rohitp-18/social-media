@@ -64,8 +64,8 @@ function Page() {
 
   useEffect(() => {
     if (name) {
-      setUsername(name as string);
-      dispatch(getProfileExperiences(name as string));
+      setUsername(decodeURIComponent(name as string));
+      dispatch(getProfileExperiences(decodeURIComponent(name as string)));
     }
   }, [name]);
 

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -32,6 +32,10 @@ import { clearError, logout, resetUser } from "@/store/user/userSlice";
 import { toast } from "sonner";
 import Link from "next/link";
 import { isAxiosError } from "axios";
+import {
+  createSearchHistoryAction,
+  getAllSearchHistoryAction,
+} from "@/store/history/searchHistory";
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -40,6 +44,7 @@ const Navbar: React.FC = () => {
   const [drop, setDrop] = useState(false);
   const [search, setSearch] = useState("");
   const [searchDrop, setSearchDrop] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
@@ -48,10 +53,51 @@ const Navbar: React.FC = () => {
     logout: logout2,
     error,
   } = useSelector((state: RootState) => state.user);
+  const { history } = useSelector((state: RootState) => state.searchHistory);
+
+  const searchCall = useCallback(
+    (e: any) => {
+      if (e.key === "Enter" && search.trim()) {
+        dispatch(createSearchHistoryAction(search));
+
+        router.push(`/search?q=${encodeURIComponent(search.trim())}`);
+      }
+    },
+    [search, open, searchDrop]
+  );
+
+  const HistoryRender = () => (
+    <div className="absolute top-full left-0 w-full z-10 mt-1 bg-white rounded-md border shadow-md max-h-60 overflow-y-auto">
+      {history.length === 0 ? (
+        <div className="py-2 px-3 text-sm text-gray-500">No result found.</div>
+      ) : (
+        <div className="max-h-60">
+          {history.map((q: any) => (
+            <div
+              key={q._id}
+              onClick={() => {
+                setSearch(q.query);
+                router.push(`/search?q=${q.query}`);
+              }}
+              className="cursor-pointer hover:bg-gray-100 p-2 text-sm text-gray-800 flex items-center gap-1"
+            >
+              {q.query}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   function logoutAction() {
     dispatch(logout());
   }
+
+  useEffect(() => {
+    if (search) {
+      dispatch(getAllSearchHistoryAction(search));
+    }
+  }, [search]);
 
   useEffect(() => {
     if (logout2) {
@@ -83,12 +129,17 @@ const Navbar: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 w-full"
-              onKeyDown={(e) =>
-                e.key === "Enter" &&
-                search.trim() &&
-                router.push(`/search?q=${encodeURIComponent(search.trim())}`)
-              }
+              onKeyDown={(e) => searchCall(e)}
+              onFocusCapture={() => {
+                setOpen(true);
+              }}
+              onBlur={() => {
+                setTimeout(() => {
+                  setOpen(false);
+                }, 300);
+              }}
             />
+            {open && search && <HistoryRender />}
           </div>
           <Search
             onClick={() => setSearchDrop(!searchDrop)}
@@ -223,12 +274,17 @@ const Navbar: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 w-full"
-              onKeyDown={(e) =>
-                e.key === "Enter" &&
-                search.trim() &&
-                router.push(`/search?q=${encodeURIComponent(search.trim())}`)
-              }
+              onKeyDown={(e) => searchCall(e)}
+              onFocusCapture={() => {
+                setOpen(true);
+              }}
+              onBlur={() => {
+                setTimeout(() => {
+                  setOpen(false);
+                }, 300);
+              }}
             />
+            {open && search && <HistoryRender />}
           </div>
         )}
       </div>

@@ -3,18 +3,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
-
-interface UserState {
-  user: any;
-  loading: boolean;
-  error: string | null;
-  login: boolean;
-  profile?: any;
-  logout?: boolean;
-  updated?: boolean;
-  message?: string;
-  changeFollow: boolean;
-}
+import { UserState } from "./typeUser";
 
 const initialState: UserState = {
   user: null,
@@ -250,7 +239,9 @@ const userSlice = createSlice({
       })
       .addCase(changeLanguage.fulfilled, (state, action) => {
         state.loading = false;
-        state.user.language = action.payload.language;
+        if (state.user) {
+          state.user.language = action.payload.language;
+        }
         if (state.profile) {
           state.profile.user.language = action.payload.language;
         }
@@ -269,7 +260,9 @@ const userSlice = createSlice({
       })
       .addCase(changeUsername.fulfilled, (state, action) => {
         state.loading = false;
-        state.user.username = action.payload.username;
+        if (state.user) {
+          state.user.username = action.payload.username;
+        }
         if (state.profile) {
           state.profile.user.username = action.payload.username;
         }
@@ -289,6 +282,7 @@ const userSlice = createSlice({
       .addCase(toggleFollow.fulfilled, (state, action) => {
         state.loading = false;
         state.changeFollow = true;
+        if (!state.user) return;
         if (action.payload.follow) {
           state.user.following.push(action.payload.userId);
           if (state.profile?.user?._id === action.payload.userId) {
@@ -302,7 +296,7 @@ const userSlice = createSlice({
           );
           if (state.profile?.user?._id === action.payload.userId) {
             state.profile.user.followers = state.profile.user.followers.filter(
-              (user: any) => user !== state.user._id
+              (user: any) => user !== state.user?._id
             );
             state.profile.user.totalFollowers =
               state.profile.user.followers.length;

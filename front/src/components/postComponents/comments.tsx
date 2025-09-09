@@ -192,6 +192,12 @@ function Comments({ postId }: { postId: string }) {
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+      if (!user) {
+        toast.error("You must be logged in to comment", {
+          position: "top-center",
+        });
+        return;
+      }
       if (!inputText.trim()) return;
       try {
         if (replyingTo) {
@@ -224,6 +230,12 @@ function Comments({ postId }: { postId: string }) {
 
   const handleLike = useCallback(
     async (commentId: string) => {
+      if (!user) {
+        toast.error("You must be logged in to like comments", {
+          position: "top-center",
+        });
+        return;
+      }
       try {
         await axios.get(`/comments/like/${commentId}`);
         getAllComments();
@@ -236,6 +248,12 @@ function Comments({ postId }: { postId: string }) {
 
   const handleDelete = useCallback(
     async (id: string) => {
+      if (!user) {
+        toast.error("You must be logged in to delete comments", {
+          position: "top-center",
+        });
+        return;
+      }
       try {
         await axios.delete(`/comments/${id}`);
         toast.success("Comment deleted", { position: "top-center" });
@@ -315,7 +333,7 @@ function Comments({ postId }: { postId: string }) {
                           >
                             <ThumbsUp
                               className={`h-4 w-4 ${
-                                comment.likes?.includes(user?._id)
+                                comment.likes?.includes(user?._id || "")
                                   ? "fill-foreground"
                                   : ""
                               }`}

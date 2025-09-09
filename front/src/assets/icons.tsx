@@ -77,4 +77,20 @@ const SocialPost = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export { Whatsapp, Thread, Email, SocialPost };
+const SaveIcon = ({ isSaved }: { isSaved: boolean }) => (
+  <svg
+    className={`w-5 h-5 ${isSaved ? "fill-foreground" : "fill-background"}`}
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    fill="none"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-5-7 5V5z"
+    />
+  </svg>
+);
+
+export { Whatsapp, Thread, Email, SocialPost, SaveIcon };

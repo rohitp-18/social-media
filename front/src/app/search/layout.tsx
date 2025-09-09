@@ -1,26 +1,24 @@
-import axios from "@/store/axios";
 import { Metadata } from "next";
 import React from "react";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { searchParams } = arguments[0] || {};
-  const q = searchParams?.q || "";
+  const q =
+    typeof window !== "undefined"
+      ? new URL(window.location.href).searchParams.get("q") || ""
+      : "";
 
-  try {
-    const data = await fetch(`http://localhost:5000/api/v1/search/all?q=${q}`, {
-      method: "GET",
-    });
-
-    return {
-      title: `${q} Search | TS - Social network site`,
-      description: `Search results for ${q} on TS - Social network site`,
-    };
-  } catch (error) {
-    return {
-      title: "Error",
-      description: "An error occurred while fetching user data.",
-    };
-  }
+  return {
+    title: q ? `Search results for "${q}"` : "Search",
+    description: q
+      ? `Find results for "${q}" across jobs, projects, people, groups, and posts.`
+      : "Search for jobs, projects, people, groups, and posts.",
+    openGraph: {
+      title: q ? `Search results for "${q}"` : "Search",
+      description: q
+        ? `Find results for "${q}" across jobs, projects, people, groups, and posts.`
+        : "Search for jobs, projects, people, groups, and posts.",
+    },
+  };
 }
 
 function layout({

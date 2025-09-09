@@ -7,6 +7,49 @@ import Group from "../model/groupModel";
 import Notification from "../model/notificationModel";
 import User from "../model/userModel";
 
+const createChat = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body;
+
+    // Validate userId
+    if (!userId) {
+      return next(new ErrorHandler("User ID is required", 400));
+    }
+
+    // Check if chat already exists
+    const existingChat = await Chat.findOne({
+      isGroupChat: false,
+      $and: [
+        { members: { $elemMatch: { $eq: req.user._id } } },
+        { members: { $elemMatch: { $eq: userId } } },
+      ],
+    });
+
+    if (existingChat) {
+      return next(
+        res.status(200).json({
+          success: true,
+          chat: existingChat,
+        })
+      );
+    }
+
+    // Create a new chat
+    const newChat = await Chat.create({
+      members: [req.user._id, userId],
+    });
+
+    if (!newChat) {
+      return next(new ErrorHandler("Chat not created", 500));
+    }
+
+    res.status(201).json({
+      success: true,
+      chat: newChat,
+    });
+  }
+);
+
 const sendMessage = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { chat, userId, content, image, video, audio, document, reply } =
@@ -321,6 +364,7 @@ const createReplyMessage = expressAsyncHandler(
 );
 
 export {
+  createChat,
   sendMessage,
   fetchChats,
   fetchChat,

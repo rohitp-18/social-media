@@ -48,6 +48,7 @@ function Page() {
   const [select, setSelect] = useState<any>();
   const [create, setCreate] = useState(false);
   const [edit, setEdit] = useState(false);
+  const [username, setUsername] = useState("");
   const [deleteS, setDeleteS] = useState(false);
   const [loading2, setLoading2] = useState(false);
   const [showDescription, setShowDescription] = useState<any>();
@@ -69,7 +70,7 @@ function Page() {
         setLoading2(false);
         setSelect(null);
         setEdit(false);
-        dispatch(userProfile(name as string));
+        dispatch(userProfile(username));
       }
 
       toast.success(data.message, {
@@ -96,7 +97,8 @@ function Page() {
 
   useEffect(() => {
     if (name) {
-      dispatch(userProfile(name as string));
+      setUsername(decodeURIComponent(name as string));
+      dispatch(userProfile(decodeURIComponent(name as string)));
     }
   }, [name]);
 
@@ -126,9 +128,9 @@ function Page() {
               setCreate(false);
               setEdit(false);
               setSelect(null);
-              dispatch(userProfile(name as string));
+              dispatch(userProfile(username));
             }}
-            username={name as string}
+            username={username}
             edit={edit}
             skill={select}
           />
@@ -138,7 +140,7 @@ function Page() {
         <Card className="">
           <CardHeader className="flex flex-row justify-between items-center gap-5">
             <div className="flex items-center md:gap-6 gap-4">
-              <Link href={`/u/${name}`}>
+              <Link href={`/u/${username}`}>
                 <MoveLeft className="w-5 h-5 opacity-80 hover:opacity-100" />
               </Link>
               <CardTitle className="font-semibold text-lg">Skills</CardTitle>

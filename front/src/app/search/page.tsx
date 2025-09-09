@@ -11,7 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -35,6 +38,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { resetSkill, searchSkill } from "@/store/skill/skillSlice";
+import { searchCompany } from "@/store/search/allSearchSlice";
+import { X } from "lucide-react";
+import { createSearchHistoryAction } from "@/store/history/searchHistory";
 
 function Page() {
   const [search, setSearch] = useState<{ [key: string]: string }>({});
@@ -51,6 +57,7 @@ function Page() {
   const { searchSkills, searchLoading } = useSelector(
     (state: RootState) => state.skill
   );
+  const { companies } = useSelector((state: RootState) => state.search);
   const { user } = useSelector((state: RootState) => state.user);
 
   const handleSelectChange = (filter: any, value: string) => {
@@ -92,7 +99,13 @@ function Page() {
       );
       setQuery(q);
     }
-  }, [pathname, router, searchParam]);
+  }, [pathname, router, searchParam, query, type]);
+
+  useEffect(() => {
+    if (query) {
+      dispatch(createSearchHistoryAction(query));
+    }
+  }, [query]);
 
   const searchFilters = useMemo(
     () => [
@@ -170,41 +183,42 @@ function Page() {
             key: "date_posted",
             title: "Date posted",
             options: [
-              { value: "past_day", label: "Past 24 hours" },
-              { value: "past_week", label: "Past week" },
-              { value: "past_month", label: "Past month" },
-              { value: "past_year", label: "Past year" },
+              { value: "1", label: "Last 24 hours" },
+              { value: "7", label: "This week" },
+              { value: "30", label: "This month" },
+              { value: "365", label: "This year" },
             ],
           },
           {
             key: "sort",
             title: "Sort by",
+            apply: true,
             options: [
               { value: "relevant", label: "Most relevant" },
               { value: "recent", label: "Most recent" },
-              { value: "liked", label: "Most liked" },
-              { value: "commented", label: "Most commented" },
+              { value: "salary", label: "Highest Salary" },
             ],
           },
-          {
-            key: "experience_level",
-            title: "Experience Level",
-            options: [
-              { value: "0", label: "Entry level" },
-              { value: "1", label: "Intermediate" },
-              { value: "2", label: "Associate" },
-              { value: "3", label: "Senior" },
-              { value: "4", label: "Professional" },
-            ],
-          },
+          // future updates
+          // {
+          //   key: "experience_level",
+          //   title: "Experience Level",
+          //   options: [
+          //     { value: "0", label: "Entry level" },
+          //     { value: "1", label: "Intermediate" },
+          //     { value: "2", label: "Associate" },
+          //     { value: "3", label: "Senior" },
+          //     { value: "4", label: "Professional" },
+          //   ],
+          // },
           {
             title: "Company",
             key: "company",
             search: true,
-            options: [
-              { value: "company1", label: "Company 1" },
-              { value: "company2", label: "Company 2" },
-            ],
+            options: companies.map((company) => ({
+              value: company._id,
+              label: company.name,
+            })),
           },
           {
             title: "Work Type",
@@ -212,14 +226,21 @@ function Page() {
             options: [
               { value: "remote", label: "Remote" },
               { value: "hybrid", label: "Hybrid" },
-              { value: "office", label: "Office" },
+              { value: "onsite", label: "On-site" },
             ],
           },
           {
             title: "Location",
             key: "location",
             search: true,
-            options: [{ value: "India", label: "India" }],
+            options: [
+              { value: "USA", label: "USA" },
+              { value: "Canada", label: "Canada" },
+              { value: "UK", label: "UK" },
+              { value: "Australia", label: "Australia" },
+              { value: "Germany", label: "Germany" },
+              { value: "India", label: "India" },
+            ],
           },
         ],
       },
@@ -251,10 +272,10 @@ function Page() {
             title: "Timeframe",
             key: "timeframe",
             options: [
-              { value: "24h", label: "Past 24 hours" },
-              { value: "7d", label: "Past week" },
-              { value: "30d", label: "Past month" },
-              { value: "1y", label: "Past year" },
+              { value: "24h", label: "Last 24 hours" },
+              { value: "7d", label: "This week" },
+              { value: "30d", label: "This month" },
+              { value: "1y", label: "This year" },
             ],
           },
           {
@@ -296,13 +317,6 @@ function Page() {
           //   ],
           // },
           // {
-          //   title: "Company",
-          //   options: [
-          //     { value: "company1", label: "Company 1" },
-          //     { value: "company2", label: "Company 2" },
-          //   ],
-          // },
-          // {
           //   title: "Members",
           //   key: "members",
           //   options: [
@@ -310,15 +324,6 @@ function Page() {
           //     { value: "member2", label: "Member 2" },
           //   ],
           // },
-          {
-            title: "Skills",
-            key: "skill",
-            search: true,
-            options: searchSkills.map((skill) => ({
-              value: skill._id,
-              label: skill.name,
-            })),
-          },
           {
             title: "Sort by",
             key: "sort",
@@ -347,23 +352,24 @@ function Page() {
               { value: "India", label: "India" },
             ],
           },
-          {
-            title: "Industry",
-            key: "industry",
-            options: [
-              { value: "it_industry", label: "IT industry" },
-              { value: "other_industry", label: "Other industry" },
-            ],
-          },
-          {
-            title: "size",
-            key: "size",
-            options: [
-              { value: "small", label: "Small" },
-              { value: "medium", label: "Medium" },
-              { value: "large", label: "Large" },
-            ],
-          },
+          // future
+          // {
+          //   title: "Industry",
+          //   key: "industry",
+          //   options: [
+          //     { value: "it_industry", label: "IT industry" },
+          //     { value: "other_industry", label: "Other industry" },
+          //   ],
+          // },
+          // {
+          //   title: "size",
+          //   key: "size",
+          //   options: [
+          //     { value: "small", label: "Small" },
+          //     { value: "medium", label: "Medium" },
+          //     { value: "large", label: "Large" },
+          //   ],
+          // },
           {
             title: "Sort by",
             key: "sort",
@@ -371,6 +377,7 @@ function Page() {
               { value: "relevant", label: "Most relevant" },
               { value: "recent", label: "Most recent" },
               { value: "employees", label: "Most employees" },
+              { value: "followers", label: "Most Followers" },
             ],
           },
         ],
@@ -388,17 +395,17 @@ function Page() {
               label: skill.name,
             })),
           },
-          {
-            title: "No of Members",
-            key: "members",
-            options: [
-              { value: "1", label: "1" },
-              { value: "2", label: "2" },
-              { value: "3", label: "3" },
-              { value: "4", label: "4" },
-              { value: "5", label: "5" },
-            ],
-          },
+          // {
+          //   title: "No of Members",
+          //   key: "members",
+          //   options: [
+          //     { value: "1", label: "1" },
+          //     { value: "2", label: "2" },
+          //     { value: "3", label: "3" },
+          //     { value: "4", label: "4" },
+          //     { value: "5", label: "5" },
+          //   ],
+          // },
 
           {
             title: "Sort by",
@@ -406,13 +413,13 @@ function Page() {
             options: [
               { value: "relevant", label: "Most relevant" },
               { value: "recent", label: "Most recent" },
-              { value: "members", label: "Most members" },
+              // { value: "old", label: "Oldest" },
             ],
           },
         ],
       },
     ],
-    [searchSkills]
+    [searchSkills, companies]
   );
 
   useEffect(() => {
@@ -467,100 +474,212 @@ function Page() {
                 )}
 
                 <div className="flex gap-5 w-full items-center">
-                  {searchFilters[index].filters?.map((f) => (
-                    <div
-                      key={f.key || f.title}
-                      className="flex flex-col min-w-[160px]"
-                    >
-                      {/* <Label className="text-xs font-medium mb-1">
+                  {searchFilters[index].filters?.map(
+                    (f) =>
+                      ("apply" in f ? !f.apply : true) && (
+                        <div key={f.key || f.title} className="flex flex-col">
+                          {/* <Label className="text-xs font-medium mb-1">
                         {f.title}
                       </Label> */}
-                      <Select
-                        value={selectValues[f.key || f.title] || ""}
-                        onValueChange={(value) => handleSelectChange(f, value)}
-                      >
-                        <SelectTrigger className="w-full min-w-[140px]">
-                          <SelectValue placeholder={f.title} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {f.search && (
-                              <div className="px-2 py-1">
-                                <Input
-                                  value={search[f.key || f.title] || ""}
-                                  onChange={(e) => {
-                                    if (f.key == "skill") {
-                                      dispatch(searchSkill(e.target.value));
-                                    }
-                                    setSearch((prev) => ({
-                                      ...prev,
-                                      [f.key || f.title]: e.target.value,
-                                    }));
-                                  }}
-                                  type="search"
-                                  placeholder={`Search ${
-                                    f.title?.toLowerCase() || ""
-                                  }...`}
-                                  className="p-2 w-full mb-2 border rounded-md"
-                                />
-                              </div>
-                            )}
-                            {f.options
-                              .filter((option) => {
-                                if (!f.search || !search) return true;
-                                const searchTerm =
-                                  search[f.key || f.title]?.toLowerCase() || "";
-                                return (
-                                  option?.label
-                                    ?.toLowerCase()
-                                    .includes(searchTerm) ||
-                                  option?.value
-                                    ?.toLowerCase()
-                                    .includes(searchTerm)
-                                );
-                              })
-                              .map((option) => (
-                                <SelectItem
-                                  key={option.value}
-                                  value={option.value}
-                                >
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
+                          <Select
+                            value={selectValues[f.key || f.title] || ""}
+                            onValueChange={(value) =>
+                              handleSelectChange(f, value)
+                            }
+                          >
+                            <SelectTrigger className="w-full min-w-[140px]">
+                              <SelectValue placeholder={f.title} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {f.search && (
+                                  <div className="px-2 py-1">
+                                    <Input
+                                      value={search[f.key || f.title] || ""}
+                                      onChange={(e) => {
+                                        if (f.key == "skill") {
+                                          dispatch(searchSkill(e.target.value));
+                                        }
+                                        if (f.key == "company") {
+                                          dispatch(
+                                            searchCompany({ q: e.target.value })
+                                          );
+                                        }
+                                        setSearch((prev) => ({
+                                          ...prev,
+                                          [f.key || f.title]: e.target.value,
+                                        }));
+                                      }}
+                                      type="search"
+                                      placeholder={`Search ${
+                                        f.title?.toLowerCase() || ""
+                                      }...`}
+                                      className="p-2 w-full mb-2 border rounded-md"
+                                    />
+                                  </div>
+                                )}
+                                {f.options
+                                  .filter((option) => {
+                                    if (!f.search || !search) return true;
+                                    const searchTerm =
+                                      search[f.key || f.title]?.toLowerCase() ||
+                                      "";
+                                    return (
+                                      option?.label
+                                        ?.toLowerCase()
+                                        .includes(searchTerm) ||
+                                      option?.value
+                                        ?.toLowerCase()
+                                        .includes(searchTerm)
+                                    );
+                                  })
+                                  .map((option) => (
+                                    <SelectItem
+                                      key={option.value}
+                                      value={option.value}
+                                    >
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )
+                  )}
 
                   {searchFilters[index].apply && (
                     <>
-                      <div className="flex h-full">
+                      <div className="flex h-full w-full justify-end">
                         <Separator
                           className="h-12 items-center opacity-60 overflow-hidden w-[1px] bg-foreground"
                           orientation="vertical"
                         />
                       </div>
                       <Drawer direction="left">
-                        {/* <DrawerTrigger> */}
-                        <Button variant={"outline"} className="text-opacity-50">
-                          Apply filters
-                        </Button>
-                        {/* </DrawerTrigger> */}
+                        <DrawerTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className="text-opacity-50"
+                          >
+                            filters
+                          </Button>
+                        </DrawerTrigger>
                         <DrawerContent>
                           <DrawerHeader>
+                            <DrawerClose className="absolute right-3 top-3">
+                              <X className="h-4 w-4" />
+                            </DrawerClose>
                             <DrawerTitle>Apply Filters</DrawerTitle>
+                            <DrawerDescription>
+                              Apply filters to refine your search results
+                            </DrawerDescription>
                           </DrawerHeader>
+                          <CardContent className="flex flex-col gap-5">
+                            {searchFilters[index].filters?.map((f) => (
+                              <div
+                                key={f.key || f.title}
+                                className="flex flex-col min-w-[160px]"
+                              >
+                                {/* <Label className="text-xs font-medium mb-1">
+                        {f.title}
+                      </Label> */}
+                                <Select
+                                  value={selectValues[f.key || f.title] || ""}
+                                  onValueChange={(value) =>
+                                    handleSelectChange(f, value)
+                                  }
+                                >
+                                  <SelectTrigger className="w-full min-w-[140px]">
+                                    <SelectValue placeholder={f.title} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectGroup>
+                                      {f.search && (
+                                        <div className="px-2 py-1">
+                                          <Input
+                                            value={
+                                              search[f.key || f.title] || ""
+                                            }
+                                            onChange={(e) => {
+                                              if (f.key == "skill") {
+                                                dispatch(
+                                                  searchSkill(e.target.value)
+                                                );
+                                              }
+                                              if (f.key == "company") {
+                                                dispatch(
+                                                  searchCompany({
+                                                    q: e.target.value,
+                                                  })
+                                                );
+                                              }
+                                              setSearch((prev) => ({
+                                                ...prev,
+                                                [f.key || f.title]:
+                                                  e.target.value,
+                                              }));
+                                            }}
+                                            type="search"
+                                            placeholder={`Search ${
+                                              f.title?.toLowerCase() || ""
+                                            }...`}
+                                            className="p-2 w-full mb-2 border rounded-md"
+                                          />
+                                        </div>
+                                      )}
+                                      {f.options
+                                        .filter((option) => {
+                                          if (!f.search || !search) return true;
+                                          const searchTerm =
+                                            search[
+                                              f.key || f.title
+                                            ]?.toLowerCase() || "";
+                                          return (
+                                            option?.label
+                                              ?.toLowerCase()
+                                              .includes(searchTerm) ||
+                                            option?.value
+                                              ?.toLowerCase()
+                                              .includes(searchTerm)
+                                          );
+                                        })
+                                        .map((option) => (
+                                          <SelectItem
+                                            key={option.value}
+                                            value={option.value}
+                                          >
+                                            {option.label}
+                                          </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            ))}
+                          </CardContent>
+                          <DrawerFooter className="justify-between">
+                            <Button
+                              variant={"secondary"}
+                              onClick={() => {
+                                setSearch({});
+                                dispatch(resetSkill());
+                                setSelectValues({ q: query, type });
+                              }}
+                            >
+                              Clear Filters
+                            </Button>
+                          </DrawerFooter>
                         </DrawerContent>
                       </Drawer>
                     </>
                   )}
                 </div>
-                {Object.keys(searchFilters).length > 0 && (
+                {Object.keys(searchFilters).length > 2 && (
                   <Button
                     variant={"outline"}
                     onClick={() => {
-                      setSearch({});
+                      // setSearch({});
                       dispatch(resetSkill());
                       setSelectValues({ q: query, type });
                     }}
@@ -604,22 +723,40 @@ function Page() {
             <All setType={setType} selectValues={selectValues} />
           )}
           {type === "people" && (
-            <PeopleSearch setType={setType} selectValues={selectValues} />
+            <PeopleSearch
+              selectValues={selectValues}
+              setSelectValues={setSelectValues}
+            />
           )}
           {type === "jobs" && (
-            <JobSearch setType={setType} selectValues={selectValues} />
+            <JobSearch
+              selectValues={selectValues}
+              setSelectValues={setSelectValues}
+            />
           )}
           {type === "companies" && (
-            <CompanySearch setType={setType} selectValues={selectValues} />
+            <CompanySearch
+              selectValues={selectValues}
+              setSelectValues={setSelectValues}
+            />
           )}
           {type === "posts" && (
-            <PostSearch setType={setType} selectValues={selectValues} />
+            <PostSearch
+              selectValues={selectValues}
+              setSelectValues={setSelectValues}
+            />
           )}
           {type === "groups" && (
-            <GroupSearch setType={setType} selectValues={selectValues} />
+            <GroupSearch
+              selectValues={selectValues}
+              setSelectValues={setSelectValues}
+            />
           )}
           {type === "projects" && (
-            <ProjectSearch setType={setType} selectValues={selectValues} />
+            <ProjectSearch
+              selectValues={selectValues}
+              setSelectValues={setSelectValues}
+            />
           )}
         </section>
       </main>

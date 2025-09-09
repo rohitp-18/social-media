@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { registerUser, resetUser } from "@/store/user/userSlice";
 import { useRouter, useSearchParams } from "next/navigation";
+import Navbar from "@/components/introNavbar";
 
 function Page() {
   const [password, setPassword] = useState(true);
@@ -80,9 +81,9 @@ function Page() {
   return (
     <>
       <main className="min-h-screen bg-background/70">
-        <h3>LOGO</h3>
-        <section className="w-full flex justify-center items-center h-screen">
-          <div className="min-w-[320px] md:min-w-96 shadow-2xl dark:bg-zinc-800 bg-white rounded-lg p-6">
+        <Navbar />
+        <section className="w-full flex justify-center items-center min-h-screen py-10">
+          <div className="min-w-[320px] max-w-full md:min-w-96 shadow-2xl dark:bg-zinc-800 bg-white rounded-lg p-6">
             <form
               className="flex flex-col justify-center"
               onSubmit={(e) => submitHandler(e)}

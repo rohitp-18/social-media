@@ -17,7 +17,6 @@ const comapnySchema = new mongoose.Schema(
       type: String,
     },
     totalFollowers: { type: Number, default: 0 },
-    totalEmployees: { type: Number, default: 0 },
     totalMembers: { type: Number, default: 0 },
     posts: [
       {
@@ -34,7 +33,6 @@ const comapnySchema = new mongoose.Schema(
       },
     ],
     postsCount: { type: Number, default: 0 },
-    membersCount: { type: Number, default: 0 },
     followers: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -63,8 +63,8 @@ function Page() {
 
   useEffect(() => {
     if (userName) {
-      setName(userName as string);
-      dispatch(getProfileProjects(userName as string));
+      setName(decodeURIComponent(userName as string));
+      dispatch(getProfileProjects(decodeURIComponent(userName as string)));
     }
   }, [userName]);
 
@@ -131,7 +131,8 @@ function Page() {
                     isUser={isUser}
                     setEdit={setEdit}
                     setSelect={setSelect}
-                    name={name}
+                    username={name}
+                    showUser={false}
                   />
                   {i < projects.length - 1 && <Separator className="my-3" />}
                 </Fragment>

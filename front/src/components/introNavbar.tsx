@@ -14,29 +14,71 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname, useRouter } from "next/navigation";
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 import { Input } from "./ui/input";
 import Link from "next/link";
 import { SocialPost } from "@/assets/icons";
+import {
+  createSearchHistoryAction,
+  getAllSearchHistoryAction,
+} from "@/store/history/searchHistory";
 
 const Navbar: React.FC = () => {
-  const [search, setSearch] = React.useState("");
-  const [searchDrop, setSearchDrop] = React.useState(false);
+  const [search, setSearch] = useState("");
+  const [searchDrop, setSearchDrop] = useState(false);
+  const [open, setOpen] = useState(false);
 
+  const dispatch = useDispatch<AppDispatch>();
   const pathname = usePathname();
   const { setTheme, theme } = useTheme();
   const router = useRouter();
 
   const { user, loading } = useSelector((state: RootState) => state.user);
+  const { history } = useSelector((state: RootState) => state.searchHistory);
+
+  const searchCall = useCallback(
+    (e: any) => {
+      if (e.key === "Enter" && search.trim()) {
+        dispatch(createSearchHistoryAction(search));
+
+        router.push(`/search?q=${encodeURIComponent(search.trim())}`);
+      }
+    },
+    [search, open, searchDrop]
+  );
+
+  const HistoryRender = () => (
+    <div className="absolute top-full left-0 w-full z-10 mt-1 bg-white rounded-md border shadow-md max-h-60 overflow-y-auto">
+      {history.length === 0 ? (
+        <div className="py-2 px-3 text-sm text-gray-500">No result found.</div>
+      ) : (
+        <div className="max-h-60">
+          {history.map((q: any) => (
+            <div
+              key={q._id}
+              onClick={() => {
+                setSearch(q.query);
+                router.push(`/search?q=${q.query}`);
+              }}
+              className="cursor-pointer hover:bg-gray-100 p-2 text-sm text-gray-800 flex items-center gap-1"
+            >
+              {q.query}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <nav className="sticky top-0 z-50 left-0 w-full bg-opacity-20 backdrop-blur-md shadow-md p-4 flex justify-between items-center bg-background/40 dark:shadow-lg">
       <section className="max-w-6xl mx-auto flex items-center justify-between w-full space-x-4">
         <div className="flex gap-4 items-center">
           <h2 className="text-2xl font-bold italic">TS</h2>
+
           <div className="md:flex hidden items-center relative max-w-xs">
             <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -45,26 +87,32 @@ const Navbar: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 w-full"
-              onKeyDown={(e) =>
-                e.key === "Enter" &&
-                search.trim() &&
-                router.push(`/search?q=${encodeURIComponent(search.trim())}`)
-              }
+              onKeyDown={(e) => searchCall(e)}
+              onFocusCapture={() => {
+                setOpen(true);
+              }}
+              onBlur={() => {
+                setTimeout(() => {
+                  setOpen(false);
+                }, 300);
+              }}
             />
+            {open && search && <HistoryRender />}
           </div>
           <Search
             onClick={() => setSearchDrop(!searchDrop)}
             className="md:hidden block w-5 h-5 cursor-pointer"
           />
         </div>
-        <div className="flex gap-5 space-x-6">
+        <div className="flex items-center gap-3 md:gap-5 space-x-3 md:space-x-6">
           <Link
             href="/"
             className={`no-underline hover:underline flex flex-col items-center ${
               pathname === "/" ? "font-bold" : ""
             }`}
           >
-            <Home className="w-[1rem] h-[1rem]" /> Home
+            <Home className="w-[1rem] h-[1rem]" />
+            <span className="md:block hidden text-sm">Home</span>
           </Link>
           <Link
             href="/intro/users"
@@ -72,7 +120,8 @@ const Navbar: React.FC = () => {
               pathname === "/intro/users" ? "font-bold" : ""
             }`}
           >
-            <Users className="w-[1rem] h-[1rem]" /> Users
+            <Users className="w-[1rem] h-[1rem]" />
+            <span className="md:block hidden text-sm">Users</span>
           </Link>
           <Link
             href="/intro/posts"
@@ -80,7 +129,8 @@ const Navbar: React.FC = () => {
               pathname === "/intro/posts" ? "font-bold" : ""
             }`}
           >
-            <SocialPost className="w-[1rem] h-[1rem]" /> Posts
+            <SocialPost className="w-[1rem] h-[1rem]" />
+            <span className="md:block hidden text-sm">Posts</span>
           </Link>
           <Link
             href="/intro/jobs"
@@ -88,7 +138,8 @@ const Navbar: React.FC = () => {
               pathname === "/intro/jobs" ? "font-bold" : ""
             }`}
           >
-            <BriefcaseBusiness className="w-[1rem] h-[1rem]" /> Jobs
+            <BriefcaseBusiness className="w-[1rem] h-[1rem]" />
+            <span className="md:block hidden text-sm">Jobs</span>
           </Link>
           {user ? (
             <Link
@@ -97,18 +148,26 @@ const Navbar: React.FC = () => {
                 pathname === `/u/${user.username}/` ? "font-bold" : ""
               }`}
             >
-              <User2 className="w-[1rem] h-[1rem]" /> Account
+              <User2 className="w-[1rem] h-[1rem]" />
+              <span className="md:block hidden text-sm">Account</span>
             </Link>
           ) : (
             <div className="flex gap-4">
               <Link
                 href={`/register?back=${pathname}`}
-                className="no-underline"
+                className="no-underline md:block hidden"
               >
-                <Button variant={"outline"}>Join with Us</Button>
+                <Button
+                  className="h-8 rounded-md px-3 text-xs md:h-9 md:text-sm md:px-4 md:py-2"
+                  variant={"outline"}
+                >
+                  Join with Us
+                </Button>
               </Link>
               <Link href={`/login?back=${pathname}`} className="no-underline">
-                <Button>Sign In</Button>
+                <Button className="h-8 rounded-md px-3 text-xs md:h-9 md:text-sm md:px-4 md:py-2">
+                  Sign In
+                </Button>
               </Link>
             </div>
           )}
@@ -133,12 +192,17 @@ const Navbar: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 w-full"
-              onKeyDown={(e) =>
-                e.key === "Enter" &&
-                search.trim() &&
-                router.push(`/search?q=${encodeURIComponent(search.trim())}`)
-              }
+              onKeyDown={(e) => searchCall(e)}
+              onFocusCapture={() => {
+                setOpen(true);
+              }}
+              onBlur={() => {
+                setTimeout(() => {
+                  setOpen(false);
+                }, 300);
+              }}
             />
+            {open && search && <HistoryRender />}
           </div>
         )}
       </div>

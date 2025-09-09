@@ -1,5 +1,6 @@
 "use client";
 
+import Navbar from "@/components/introNavbar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -72,8 +73,8 @@ function Page() {
 
   return (
     <main className="min-h-screen bg-background/70">
-      <h3>LOGO</h3>
-      <section className="w-full flex justify-center items-center h-screen">
+      <Navbar />
+      <section className="w-full flex justify-center items-center min-h-screen py-10">
         <div className="min-w-[320px] max-w-full md:min-w-96 shadow-2xl dark:bg-zinc-800 bg-white rounded-lg p-6">
           <form
             className="flex flex-col justify-center"

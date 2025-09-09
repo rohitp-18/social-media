@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
+import { IAllSearch } from "./typeSearch";
 
 const getAllSearch = createAsyncThunk(
   "allSearch/getAllSearch",
@@ -44,7 +45,7 @@ const searchProjects = createAsyncThunk(
   "allSearch/searchProjects",
   async (params: any) => {
     try {
-      const { data } = await axios.get("/search/project", {
+      const { data } = await axios.get("/search/projects", {
         params,
       });
       return data;
@@ -91,20 +92,56 @@ const searchPosts = createAsyncThunk(
   }
 );
 
-interface IAllSearch {
-  peoples: any[];
-  companies: any[];
-  posts: any[];
-  projects: any[];
-  groups: any[];
-  connections: any[];
-  jobs: any[];
-  total: number;
-  page: number;
-  loading: boolean;
-  error: string | null;
-  skills: any[];
-}
+const searchGroups = createAsyncThunk(
+  "allSearch/searchGroups",
+  async (query: any, thunkAPI) => {
+    try {
+      const { data } = await axios.get("/search/groups", {
+        params: query,
+      });
+      return data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(error.response?.data.message);
+      }
+      throw new Error("Something went wrong");
+    }
+  }
+);
+
+const searchJobs = createAsyncThunk(
+  "allSearch/searchJobs",
+  async (query: any, thunkAPI) => {
+    try {
+      const { data } = await axios.get("/search/jobs", {
+        params: query,
+      });
+      return data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(error.response?.data.message);
+      }
+      throw new Error("Something went wrong");
+    }
+  }
+);
+
+const searchCompany = createAsyncThunk(
+  "allSearch/searchCompany",
+  async (query: any, thunkAPI) => {
+    try {
+      const { data } = await axios.get("/search/companies", {
+        params: query,
+      });
+      return data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(error.response?.data.message);
+      }
+      throw new Error("Something went wrong");
+    }
+  }
+);
 
 const initialState: IAllSearch = {
   peoples: [],
@@ -215,6 +252,36 @@ const getAllSearchSlice = createSlice({
       .addCase(searchPosts.rejected, (state, action) => {
         state.error = action.error.message || "";
         state.posts = [];
+      })
+
+      .addCase(searchGroups.pending, (state) => {
+        state.groups = [];
+      })
+      .addCase(searchGroups.fulfilled, (state, action: any) => {
+        state.groups = action.payload.groups;
+      })
+      .addCase(searchGroups.rejected, (state) => {
+        state.groups = [];
+      })
+
+      .addCase(searchJobs.pending, (state) => {
+        state.jobs = [];
+      })
+      .addCase(searchJobs.fulfilled, (state, action: any) => {
+        state.jobs = action.payload.jobs;
+      })
+      .addCase(searchJobs.rejected, (state) => {
+        state.jobs = [];
+      })
+
+      .addCase(searchCompany.pending, (state) => {
+        state.companies = [];
+      })
+      .addCase(searchCompany.fulfilled, (state, action: any) => {
+        state.companies = action.payload.companies;
+      })
+      .addCase(searchCompany.rejected, (state) => {
+        state.companies = [];
       });
   },
 });
@@ -229,6 +296,9 @@ export {
   searchProjects,
   searchPeoples,
   searchPosts,
+  searchGroups,
+  searchJobs,
+  searchCompany,
 };
 
 export default getAllSearchSlice.reducer;

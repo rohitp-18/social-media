@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Mongoose, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
@@ -32,7 +32,6 @@ interface IUser extends Document {
   topVoice: mongoose.Schema.Types.ObjectId[];
   companies: mongoose.Schema.Types.ObjectId[];
   groups: mongoose.Schema.Types.ObjectId[];
-  newsLetter: mongoose.Schema.Types.ObjectId[];
   education: mongoose.Schema.Types.ObjectId[];
   website: {
     link: string;
@@ -146,12 +145,6 @@ const UserSchema: Schema = new Schema(
         ref: "group",
       },
     ],
-    newsLetter: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "newsLetter",
-      },
-    ],
     education: [{ type: mongoose.Schema.Types.ObjectId, ref: "education" }],
     website: {
       link: {
@@ -177,10 +170,18 @@ const UserSchema: Schema = new Schema(
   }
 );
 
-UserSchema.pre("save", async function (this: any) {
+// Keep totalFollowers, totalFollowing, totalConnections in sync on save/update
+
+UserSchema.set("toJSON", { virtuals: true });
+UserSchema.set("toObject", { virtuals: true });
+
+UserSchema.pre("save", async function (this: IUser) {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
   }
+  this.totalFollowers = this.followers ? this.followers.length : 0;
+  this.totalFollowing = this.following ? this.following.length : 0;
+  this.totalConnections = this.connections ? this.connections.length : 0;
 });
 
 UserSchema.methods.comparePassword = async function (password: any) {

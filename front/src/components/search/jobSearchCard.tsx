@@ -4,8 +4,15 @@ import React from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User2, X } from "lucide-react";
+import { Button } from "../ui/button";
 
-function JobSearchCard({ job }: { job: any }) {
+function JobSearchCard({
+  job,
+  removeHandler,
+}: {
+  job: any;
+  removeHandler: (id: string) => void;
+}) {
   return (
     <>
       <div className="flex gap-5 justify-between items-center">
@@ -31,7 +38,14 @@ function JobSearchCard({ job }: { job: any }) {
           </div>
         </Link>
         <div className="flex items-center h-full">
-          <X className="w-5 h-5" />
+          <Button
+            onClick={() => removeHandler(job._id)}
+            variant={"outline"}
+            size={"icon"}
+            className=""
+          >
+            <X className="w-5 h-5" />
+          </Button>
         </div>
       </div>
       <hr className="my-2" />

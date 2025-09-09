@@ -26,6 +26,7 @@ import applyJobRouter from "./router/applyJobRouter";
 import projectRouter from "./router/projectRouter";
 import educationRouter from "./router/educationRouter";
 import searchRouter from "./router/searchRouter";
+import searchHistoryRouter from "./router/searchHistoryRouter";
 import setupSocket from "./utils/socket";
 
 dotenv.config({ path: path.resolve(path.join(__dirname, "./config/.env")) });
@@ -63,6 +64,7 @@ app.use("/api/v1/projects", projectRouter);
 app.use("/api/v1/notifications", notificationRouter);
 app.use("/api/v1/educations", educationRouter);
 app.use("/api/v1/search", searchRouter);
+app.use("/api/v1/searchHistory", searchHistoryRouter);
 
 app.use(error);
 

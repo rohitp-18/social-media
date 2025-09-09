@@ -67,10 +67,6 @@ const postSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    repostCount: {
-      type: Number,
-      default: 0,
-    },
     savedCount: {
       type: Number,
       default: 0,
@@ -93,14 +89,6 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    editedAt: {
-      type: Date,
-      default: null,
-    },
-    repost: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "post",
-    },
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -121,11 +109,6 @@ const postSchema = new mongoose.Schema(
     isDeleted: {
       type: Boolean,
       default: false,
-    },
-    deletedAt: { type: Date },
-    deletedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
     },
     postType: {
       type: String,

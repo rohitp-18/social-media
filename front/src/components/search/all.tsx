@@ -1,4 +1,4 @@
-import React, { Fragment, use, useEffect } from "react";
+import React, { Fragment, use, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import RecommendCompany from "../recommend/recommendCompany";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -21,12 +21,28 @@ import { Separator } from "../ui/separator";
 import { toggleFollow } from "@/store/user/userSlice";
 import Link from "next/link";
 import JobSearchCard from "./jobSearchCard";
+import { toast } from "sonner";
+import { toggleJoinRequest } from "@/store/group/groupSlice";
+import { toggleFollowCompany } from "@/store/company/companySlice";
+import { timeAgo } from "@/lib/functions";
+import ProjectSearchCard from "./projectSearchCard";
+import GroupSearchCard from "./groupSearchCard";
+import CompanySearchCard from "./companySearchCard";
 
 function All({ setType, selectValues }: any) {
+  const [jobs, setJobs] = useState<any[]>([]);
+
   const params = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
-  const { peoples, companies, posts, projects, groups, jobs, loading } =
-    useSelector((state: RootState) => state.search);
+  const {
+    peoples,
+    companies,
+    posts,
+    projects,
+    groups,
+    jobs: AllJobs,
+    loading,
+  } = useSelector((state: RootState) => state.search);
   const { user } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
@@ -35,6 +51,10 @@ function All({ setType, selectValues }: any) {
       dispatch(getAllSearch(query));
     }
   }, [params, dispatch]);
+
+  useEffect(() => {
+    setJobs(AllJobs);
+  }, [AllJobs]);
 
   return (
     <section className="md:grid block grid-cols-[200px_1fr_300px] gap-4">
@@ -101,7 +121,7 @@ function All({ setType, selectValues }: any) {
             <CardContent>
               {peoples.length > 0 ? (
                 <>
-                  {peoples.map((people: any, i: number) => (
+                  {peoples.map((people, i: number) => (
                     <Fragment key={people._id}>
                       <div className="flex justify-between my-2 items-start">
                         <Link
@@ -146,7 +166,18 @@ function All({ setType, selectValues }: any) {
                               className="flex items-center w-min md:ml-8 mt-2 px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
                               variant={"outline"}
                               size={"sm"}
-                              onClick={() => dispatch(toggleFollow(people._id))}
+                              onClick={() => {
+                                if (!user) {
+                                  toast.error(
+                                    "You must be logged in to follow users",
+                                    {
+                                      position: "top-center",
+                                    }
+                                  );
+                                  return;
+                                }
+                                dispatch(toggleFollow(people._id));
+                              }}
                             >
                               Follow
                             </Button>
@@ -220,7 +251,14 @@ function All({ setType, selectValues }: any) {
                 <>
                   {jobs.map((job) => (
                     <Fragment key={job._id}>
-                      <JobSearchCard job={job} />
+                      <JobSearchCard
+                        job={job}
+                        removeHandler={(id) =>
+                          setJobs((prev) =>
+                            prev.filter((job) => job._id !== id)
+                          )
+                        }
+                      />
                     </Fragment>
                   ))}
                 </>
@@ -253,39 +291,7 @@ function All({ setType, selectValues }: any) {
               {groups.length > 0 ? (
                 groups.map((group: any, i: number) => (
                   <Fragment key={group._id}>
-                    <div className="flex justify-between my-2 items-start">
-                      <Link
-                        href={`/group/${group._id}`}
-                        className="flex justify-start items-start gap-3"
-                      >
-                        <Avatar className="w-10 h-10">
-                          <AvatarImage src={group.avatar?.url} />
-                          <AvatarFallback>
-                            <User2 className="w-8 h-8 p-1.5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col max-w-96">
-                          <span className="font-semibold line-clamp-2 leading-tight text-ellipsis overflow-hidden">
-                            {group.name}
-                          </span>
-                          <span className="text-xs opacity-60 line-clamp-2 leading-tight text-ellipsis overflow-hidden">
-                            {group.headline}
-                          </span>
-                          <span className="opacity-90 text-sm">
-                            {group.memberCount} Members
-                          </span>
-                        </div>
-                      </Link>
-
-                      <Button
-                        className="flex items-center w-min md:ml-8 mt-2 px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
-                        variant={"outline"}
-                        size={"sm"}
-                      >
-                        Join
-                      </Button>
-                    </div>
-                    {i < groups.length - 1 && <Separator className="my-1" />}
+                    <GroupSearchCard group={group} i={i} />
                   </Fragment>
                 ))
               ) : (
@@ -315,39 +321,9 @@ function All({ setType, selectValues }: any) {
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
               {companies.length > 0 ? (
-                companies.map((company: any, i: number) => (
+                companies.map((company, i: number) => (
                   <Fragment key={company._id}>
-                    <Link
-                      href={`/company/${company._id}`}
-                      className="flex justify-between my-2 items-start"
-                    >
-                      <div className="flex justify-start items-start gap-3">
-                        <Avatar className="w-10 h-10">
-                          <AvatarImage src={company.avatar?.url} />
-                          <AvatarFallback>
-                            <User2 className="w-8 h-8 p-1.5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col max-w-96">
-                          <span className="font-semibold">{company.name} </span>
-                          <span className="text-sm opacity-90 line-clamp-1 leading-tight text-ellipsis overflow-hidden">
-                            {company.headline} | {company.location} |{" "}
-                          </span>
-                          <span className="opacity-70 text-[13px]">
-                            {company.totalFollowers} followers
-                          </span>
-                        </div>
-                      </div>
-
-                      <Button
-                        className="flex items-center w-min md:ml-8 mt-2 px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
-                        variant={"outline"}
-                        size={"sm"}
-                      >
-                        follow
-                      </Button>
-                    </Link>
-                    {i < companies.length - 1 && <hr className="my-1" />}
+                    <CompanySearchCard company={company} i={i} />
                   </Fragment>
                 ))
               ) : (
@@ -379,53 +355,7 @@ function All({ setType, selectValues }: any) {
               {projects.length > 0 ? (
                 projects.map((project: any, i: number) => (
                   <Fragment key={project._id}>
-                    <div className="flex justify-between my-2 items-start">
-                      <div className="flex justify-start items-start gap-3">
-                        <div className="flex flex-col max-w-96 gap-1">
-                          <div className="flex gap-2">
-                            <h4 className="font-semibold text-primary">
-                              {project.title}
-                            </h4>
-                            {project.current ? (
-                              <span className="ml-1 px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-medium">
-                                working
-                              </span>
-                            ) : (
-                              <span className="ml-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
-                                completed
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-sm text-muted-foreground line-clamp-2">
-                            {project.description}
-                          </span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {project.skills.map((skill: any) => (
-                              <span
-                                key={skill.name}
-                                className="bg-secondary text-xs px-2 py-0.5 rounded-full"
-                              >
-                                {skill.name}
-                              </span>
-                            ))}
-                          </div>
-
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                            <span>{project.likes.length} likes</span>
-                            <span>{project.comments.length} comments</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button
-                        className="flex items-center w-min md:ml-8 mt-2 px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
-                        variant={"outline"}
-                        size={"sm"}
-                      >
-                        Save
-                      </Button>
-                    </div>
-                    {i < projects.length - 1 && <Separator className="my-1" />}
+                    <ProjectSearchCard project={project} i={i} />
                   </Fragment>
                 ))
               ) : (

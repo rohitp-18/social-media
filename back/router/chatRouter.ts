@@ -5,6 +5,7 @@ import {
   readMessage,
   createReplyMessage,
   sendMessage,
+  createChat,
 } from "../controller/chatController";
 import { auth } from "../middleware/auth";
 import { Router } from "express";
@@ -13,6 +14,7 @@ const router = Router();
 
 router.use(auth);
 
+router.post("/create", createChat);
 router.post("/create/message", sendMessage);
 router.post("/create/reply", createReplyMessage);
 router.get("/fetch", fetchChats);

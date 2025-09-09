@@ -9,7 +9,6 @@ import Project from "../model/projectModel";
 import Group from "../model/groupModel";
 import Job from "../model/jobModel";
 import Skill from "../model/skillModel";
-import { Types } from "mongoose";
 
 const getAllSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -199,7 +198,6 @@ const getAllSearch = expressAsyncHandler(
       const followingGroups = groups.map((group) => {
         return {
           ...group.toObject(),
-          isFollowing: req.user?.followingGroups.includes(group._id),
           isMember: req.user?.groups.includes(group._id),
         };
       });
@@ -222,7 +220,7 @@ const getAllSearch = expressAsyncHandler(
 
 const getPeopleSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q, page, location, connections, skill, sort } = req.query;
+    const { q, page, location, skill, sort } = req.query;
 
     if (!q) {
       return next(new ErrorHandler("Please provide a search query", 400));
@@ -258,17 +256,17 @@ const getPeopleSearch = expressAsyncHandler(
         { "location.city": { $regex: q, $options: "i" } },
         { "location.state": { $regex: q, $options: "i" } },
         { bio: { $regex: q, $options: "i" } },
-        ...(location
-          ? [
+      ],
+      ...(skill ? { "skills.skill": skill } : {}),
+      ...(location
+        ? {
+            $or: [
               { "location.city": { $regex: location, $options: "i" } },
               { "location.state": { $regex: location, $options: "i" } },
               { "location.country": { $regex: location, $options: "i" } },
-            ]
-          : []),
-        ...(skill
-          ? [{ "skills.skill": { $regex: skill, $options: "i" } }]
-          : []),
-      ],
+            ],
+          }
+        : []),
     };
 
     if (sort === "relevant" && userHasTextIndex) {
@@ -309,7 +307,7 @@ const getPeopleSearch = expressAsyncHandler(
 
 const getCompaniesSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q, page } = req.query;
+    const { q, page, location, sort } = req.query;
 
     if (!q) {
       return next(new ErrorHandler("Please provide a search query", 400));
@@ -318,11 +316,36 @@ const getCompaniesSearch = expressAsyncHandler(
     const companies = await Company.find({
       $or: [
         { name: { $regex: q, $options: "i" } },
-        { location: { $regex: q, $options: "i" } },
+        { "address.city": { $regex: q, $options: "i" } },
+        { "address.country": { $regex: q, $options: "i" } },
+        { "address.state": { $regex: q, $options: "i" } },
+        { "address.address": { $regex: q, $options: "i" } },
         { website: { $regex: q, $options: "i" } },
         { bio: { $regex: q, $options: "i" } },
       ],
+      ...(location
+        ? {
+            $or: [
+              { "address.city": { $regex: location, $options: "i" } },
+              { "address.country": { $regex: location, $options: "i" } },
+              { "address.state": { $regex: location, $options: "i" } },
+              { "address.address": { $regex: location, $options: "i" } },
+            ],
+          }
+        : {}),
+      isDeleted: false,
     })
+      .sort(
+        sort === "employees"
+          ? { totalMembers: -1 }
+          : sort === "recent"
+          ? { createdAt: -1 }
+          : sort === "followers"
+          ? { totalFollowers: -1 }
+          : sort === "relavant"
+          ? { score: { $meta: "textScore" } }
+          : {}
+      )
       .skip((Number(page) - 1) * 20)
       .limit(20);
 
@@ -430,16 +453,26 @@ const getPostsSearch = expressAsyncHandler(
 
     if (contentType) {
       if (contentType === "text") {
-        postQuery.images = [];
-        postQuery.video = {};
+        postQuery.images = { $eq: [] };
+        postQuery.video = { $eq: null };
       } else if (contentType === "image") {
         postQuery.images = { $ne: [] };
       } else if (contentType === "video") {
-        postQuery.video = { $exists: true, $ne: null };
+        postQuery.$or = [{ video: { $ne: null } }];
       }
     }
 
-    const posts = await Post.find(postQuery)
+    // Only add $text query and textScore sort if Post has a text index
+    const postHasTextIndex = Post.schema
+      .indexes()
+      .some((idx) => Object.values(idx[0]).includes("text"));
+
+    const posts = await Post.find({
+      ...postQuery,
+      ...(sort === "relevant" && q && postHasTextIndex
+        ? { $text: { $search: q as string } }
+        : {}),
+    })
       .skip((Number(page) - 1) * 20)
       .limit(Number(limit) || 20)
       .sort(
@@ -447,7 +480,7 @@ const getPostsSearch = expressAsyncHandler(
           ? { createdAt: -1 }
           : sort === "popular"
           ? { likeCount: -1 }
-          : sort === "relevant"
+          : sort === "relevant" && postHasTextIndex
           ? { score: { $meta: "textScore" } }
           : sort === "liked"
           ? { likeCount: -1 }
@@ -476,7 +509,7 @@ const getPostsSearch = expressAsyncHandler(
 
 const getProjectsSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q, page } = req.query;
+    const { q, page, skill, sort } = req.query;
 
     if (!q) {
       return next(new ErrorHandler("Please provide a search query", 400));
@@ -488,9 +521,34 @@ const getProjectsSearch = expressAsyncHandler(
         { description: { $regex: q, $options: "i" } },
         { tags: { $regex: q, $options: "i" } },
       ],
+      ...(skill
+        ? {
+            skills: {
+              $in: [skill],
+            },
+          }
+        : {}),
     })
       .skip((Number(page) - 1) * 20)
-      .limit(20);
+      .limit(20)
+      .populate("user", "name avatar headline location username")
+      .populate("skills", "name _id")
+      .sort(
+        sort === "recent"
+          ? { createdAt: -1 }
+          : sort === "old"
+          ? { createdAt: 1 }
+          : sort === "relevant"
+          ? Project.schema
+              .indexes()
+              .some(
+                (idx) =>
+                  idx[0].hasOwnProperty("name") && idx[1].hasOwnProperty("text")
+              )
+            ? { score: { $meta: "textScore" } }
+            : {}
+          : {}
+      );
 
     if (projects.length === 0) {
       return next(new ErrorHandler("No results found", 404));
@@ -505,7 +563,7 @@ const getProjectsSearch = expressAsyncHandler(
 
 const getGroupsSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q, page } = req.query;
+    const { q, page, sort, location } = req.query;
 
     if (!q) {
       return next(new ErrorHandler("Please provide a search query", 400));
@@ -513,11 +571,24 @@ const getGroupsSearch = expressAsyncHandler(
 
     const groups = await Group.find({
       $or: [
-        { title: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } },
-        { tags: { $regex: q, $options: "i" } },
+        { name: { $regex: q, $options: "i" } },
+        { headline: { $regex: q, $options: "i" } },
+        { about: { $regex: q, $options: "i" } },
       ],
+      ...(location ? { location: { $regex: location, $options: "i" } } : {}),
+      isDeleted: false,
     })
+      .sort(
+        sort === "popular"
+          ? { members: -1 }
+          : sort === "recent"
+          ? { createdAt: -1 }
+          : sort === "members"
+          ? { members: -1 }
+          : sort === "relavant"
+          ? { score: { $meta: "textScore" } }
+          : {}
+      )
       .skip((Number(page) - 1) * 20)
       .limit(20);
 
@@ -534,7 +605,8 @@ const getGroupsSearch = expressAsyncHandler(
 
 const getJobsSearch = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q, page } = req.query;
+    const { q, page, date_posted, sort, workType, location, company } =
+      req.query;
 
     if (!q) {
       return next(new ErrorHandler("Please provide a search query", 400));
@@ -545,10 +617,34 @@ const getJobsSearch = expressAsyncHandler(
         { title: { $regex: q, $options: "i" } },
         { description: { $regex: q, $options: "i" } },
         { tags: { $regex: q, $options: "i" } },
+        { location: { $elemMatch: { $regex: q, $options: "i" } } },
       ],
+      ...(date_posted
+        ? {
+            createdAt: {
+              $gte: new Date(
+                Date.now() - Number(date_posted) * 24 * 60 * 60 * 1000
+              ),
+            },
+          }
+        : {}),
+      ...(location ? { location: { $regex: location, $options: "i" } } : {}),
+      ...(workType ? { workType: workType } : {}),
+      ...(company ? { company: company } : {}),
     })
       .skip((Number(page) - 1) * 20)
-      .limit(20);
+      .limit(20)
+      .sort(
+        sort === "recent"
+          ? { createdAt: -1 }
+          : sort === "salary"
+          ? { salary: -1 }
+          : sort === "relevant"
+          ? { score: { $meta: "textScore" } }
+          : {}
+      )
+      .populate("user", "name avatar headline username isDeleted")
+      .populate("company", "name headline address avatar isDeleted");
 
     if (jobs.length === 0) {
       return next(new ErrorHandler("No results found", 404));

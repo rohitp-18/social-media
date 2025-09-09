@@ -15,6 +15,7 @@ import jobsSlice from "./jobs/jobSlice";
 import applyJobsSlice from "./jobs/applyJobsSlice";
 import postSlice from "./utils/postSlice";
 import groupSlice from "./group/groupSlice";
+import searchHistorySlice from "./history/searchHistory";
 
 const store = configureStore({
   reducer: {
@@ -32,6 +33,7 @@ const store = configureStore({
     jobs: jobsSlice,
     applyJobs: applyJobsSlice,
     group: groupSlice,
+    searchHistory: searchHistorySlice,
   },
 });
 

@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
+import { skillsState } from "./typeSkill";
 
 const searchSkill = createAsyncThunk(
   "skill/searchSkill",
@@ -16,19 +17,6 @@ const searchSkill = createAsyncThunk(
     }
   }
 );
-
-interface skillsState {
-  skills: any[];
-  searchSkills: any[];
-  searchLoading: boolean;
-  searchError: string | null;
-  loading: boolean;
-  error: string | null;
-  message: string | null;
-  created: boolean;
-  updated: boolean;
-  deleted: boolean;
-}
 
 const initialState: skillsState = {
   skills: [],

@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { toggleFollow } from "@/store/user/userSlice";
 import { timeAgo } from "@/lib/functions";
+import { toast } from "sonner";
 
 function ActivityCard({ isUser }: { isUser: boolean }) {
   const [activity, setActivity] = useState("post");
@@ -184,9 +185,18 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                                       className="w-min flex px-7 py-2 border-primary text-primary hover:text-white hover:bg-primary rounded-full"
                                       variant={"outline"}
                                       size={"sm"}
-                                      onClick={() =>
-                                        dispatch(toggleFollow(post.userId._id))
-                                      }
+                                      onClick={() => {
+                                        if (!user) {
+                                          toast.error(
+                                            "You must be logged in to follow users",
+                                            {
+                                              position: "top-center",
+                                            }
+                                          );
+                                          return;
+                                        }
+                                        dispatch(toggleFollow(post.userId._id));
+                                      }}
                                     >
                                       Follow
                                     </Button>

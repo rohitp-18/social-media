@@ -41,8 +41,8 @@ function Page() {
 
   useEffect(() => {
     if (name) {
-      setUserName(name as string);
-      dispatch(getProfileActivity(name as string));
+      setUserName(decodeURIComponent(name as string));
+      dispatch(getProfileActivity(decodeURIComponent(name as string)));
     }
   }, [name]);
 

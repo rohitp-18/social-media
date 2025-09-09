@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
+import { chatState } from "./typeChat";
 
 const fetchChats = createAsyncThunk("chat/fetchChats", async () => {
   try {
@@ -29,19 +30,27 @@ const readMessage = createAsyncThunk(
   }
 );
 
-interface chatState {
-  chats: any[];
-  loading: boolean;
-  error: string | null;
-  message: string | null;
-  deleted: boolean;
-}
+const createChat = createAsyncThunk(
+  "chat/createChat",
+  async (userId: string) => {
+    try {
+      const { data } = await axios.post("/chat/create", { userId });
+      return data;
+    } catch (error: any) {
+      if (isAxiosError(error) && error.response) {
+        throw error.response.data.message;
+      }
+      throw error.message;
+    }
+  }
+);
 
 const initialState: chatState = {
   chats: [],
   loading: false,
   error: null,
   message: null,
+  newChat: null,
   deleted: false,
 };
 
@@ -78,6 +87,14 @@ const chatSlice = createSlice({
       // Handle readMessage
       .addCase(readMessage.rejected, (state, action) => {
         state.error = action.error.message || "Failed to read message";
+      })
+
+      // Handle createChat
+      .addCase(createChat.fulfilled, (state, action) => {
+        state.chats.push(action.payload.chat);
+      })
+      .addCase(createChat.rejected, (state, action) => {
+        state.error = action.error.message || "Failed to create chat";
       });
   },
 });
