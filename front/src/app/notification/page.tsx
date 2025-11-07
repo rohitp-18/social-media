@@ -60,10 +60,10 @@ function Page() {
       <Navbar />
 
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
-        <div className="container mx-auto">
+        <div className="p-2 mx-auto">
           {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}
-          <section className="md:grid feed mx-auto max-w-7xl min-h-screen gap-2">
-            <aside className="md:flex flex-col gap-3 shrink hidden h-min shadow-lg w-60">
+          <section className="md:grid lg:grid-cols-[256px_1fr_300px] grid-cols-[256px_1fr] mx-auto max-w-7xl min-h-screen gap-2">
+            <aside className="md:flex flex-col gap-3 shrink hidden h-min w-60">
               <ProfileCard />
               <Card>
                 <div className="flex justify-between px-3 flex-col my-3">
@@ -75,6 +75,9 @@ function Page() {
                   </Button>
                 </div>
               </Card>
+              <div className="w-full lg:hidden md:block">
+                <FooterS />
+              </div>
             </aside>
             <section className="min-h-screen overflow-hidden w-full flex flex-col gap-5 flex-grow-0">
               {/* <div className="bg-background rounded-xl border text-card-foreground shadow-sm w-full flex justify-start items-center py-4 px-2 gap-10">

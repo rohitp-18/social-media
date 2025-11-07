@@ -4,9 +4,10 @@ import Navbar from "@/components/userNavbar";
 import IntroNavbar from "@/components/introNavbar";
 import React, { PropsWithChildren, ReactNode } from "react";
 import RecommendUser from "@/components/recommend/recommendUser";
-import YouMayKnow from "@/components/recommend/YouMayKnow";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import RecommendGroups from "@/components/recommend/recommendGroups";
+import RecommendUserHorizon from "@/components/recommend/recommendUserHorizon";
 
 function Wrapper(props: {
   children: ReactNode;
@@ -34,6 +35,7 @@ function Wrapper(props: {
               }
             >
               {props.children}
+              <RecommendUserHorizon />
             </section>
             <aside
               className={
@@ -42,7 +44,7 @@ function Wrapper(props: {
               }
             >
               <RecommendUser />
-              <YouMayKnow />
+              <RecommendGroups />
             </aside>
           </section>
         </div>

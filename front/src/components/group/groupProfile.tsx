@@ -214,7 +214,7 @@ function GroupProfile() {
               </Link>
             )}
           </div>
-          <div className="flex justify-start items-center gap-3 mt-5">
+          <div className="flex justify-start flex-wrap items-center gap-3 mt-5">
             {!isMember && (
               <Button
                 className={`flex items-center rounded-full ${

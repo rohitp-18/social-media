@@ -13,8 +13,8 @@ import {
   Users,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { usePathname, useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -40,9 +40,10 @@ import {
 const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { setTheme, theme } = useTheme();
+  const param = useSearchParams();
 
   const [drop, setDrop] = useState(false);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState<string>("");
   const [searchDrop, setSearchDrop] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -66,29 +67,6 @@ const Navbar: React.FC = () => {
     [search, open, searchDrop]
   );
 
-  const HistoryRender = () => (
-    <div className="absolute top-full left-0 w-full z-10 mt-1 bg-white rounded-md border shadow-md max-h-60 overflow-y-auto">
-      {history.length === 0 ? (
-        <div className="py-2 px-3 text-sm text-gray-500">No result found.</div>
-      ) : (
-        <div className="max-h-60">
-          {history.map((q: any) => (
-            <div
-              key={q._id}
-              onClick={() => {
-                setSearch(q.query);
-                router.push(`/search?q=${q.query}`);
-              }}
-              className="cursor-pointer hover:bg-gray-100 p-2 text-sm text-gray-800 flex items-center gap-1"
-            >
-              {q.query}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
   function logoutAction() {
     dispatch(logout());
   }
@@ -98,6 +76,12 @@ const Navbar: React.FC = () => {
       dispatch(getAllSearchHistoryAction(search));
     }
   }, [search]);
+
+  useEffect(() => {
+    if (param.get("q")) {
+      setSearch(param.get("q") || "");
+    }
+  }, [param]);
 
   useEffect(() => {
     if (logout2) {
@@ -115,6 +99,33 @@ const Navbar: React.FC = () => {
       dispatch(clearError());
     }
   }, [logout2, error]);
+
+  const HistoryRender = () => (
+    <div className="absolute top-full left-0 w-full z-10 mt-1 bg-white rounded-md border shadow-md max-h-60 overflow-y-auto">
+      {history.length === 0 ? (
+        <div className="py-2 px-3 text-sm text-gray-500">No result found.</div>
+      ) : (
+        <div className="max-h-60">
+          {history.map((q: any) => (
+            <div
+              key={q._id}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setSearch(q.query);
+                setTimeout(() => {
+                  router.push(`/search?q=${encodeURIComponent(q.query)}`);
+                }, 0);
+              }}
+              className="cursor-pointer hover:bg-gray-100 p-2 text-sm text-gray-800 flex items-center gap-1"
+            >
+              {q.query}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <nav className="sticky h-[70px] top-0 z-50 left-0 w-full border text-card-foreground bg-opacity-20 backdrop-blur-md shadow-md p-4 flex flex-col justify-between items-center bg-background/40 dark:shadow-lg">
@@ -146,7 +157,7 @@ const Navbar: React.FC = () => {
             className="md:hidden block w-5 h-5 cursor-pointer"
           />
         </div>
-        <div className="flex gap-3 space-x-4">
+        <div className="flex items-center gap-2 lg:gap-5 space-x-3 md:space-x-6">
           <Link
             href="/feed"
             className={`no-underline hover:underline flex flex-col items-center ${
@@ -255,7 +266,7 @@ const Navbar: React.FC = () => {
           <Button
             variant={"outline"}
             size={"icon"}
-            className="md:flex hidden"
+            className="xs:flex hidden"
             onClick={() =>
               theme === "light" ? setTheme("dark") : setTheme("light")
             }

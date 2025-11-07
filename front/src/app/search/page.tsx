@@ -35,16 +35,17 @@ import Navbar from "@/components/userNavbar";
 import IntroNavbar from "@/components/introNavbar";
 import { AppDispatch, RootState } from "@/store/store";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { resetSkill, searchSkill } from "@/store/skill/skillSlice";
 import { searchCompany } from "@/store/search/allSearchSlice";
 import { X } from "lucide-react";
 import { createSearchHistoryAction } from "@/store/history/searchHistory";
+import { PrimaryLoader } from "@/components/loader";
 
 function Page() {
   const [search, setSearch] = useState<{ [key: string]: string }>({});
-  const [type, setType] = useState("all");
+  const [type, setType] = useState("not");
   const [index, setIndex] = useState(0);
   const [query, setQuery] = useState("");
   const [selectValues, setSelectValues] = useState<any>({});
@@ -87,19 +88,27 @@ function Page() {
     router.push(`/search?${searchParam.toString()}`);
   };
 
+  const changeType = (str: string) => {
+    setType(str);
+    console.log(str);
+    setSelectValues({ q: query });
+  };
+
   useEffect(() => {
     const q = searchParam.get("q");
     const t = searchParam.get("type");
     if (q == query && t == type) return;
     if (q) {
+      console.log(q, t, searchParam.get("type"), 102);
       router.push(
-        `/search?q=${encodeURIComponent(q)}&type=${encodeURIComponent(
+        `/search?q=${decodeURIComponent(q)}&type=${decodeURIComponent(
           t ? t : "all"
         )}`
       );
       setQuery(q);
+      setSelectValues({ ...selectValues, q: q });
     }
-  }, [pathname, router, searchParam, query, type]);
+  }, [searchParam, query, type]);
 
   useEffect(() => {
     if (query) {
@@ -113,6 +122,7 @@ function Page() {
       {
         value: "people",
         label: "People",
+        apply: true,
         filters: [
           {
             key: "location",
@@ -247,6 +257,7 @@ function Page() {
       {
         value: "posts",
         label: "Posts",
+        apply: true,
         filters: [
           {
             title: "Content Type",
@@ -338,6 +349,7 @@ function Page() {
       {
         value: "companies",
         label: "Companies",
+        apply: true,
         filters: [
           {
             title: "location",
@@ -385,6 +397,7 @@ function Page() {
       {
         value: "projects",
         label: "Projects",
+        apply: true,
         filters: [
           {
             title: "Skills",
@@ -426,20 +439,32 @@ function Page() {
     const selectedFilter = searchFilters.find(
       (filter) => filter.value === type
     );
-    urlChange();
+    // urlChange();
     setIndex(selectedFilter ? searchFilters.indexOf(selectedFilter) : 0);
   }, [type, searchFilters]);
 
   useEffect(() => {
-    setSelectValues({ q: query });
-    router.push(`/search?q=${query}&type=${type}`);
+    console.log(searchParam.toString());
+  }, [searchParam]);
+
+  useEffect(() => {
+    if (type === "not") {
+      router.push(
+        `/search?q=${query}&type=${searchParam.get("type") || "all"}`
+      );
+      setType(searchParam.get("type") || "all");
+    } else {
+      router.push(`/search?q=${query}&type=${type}`);
+    }
   }, [type, query]);
+
+  if (type === "not" || query == "") return <PrimaryLoader />;
 
   return (
     <>
       {user ? <Navbar /> : <IntroNavbar />}
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
-        <div className="container lg:max-w-[1100px] mx-auto">
+        <div className="md:container lg:max-w-[1100px] md:mx-auto md:px-4 px-2">
           <Card className="bg-background flex flex-col gap-3 shadow-md w-full">
             {type !== "all" ? (
               <CardContent className="flex items-center gap-3 py-3">
@@ -447,7 +472,7 @@ function Page() {
                   {/* <Label className="text-sm font-semibold">Type</Label> */}
                   <Select
                     defaultValue={type}
-                    onValueChange={(value) => setType(value)}
+                    onValueChange={(value) => changeType(value)}
                   >
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="All" />
@@ -477,7 +502,10 @@ function Page() {
                   {searchFilters[index].filters?.map(
                     (f) =>
                       ("apply" in f ? !f.apply : true) && (
-                        <div key={f.key || f.title} className="flex flex-col">
+                        <div
+                          key={f.key || f.title}
+                          className="hidden flex-col md:flex"
+                        >
                           {/* <Label className="text-xs font-medium mb-1">
                         {f.title}
                       </Label> */}
@@ -552,7 +580,7 @@ function Page() {
                     <>
                       <div className="flex h-full w-full justify-end">
                         <Separator
-                          className="h-12 items-center opacity-60 overflow-hidden w-[1px] bg-foreground"
+                          className="h-12 items-center opacity-60 sm:flex hidden overflow-hidden w-[1px] bg-foreground"
                           orientation="vertical"
                         />
                       </div>
@@ -664,7 +692,7 @@ function Page() {
                               onClick={() => {
                                 setSearch({});
                                 dispatch(resetSkill());
-                                setSelectValues({ q: query, type });
+                                setSelectValues({ q: query });
                               }}
                             >
                               Clear Filters
@@ -675,15 +703,15 @@ function Page() {
                     </>
                   )}
                 </div>
-                {Object.keys(searchFilters).length > 2 && (
+                {Object.keys(selectValues).length > 1 && (
                   <Button
                     variant={"outline"}
                     onClick={() => {
                       // setSearch({});
                       dispatch(resetSkill());
-                      setSelectValues({ q: query, type });
+                      setSelectValues({ q: query });
                     }}
-                    className="text-opacity-50"
+                    className="text-opacity-50 xs:flex hidden"
                   >
                     Clear filters
                   </Button>
@@ -691,36 +719,35 @@ function Page() {
               </CardContent>
             ) : (
               <CardContent className="flex gap-3 py-3">
-                <div className="">
-                  <Tabs
-                    value={type}
-                    onValueChange={(val) => setType(val)}
-                    className="md:overflow-hidden overflow-auto"
-                  >
-                    <TabsList className="flex md:gap-6 gap-5 min-h-12 max-h-max h-[unset] justify-center overflow-auto bg-transparent items-center md:justify-start">
-                      {searchFilters.map(
-                        (tabs) =>
-                          tabs.value !== "all" && (
-                            <TabsTrigger
-                              key={tabs.value}
-                              style={{ boxShadow: "none" }}
-                              className={"border rounded-full py-2 px-4"}
-                              value={tabs.value}
-                            >
-                              {tabs.label}
-                            </TabsTrigger>
-                          )
-                      )}
-                    </TabsList>
-                  </Tabs>
-                </div>
+                {/* <div className=""> */}
+                <Tabs
+                  value={type}
+                  onValueChange={(val) => changeType(val)}
+                  className="flex flex-wrap"
+                >
+                  <TabsList className="flex flex-wrap md:gap-6 gap-5 min-h-12 max-h-max h-[unset] justify-evenly md:justify-start items-center whitespace-nowrap bg-transparent">
+                    {searchFilters.map(
+                      (tabs) =>
+                        tabs.value !== "all" && (
+                          <TabsTrigger
+                            key={tabs.value}
+                            style={{ boxShadow: "none" }}
+                            className="border rounded-full py-2 px-4 inline-flex flex-shrink-0"
+                            value={tabs.value}
+                          >
+                            {tabs.label}
+                          </TabsTrigger>
+                        )
+                    )}
+                  </TabsList>
+                </Tabs>
               </CardContent>
             )}
           </Card>
         </div>
-        <section className="container lg:max-w-[1100px] mx-auto py-6">
+        <section className="md:container lg:max-w-[1100px] mx-auto py-6 px-2 md:px-4">
           {type === "all" && (
-            <All setType={setType} selectValues={selectValues} />
+            <All setType={changeType} selectValues={selectValues} />
           )}
           {type === "people" && (
             <PeopleSearch

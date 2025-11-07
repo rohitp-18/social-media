@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { searchPosts } from "@/store/search/allSearchSlice";
+import RecommendGroups from "../recommend/recommendGroups";
 
 function PostSearch({
   selectValues,
@@ -25,10 +26,10 @@ function PostSearch({
   }, [selectValues, dispatch]);
 
   return (
-    <section className="grid grid-cols-[1fr_300px]  gap-4">
+    <section className="md:grid grid-cols-[1fr_300px] flex flex-col gap-4">
       <div className="">
         {posts.length > 0 ? (
-          <div className="flex px-6 flex-col bg-transparent w-full gap-3 overflow-auto">
+          <div className="flex md:px-6 flex-col bg-transparent w-full gap-3 overflow-auto">
             <div className="flex flex-col gap-2 py-5">
               {posts.map((post) => (
                 <Fragment key={post._id}>
@@ -75,8 +76,10 @@ function PostSearch({
             )}
           </div>
         )}
+        <RecommendGroups horizontal={true} />
       </div>
       <aside>
+        <RecommendGroups />
         <FooterS />
       </aside>
     </section>

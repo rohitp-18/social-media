@@ -527,36 +527,52 @@ const userActivities = expressAsyncHandler(
 
 const recommendationsUser = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const user = await User.findById(req.user._id);
+    const { user } = req;
 
-    if (!user) {
-      return next(new ErrorHandler("User not found", 404));
-    }
-
-    const users = await User.find({
-      _id: { $ne: user._id, $nin: user.following }, // Exclude self and already-followed users
-      $or: [
-        {
-          skills: { $in: user.skills },
-        },
-        {
-          headline: {
-            $regex: user.headline ? user.headline.split(/\s+/).join("|") : "",
-            $options: "i",
-          }, // Contain headline words/phrases
-        },
-        {
-          about: {
-            $regex: user.about ? user.about.split(/\s+/).join("|") : "",
-            $options: "i",
-          }, // Contain about words/phrases
-        },
-      ], // Find users with similar skills
+    let users = await User.find({
+      ...(user
+        ? {
+            _id: { $ne: user._id, $nin: user.following }, // Exclude self and already-followed users
+            $or: [
+              {
+                skills: { $in: user.skills },
+              },
+              {
+                headline: {
+                  $regex: user.headline
+                    ? user.headline.split(/\s+/).join("|")
+                    : "",
+                  $options: "i",
+                }, // Contain headline words/phrases
+              },
+              {
+                about: {
+                  $regex: user.about ? user.about.split(/\s+/).join("|") : "",
+                  $options: "i",
+                }, // Contain about words/phrases
+              },
+            ],
+          }
+        : {}), // Find users with similar skills
       deleted: false,
     })
       .populate("followers", "name avatar headline username")
       .populate("following", "name avatar headline username")
       .limit(10);
+
+    if (users.length < 10) {
+      users = await User.find({
+        ...(user
+          ? {
+              _id: { $ne: user._id, $nin: user.following }, // Exclude self and already-followed users
+            }
+          : {}),
+        deleted: false,
+      })
+        .populate("followers", "name avatar headline username")
+        .populate("following", "name avatar headline username")
+        .limit(10 - users.length);
+    }
 
     res.status(200).json({
       success: true,

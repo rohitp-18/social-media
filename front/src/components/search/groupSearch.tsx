@@ -11,6 +11,7 @@ import { searchGroups } from "@/store/search/allSearchSlice";
 import { toast } from "sonner";
 import { toggleJoinRequest } from "@/store/group/groupSlice";
 import GroupSearchCard from "./groupSearchCard";
+import RecommendGroups from "../recommend/recommendGroups";
 
 function GroupSearch({
   selectValues,
@@ -28,7 +29,7 @@ function GroupSearch({
   }, [dispatch, selectValues]);
 
   return (
-    <section className="grid grid-cols-[1fr_300px] gap-4">
+    <section className="md:grid grid-cols-[1fr_300px] flex flex-col gap-4">
       <div>
         {groups.length > 0 ? (
           <Card className="flex flex-col w-full gap-3 overflow-auto">
@@ -81,7 +82,9 @@ function GroupSearch({
           </Card>
         )}
       </div>
+      <RecommendGroups horizontal={true} />
       <aside>
+        <RecommendGroups />
         <FooterS />
       </aside>
     </section>

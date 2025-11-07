@@ -1,5 +1,13 @@
-import React, { createContext, useState, useContext, ReactNode } from "react";
-import { Socket } from "socket.io-client";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  ReactNode,
+  useEffect,
+} from "react";
+import { io, Socket } from "socket.io-client";
+import { RootState } from "../store";
+import { useSelector } from "react-redux";
 
 interface SocketState {
   isConnected: boolean;
@@ -28,6 +36,7 @@ const SocketContext = createContext<SocketContextProps>({
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<SocketState>(initialState);
+  const { user } = useSelector((state: RootState) => state.user);
 
   const connectSocket = (socket: Socket) => {
     setState({ isConnected: true, socket, error: null });
@@ -40,6 +49,22 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const setError = (error: string) => {
     setState((prevState) => ({ ...prevState, error }));
   };
+
+  useEffect(() => {
+    if (!user) return;
+    if (state.socket) return;
+    let newSocket = io("ws://api.192.168.43.34.nip.io", {
+      query: { selectedUser: user._id },
+      transports: ["websocket"],
+    });
+    newSocket.connect();
+    newSocket.on("connect", () => {
+      console.log("connected");
+    });
+    connectSocket(newSocket);
+
+    newSocket.on("disconnect", () => {});
+  }, [user, state.socket]);
 
   return (
     <SocketContext.Provider

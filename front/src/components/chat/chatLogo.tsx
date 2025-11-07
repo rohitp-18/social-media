@@ -31,7 +31,9 @@ function ChatLogo({
         );
       }
     }
-  }, [chat, user, chat.lastMessage.readBy, chat.members, chat.lastMessage]);
+  }, [chat, user, chat.lastMessage?.readBy, chat.members, chat.lastMessage]);
+
+  if (!user) return null;
 
   return (
     <div
@@ -41,7 +43,7 @@ function ChatLogo({
       }`}
       onClick={() => handleChatSelection(chat, chatUser)}
     >
-      <div className="flex items-center gap-3 w-full">
+      <div className="flex items-center gap-3 w-full overflow-hidden">
         <Avatar>
           <AvatarImage src={chatUser.avatar?.url} />
           <AvatarFallback>

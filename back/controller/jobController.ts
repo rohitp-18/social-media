@@ -376,31 +376,33 @@ const recommendedJobs = expressAsyncHandler(
     const { user } = req;
     const companyId = req.query.company as string;
 
-    if (!user) {
-      return next(new ErrorHandler("User not found", 404));
-    }
-
     const jobs = await Job.find({
       isDeleted: false,
       company: companyId || { $ne: null },
-      $or: [
-        {
-          preferredSkills: {
-            $in: user.skills.map((skill: any) => skill.skill.toString()),
-          },
-        },
-        {
-          essentialSkills: {
-            $in: user.skills.map((skill: any) => skill.skill.toString()),
-          },
-        },
-        {
-          description: {
-            $regex: user.skills.map((skill: any) => skill.skill.name).join("|"),
-            $options: "i",
-          },
-        },
-      ],
+      ...(req.user
+        ? {
+            $or: [
+              {
+                preferredSkills: {
+                  $in: user.skills.map((skill: any) => skill.skill.toString()),
+                },
+              },
+              {
+                essentialSkills: {
+                  $in: user.skills.map((skill: any) => skill.skill.toString()),
+                },
+              },
+              {
+                description: {
+                  $regex: user.skills
+                    .map((skill: any) => skill.skill.name)
+                    .join("|"),
+                  $options: "i",
+                },
+              },
+            ],
+          }
+        : {}),
     })
       .populate("user", "name email avatar username headline followers")
       .populate("company", "name avatar")

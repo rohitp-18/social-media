@@ -60,7 +60,7 @@ function EditAbout({
 
   useEffect(() => {
     if (user) {
-      setAbout(user.about);
+      setAbout(user.about || "");
     }
   }, [user]);
   return (

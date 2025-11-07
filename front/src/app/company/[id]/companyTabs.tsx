@@ -40,7 +40,7 @@ function CompanyTabs({ tab }: { tab: string }) {
 
   useEffect(() => {
     if (user && company) {
-      setIsAdmin(company.admin.some((admin: any) => admin.id === user.id));
+      setIsAdmin(company.admin.some((admin: any) => admin.id === user._id));
     }
   }, [user, company]);
 

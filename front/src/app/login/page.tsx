@@ -72,7 +72,7 @@ function Page() {
   }, [loading, user, error]);
 
   return (
-    <main className="min-h-screen bg-background/70">
+    <main className="min-h-screen bg-background/40 dark:bg-background-dark">
       <Navbar />
       <section className="w-full flex justify-center items-center min-h-screen py-10">
         <div className="min-w-[320px] max-w-full md:min-w-96 shadow-2xl dark:bg-zinc-800 bg-white rounded-lg p-6">

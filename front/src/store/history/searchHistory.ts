@@ -51,14 +51,16 @@ const clearSearchHistoryAction = createAsyncThunk(
   }
 );
 
+interface SearchHistoryItem {
+  _id: string;
+  user: string;
+  query: string;
+  suggest: boolean;
+  createdAt: string;
+}
+
 interface SearchHistoryState {
-  history: Array<{
-    _id: string;
-    user: string;
-    query: string;
-    suggest: boolean;
-    createdAt: string;
-  }>;
+  history: SearchHistoryItem[];
   loading: boolean;
   deleted: boolean;
   cleared: boolean;
@@ -93,10 +95,13 @@ export const searchHistorySlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createSearchHistoryAction.fulfilled, (state, action) => {
-        state.loading = false;
-        state.history.push(action.payload.history);
-      })
+      .addCase(
+        createSearchHistoryAction.fulfilled,
+        (state, action: { payload: { history: SearchHistoryItem } }) => {
+          state.loading = false;
+          action.payload.history && state.history.push(action.payload.history);
+        }
+      )
       .addCase(createSearchHistoryAction.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;

@@ -69,6 +69,7 @@ function PersonalInfo({
 
   const submitHandler = async (e: any) => {
     e.preventDefault();
+    if (!user) return;
     const form = new FormData();
 
     // check if country is empty and state and city is filled show error to fill country name
@@ -102,7 +103,7 @@ function PersonalInfo({
     );
     form.append("pronouns", pronouns);
 
-    if (avatarPreview !== user.avatar?.url) {
+    if (avatarPreview !== user?.avatar?.url) {
       form.append("image", avatar);
     }
 
@@ -127,16 +128,16 @@ function PersonalInfo({
 
   useEffect(() => {
     if (user) {
-      setAvatar(user.avatar);
+      setAvatar(user?.avatar ? user.avatar.url : "");
       setName(user.name);
       setLink(user?.website?.link);
       setLinkText(user?.website?.text);
       setHeadline(user.headline);
       setPronouns(user.pronouns);
-      setCountry(user.location?.country);
-      setState(user.location?.state);
-      setCity(user.location?.city);
-      setAvatarPreview(user.avatar?.url);
+      setCountry(user.location?.country || "");
+      setState(user.location?.state || "");
+      setCity(user.location?.city || "");
+      setAvatarPreview(user.avatar?.url || "");
     }
   }, [user]);
 

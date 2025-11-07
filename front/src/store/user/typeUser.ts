@@ -27,6 +27,7 @@ interface user {
   totalFollowing: number;
   totalConnections: number;
   bannerImage: { public_id: string; url: string } | null;
+  resume?: { public_id: string; url: string } | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -93,6 +94,8 @@ interface InheritUser {
   location: { city: string; country: string; state: string } | null;
   createdAt: Date;
   updatedAt: Date;
+  bannerImage?: { public_id: string; url: string } | null;
+  resume?: { public_id: string; url: string } | null;
 }
 
 interface sUser {

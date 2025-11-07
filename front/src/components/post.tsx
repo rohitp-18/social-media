@@ -177,7 +177,7 @@ function Post({
     <Card className={cn("w-[500px] max-w-full", cardClass)}>
       {post.postType !== "user" && post.origin && (
         <>
-          <CardHeader className="flex flex-col md:flex-row justify-between items-start gap-2 p-2 pb-1">
+          <CardHeader className="flex flex-col md:flex-row justify-between items-start gap-2 md:p-2 p-1 pb-1">
             <Link
               href={`/${post.postType}/${post.origin._id}`}
               className="flex items-center gap-3 hover:underline"
@@ -202,7 +202,7 @@ function Post({
           <Separator className="my-2" />
         </>
       )}
-      <CardHeader className="flex flex-row justify-between items-start gap-2 py-3">
+      <CardHeader className="flex flex-row justify-between items-start gap-2 py-3 md:px-6 px-3">
         <div className="flex flex-row items-start gap-3">
           <Link
             href={`/u/${post.userId.username}`}

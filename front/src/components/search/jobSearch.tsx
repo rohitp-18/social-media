@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Job } from "@/store/jobs/typeJob";
 import { searchJobs } from "@/store/search/allSearchSlice";
 import JobSearchCard from "./jobSearchCard";
+import RecommendedJobs from "../recommend/recommendedJobs";
 
 function JobSearch({
   selectValues,
@@ -27,12 +28,15 @@ function JobSearch({
   }, [allJobs]);
 
   useEffect(() => {
+    if (selectValues.q === undefined) {
+      setSelectValues({ ...selectValues, q: "" });
+    }
     dispatch(searchJobs(selectValues));
   }, [selectValues]);
   return (
-    <section className="grid grid-cols-[1fr_300px]  gap-4">
+    <section className="sm:grid grid-cols-[1fr_300px] flex flex-col gap-4">
       {jobs.length > 0 ? (
-        <Card className="flex flex-col max-w-screen-md w-full gap-3 overflow-auto">
+        <Card className="flex flex-col max-w-screen-md self-start w-full gap-3 overflow-auto">
           <CardContent className="flex flex-col gap-2 py-5">
             {jobs.map((job) => (
               <Fragment key={job._id}>
@@ -87,6 +91,7 @@ function JobSearch({
         </Card>
       )}
       <aside>
+        <RecommendedJobs />
         <FooterS />
       </aside>
     </section>

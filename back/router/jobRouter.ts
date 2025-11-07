@@ -14,6 +14,7 @@ import {
   toggleSaveJob,
   toggleActiveJob,
 } from "../controller/jobController";
+import checkAuth from "../middleware/checkAuth";
 
 const router = Router();
 
@@ -21,7 +22,7 @@ router.post("/create", auth, createJob);
 router.get("/all", getAllJobs);
 router.get("/intro", introductionJobs);
 router.get("/search", searchJob);
-router.get("/recommended", auth, recommendedJobs);
+router.get("/recommended", checkAuth, recommendedJobs);
 router
   .route("/job/:id")
   .get(getJob)

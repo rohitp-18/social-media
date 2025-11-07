@@ -23,25 +23,23 @@ function ProjectSearch({
     console.log(selectValues);
   }, [selectValues]);
   return (
-    <section className="grid grid-cols-[1fr_300px]  gap-4">
+    <section className="md:grid grid-cols-[1fr_300px] flex flex-col gap-4">
       {projects.length > 0 ? (
-        <div>
-          <Card className="flex flex-col w-full gap-3 overflow-auto">
-            <CardContent className="flex flex-col gap-2 py-5">
-              {projects.map((project: any, i: number) => (
-                <Fragment key={project._id}>
-                  <ProjectCard
-                    project={project}
-                    isUser={user?._id === project.user._id}
-                    showUser={true}
-                    username={project.user.username}
-                  />
-                  {i < projects.length - 1 && <Separator className="my-1" />}
-                </Fragment>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="flex flex-col w-full gap-3 overflow-auto">
+          <CardContent className="flex flex-col gap-2 py-5 md:p-6 p-3">
+            {projects.map((project: any, i: number) => (
+              <Fragment key={project._id}>
+                <ProjectCard
+                  project={project}
+                  isUser={user?._id === project.user._id}
+                  showUser={true}
+                  username={project.user.username}
+                />
+                {i < projects.length - 1 && <Separator className="my-1" />}
+              </Fragment>
+            ))}
+          </CardContent>
+        </Card>
       ) : (
         <div>
           <Card className="flex flex-col items-center justify-center w-full min-h-[400px] gap-4">

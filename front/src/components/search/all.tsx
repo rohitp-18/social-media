@@ -28,6 +28,7 @@ import { timeAgo } from "@/lib/functions";
 import ProjectSearchCard from "./projectSearchCard";
 import GroupSearchCard from "./groupSearchCard";
 import CompanySearchCard from "./companySearchCard";
+import RecommendUser from "../recommend/recommendUser";
 
 function All({ setType, selectValues }: any) {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -57,8 +58,8 @@ function All({ setType, selectValues }: any) {
   }, [AllJobs]);
 
   return (
-    <section className="md:grid block grid-cols-[200px_1fr_300px] gap-4">
-      <aside className="h-min md:block hidden">
+    <section className="md:grid block lg:grid-cols-[200px_1fr_300px] md:grid-cols-[1fr_300px] w-full gap-4">
+      <aside className="h-min lg:block hidden">
         <Card className="sticky  top-[70px] left-0">
           <CardHeader>
             <CardTitle>On this Page</CardTitle>
@@ -110,7 +111,7 @@ function All({ setType, selectValues }: any) {
       </aside>
 
       {!loading && (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col w-full gap-6">
           <Card id="people">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -379,6 +380,7 @@ function All({ setType, selectValues }: any) {
         </div>
       )}
       <aside className="h-min md:block hidden">
+        <RecommendUser />
         <RecommendCompany />
       </aside>
     </section>

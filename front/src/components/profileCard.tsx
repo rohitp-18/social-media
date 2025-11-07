@@ -12,6 +12,7 @@ import Link from "next/link";
 
 function ProfileCard() {
   const { user } = useSelector((state: RootState) => state.user);
+  if (!user) return null;
   return (
     <>
       {user && (
@@ -19,12 +20,20 @@ function ProfileCard() {
           <Card>
             <CardHeader className="p-0 rounded-2xl pb-3 flex flex-row justify-between items-center gap-2">
               <div className="flex flex-col relative w-full">
-                <img
-                  loading="lazy"
-                  src={user.bannerImage ? user.bannerImage.url : back}
-                  alt="background"
-                  className="w-full aspect-[4/1] flex-shrink-0 rounded-t-lg"
-                />
+                {user.bannerImage ? (
+                  <img
+                    loading="lazy"
+                    src={user.bannerImage.url}
+                    alt="background"
+                    className="w-full aspect-[4/1] flex-shrink-0 rounded-t-lg"
+                  />
+                ) : (
+                  <Image
+                    src={back}
+                    alt="background"
+                    className="w-full aspect-[4/1] flex-shrink-0 rounded-t-lg"
+                  />
+                )}
                 <Avatar className="w-24 h-24 ml-5 -mt-10">
                   <AvatarImage src={user.avatar?.url} />
                   <AvatarFallback>
@@ -37,9 +46,9 @@ function ProfileCard() {
               <h3 className="text-lg pb-2 font-semibold">{user.name}</h3>
               <span className="text-xs opacity-70 -mt-2">{user.headline}</span>
               <h3 className="text-opacity-50 text-xs opacity-50">
-                {`${user.location.city ? user.location.city + ", " : ""}${
-                  user.location.state ? user.location.state + ", " : ""
-                }${user.location.country ? user.location.country : ""}`}
+                {`${user.location?.city ? user.location.city + ", " : ""}${
+                  user.location?.state ? user.location.state + ", " : ""
+                }${user.location?.country ? user.location.country : ""}`}
               </h3>
             </CardContent>
           </Card>

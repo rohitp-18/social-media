@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { toggleFollowCompany } from "@/store/company/companySlice";
 import { searchCompany } from "@/store/search/allSearchSlice";
 import CompanySearchCard from "./companySearchCard";
+import RecommendCompany from "../recommend/recommendCompany";
 
 function CompanySearch({
   setSelectValues,
@@ -28,7 +29,7 @@ function CompanySearch({
   }, [dispatch, selectValues]);
 
   return (
-    <section className="grid grid-cols-[1fr_300px]  gap-4">
+    <section className="grid-cols-[1fr_300px] md:grid flex flex-col gap-4">
       <div>
         {companies.length > 0 ? (
           <Card className="flex flex-col w-full gap-3 overflow-auto">
@@ -81,7 +82,9 @@ function CompanySearch({
           </Card>
         )}
       </div>
+      <RecommendCompany horizontal={true} />
       <aside>
+        <RecommendCompany />
         <FooterS />
       </aside>
     </section>

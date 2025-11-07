@@ -19,14 +19,22 @@ function RecommendUser() {
     changeFollow,
     message,
     user: loginUser,
+    loading: userLoading,
   } = useSelector((state: RootState) => state.user);
 
   async function fetchData() {
     try {
       setLoading(true);
-      const { data } = await axios.get("/user/recommend");
+      if (users.length > 0) return;
+      if (loginUser && !userLoading) {
+        const { data } = await axios.get("/user/recommend");
 
-      setUsers(data.users);
+        setUsers(data.users);
+      } else {
+        const { data } = await axios.get("/user/intro");
+
+        setUsers(data.users);
+      }
     } catch (error) {
     } finally {
       setLoading(false);
@@ -34,8 +42,8 @@ function RecommendUser() {
   }
 
   useEffect(() => {
-    if (loginUser) fetchData();
-  }, [loginUser]);
+    fetchData();
+  }, [loginUser, userLoading]);
 
   useEffect(() => {
     if (changeFollow) {
@@ -47,7 +55,7 @@ function RecommendUser() {
   if (users.length === 0) return null;
 
   return (
-    <Card className="flex flex-col gap-3">
+    <Card className="md:flex flex-col gap-3 mb-3 hidden">
       <CardHeader className="pb-2">
         <h3 className="text-base font-semibold">People also viewed</h3>
       </CardHeader>

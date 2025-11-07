@@ -367,13 +367,13 @@ const getPostsSearch = expressAsyncHandler(
 
     const peoples = await User.find({
       $or: [
-        { name: { $regex: q, $options: "i" } },
-        { headline: { $regex: q, $options: "i" } },
-        { "location.city": { $regex: q, $options: "i" } },
-        { "location.state": { $regex: q, $options: "i" } },
-        { "location.country": { $regex: q, $options: "i" } },
-        { "website.link": { $regex: q, $options: "i" } },
-        { bio: { $regex: q, $options: "i" } },
+        { name: { $regex: q || "", $options: "i" } },
+        { headline: { $regex: q || "", $options: "i" } },
+        { "location.city": { $regex: q || "", $options: "i" } },
+        { "location.state": { $regex: q || "", $options: "i" } },
+        { "location.country": { $regex: q || "", $options: "i" } },
+        { "website.link": { $regex: q || "", $options: "i" } },
+        { bio: { $regex: q || "", $options: "i" } },
       ],
       ...(User.schema
         .indexes()
@@ -400,11 +400,11 @@ const getPostsSearch = expressAsyncHandler(
 
     const companies = await Company.find({
       $or: [
-        { name: { $regex: q, $options: "i" } },
-        { headline: { $regex: q, $options: "i" } },
-        { location: { $regex: q, $options: "i" } },
-        { website: { $regex: q, $options: "i" } },
-        { about: { $regex: q, $options: "i" } },
+        { name: { $regex: q || "", $options: "i" } },
+        { headline: { $regex: q || "", $options: "i" } },
+        { location: { $regex: q || "", $options: "i" } },
+        { website: { $regex: q || "", $options: "i" } },
+        { about: { $regex: q || "", $options: "i" } },
       ],
       isDeleted: false,
     }).limit(10);
@@ -416,7 +416,7 @@ const getPostsSearch = expressAsyncHandler(
 
     if (q) {
       postQuery.$or = [
-        { content: { $regex: q, $options: "i" } },
+        { content: { $regex: q || "", $options: "i" } },
         ...(peoples.length > 0
           ? [{ user: { $in: peoples.map((user) => user._id) } }]
           : []),

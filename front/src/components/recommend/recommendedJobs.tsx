@@ -17,6 +17,8 @@ function RecommendedJobs({ company }: { company?: string }) {
   useEffect(() => {
     if (company) {
       dispatch(recommendedJobsAction(company));
+    } else {
+      dispatch(recommendedJobsAction());
     }
   }, [company]);
 

@@ -11,15 +11,19 @@ import { Button } from "@/components/ui/button";
 
 function Page() {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   async function fetchUsers() {
     try {
+      setLoading(true);
       const { data } = await axios.get("/user/intro");
       setUsers(data.users);
+      setLoading(false);
     } catch (error) {
       toast.error("Failed to fetch users", {
         position: "top-center",
       });
+      setLoading(false);
     }
   }
 
@@ -31,7 +35,30 @@ function Page() {
     <>
       <Navbar />
       <section className="container lg:max-w-[1100px] mx-auto py-6">
-        <section className="grid grid-cols-[1fr_300px]  gap-4">
+        <section className="mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <User2 className="w-6 h-6 text-primary" />
+              <div>
+                <h2 className="text-lg font-bold text-primary">
+                  Recommended users
+                </h2>
+                <p className="text-xs opacity-70">
+                  People you might want to follow
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm opacity-70">
+                {users.length} suggestions
+              </span>
+              <Button variant="ghost" size="sm" onClick={fetchUsers}>
+                Refresh
+              </Button>
+            </div>
+          </div>
+        </section>
+        <section className="md:grid grid-cols-[1fr_300px] block gap-4">
           <Card className="flex flex-col max-w-screen-md w-full gap-3 overflow-auto">
             <CardContent className="flex flex-col gap-3 md:gap-5 py-5">
               {users.length > 0 ? (
@@ -49,7 +76,7 @@ function Page() {
                           <h3 className="text-base text-primary font-bold">
                             {user.name}
                           </h3>
-                          <span className="text-xs opacity-70">
+                          <span className="text-xs block opacity-70">
                             {user.headline || "No headline provided"},{" "}
                             {`${
                               user.location?.city
@@ -64,6 +91,9 @@ function Page() {
                                 ? user.location.country
                                 : ""
                             }` || "Unknown"}
+                          </span>
+                          <span className="text-xs opacity-70">
+                            {user.followers.length} followers
                           </span>
                         </div>
                       </div>

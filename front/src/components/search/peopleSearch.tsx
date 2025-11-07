@@ -6,10 +6,11 @@ import { User2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { connect } from "http2";
 import { searchPeoples } from "@/store/search/allSearchSlice";
 import { toast } from "sonner";
 import { toggleFollow } from "@/store/user/userSlice";
+import RecommendUserHorizon from "../recommend/recommendUserHorizon";
+import RecommendUser from "../recommend/recommendUser";
 
 function PeopleSearch({
   selectValues,
@@ -28,7 +29,7 @@ function PeopleSearch({
 
   return (
     <>
-      <section className="grid grid-cols-[1fr_300px] gap-4">
+      <section className="grid-cols-[1fr_300px] sm:grid block gap-4">
         <div>
           {peoples.length > 0 ? (
             <Card className="">
@@ -142,6 +143,8 @@ function PeopleSearch({
           )}
         </div>
         <aside>
+          <RecommendUser />
+          <RecommendUserHorizon />
           <FooterS />
         </aside>
       </section>

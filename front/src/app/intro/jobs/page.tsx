@@ -6,11 +6,16 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import FooterS from "@/components/footerS";
-import Navbar from "@/components/introNavbar";
+import IntroNavbar from "@/components/introNavbar";
+import Navbar from "@/components/userNavbar";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 function Page() {
   const [jobs, setJobs] = useState([]);
+
+  const { user } = useSelector((state: RootState) => state.user);
 
   async function fetchJobs() {
     try {
@@ -29,10 +34,17 @@ function Page() {
 
   return (
     <>
-      <Navbar />
+      {user ? <Navbar /> : <IntroNavbar />}
       <section className="container lg:max-w-[1100px] mx-auto py-6">
-        <section className="grid grid-cols-[1fr_300px]  gap-4">
+        <section className="md:grid grid-cols-[1fr_300px] block gap-4">
           <Card className="flex flex-col max-w-screen-md w-full gap-3 overflow-auto">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex flex-col">
+                <h3 className="text-lg font-bold text-primary">
+                  Job Recommendations
+                </h3>
+              </div>
+            </div>
             <CardContent className="flex flex-col gap-2 py-5">
               {jobs.length > 0 ? (
                 jobs.map((job: any) => (

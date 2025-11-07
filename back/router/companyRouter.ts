@@ -11,10 +11,12 @@ import {
   followCompany,
   unfollowCompany,
   updateBanner,
+  recommendedCompanies,
 } from "../controller/companyController";
 import { auth } from "../middleware/auth";
 import multer from "multer";
 import upload from "../config/multer";
+import checkAuth from "../middleware/checkAuth";
 
 const router = Router();
 
@@ -45,5 +47,6 @@ router.get("/posts/:id", auth, getCompanyPosts);
 router.get("/followers/:id", auth, getCompanyFollowers);
 router.put("/follow/:id", auth, followCompany);
 router.put("/unfollow/:id", auth, unfollowCompany);
+router.get("/recommend", checkAuth, recommendedCompanies);
 
 export default router;

@@ -114,7 +114,7 @@ function Page() {
   }, []);
 
   const handleNewMessage = (newMessage: any) => {
-    console.log("New message received:", newMessage);
+    if (!user) return;
     if (selectedChat && selectedChat._id === newMessage.chat._id) {
       setAllMessages((prev) => [...prev, newMessage]);
       if (newMessage.sender._id !== user._id) {

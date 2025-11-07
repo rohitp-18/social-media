@@ -11,38 +11,58 @@ import { Button } from "./ui/button";
 import back from "../assets/back.png";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { InheritUser } from "@/store/user/typeUser";
 
-function Friend() {
+function Friend({
+  user,
+  removeHandler,
+}: {
+  user: InheritUser;
+  removeHandler: (id: string) => void;
+}) {
   return (
     <>
       <Card className="max-w-[186px] w-[48%] rounded-2xl p-0">
         <CardHeader className="p-0 rounded-2xl flex flex-row justify-between items-center gap-2">
           <div className="flex flex-col relative w-full h-32">
-            <Image
-              src={back}
-              alt="back"
-              className="w-full aspect-[4/1] min-h-20 flex-shrink-0 rounded-t-2xl"
-            />
+            {user.bannerImage ? (
+              <img
+                src={user.bannerImage.url}
+                alt="back"
+                className="w-full aspect-[4/1] min-h-20 flex-shrink-0 rounded-t-2xl"
+              />
+            ) : (
+              <Image
+                src={back}
+                alt={user.name}
+                className="w-full aspect-[4/1] min-h-20 flex-shrink-0 rounded-t-2xl"
+              />
+            )}
             <Avatar className="w-20 h-20 mx-auto -mt-10">
-              <AvatarImage src="" />
+              <AvatarImage src={user.avatar?.url} />
               <AvatarFallback>
                 <User2 className="w-20  opacity-70 h-20 p-5" />
               </AvatarFallback>
             </Avatar>
             <div className="bg-foreground/80 text-background absolute right-2 top-2 rounded-full p-1">
-              <X className="h-4 w-4" />
+              <Button
+                variant={"ghost"}
+                className="p-1"
+                onClick={() => removeHandler(user._id)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent className="flex justify-center p-1 items-center flex-col">
           <h2 className="font-semibold overflow-ellipsis text-lg">
-            Rohit Patil
+            {user.name}
           </h2>
           <CardDescription className="text-sm opacity-90 mt-[-6px]">
             <p className="text-sm leading-tight text-center pb-3">
-              full stack web developer
+              {user.headline}
             </p>
-            <p className="text-sm text-center opacity-70">4 mutual followers</p>
           </CardDescription>
         </CardContent>
         <CardFooter className="pb-2 justify-center">

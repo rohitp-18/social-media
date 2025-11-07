@@ -657,6 +657,23 @@ const updateBanner = expressAsyncHandler(
   }
 );
 
+const recommendedCompanies = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const companies = await Company.find({
+      isDeleted: false,
+      ...(req.user ? { followers: { $nin: [req.user?._id || ""] } } : {}),
+    }).limit(5);
+    if (!companies) {
+      return next(new ErrorHandler("Internal error", 500));
+    }
+
+    res.status(200).json({
+      success: true,
+      companies,
+    });
+  }
+);
+
 export {
   createCompany,
   getAllCompanies,
@@ -669,4 +686,5 @@ export {
   followCompany,
   unfollowCompany,
   updateBanner,
+  recommendedCompanies,
 };

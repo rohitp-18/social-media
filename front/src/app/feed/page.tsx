@@ -26,9 +26,13 @@ import axios from "@/store/axios";
 import { toast } from "sonner";
 import { isAxiosError } from "axios";
 import { SocialPost } from "@/assets/icons";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 function Page() {
   const [posts, setPosts] = React.useState([]);
+
+  const { user } = useSelector((state: RootState) => state.user);
 
   async function fetchPosts() {
     try {
@@ -49,16 +53,18 @@ function Page() {
     fetchPosts();
   }, []);
 
+  if (!user) return null;
+
   return (
     <>
       <Navbar />
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container mx-auto">
           {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}
-          <section className="md:grid feed block mx-auto max-w-7xl min-h-screen gap-2">
+          <section className="md:grid grid-cols-[256px_1fr] block mx-auto max-w-7xl min-h-screen gap-2">
             <aside className="md:flex flex-col gap-3 shrink hidden h-min w-60">
               <ProfileCard />
-              <Card className="">
+              {/* <Card className="">
                 <CardContent className="flex flex-col gap-1 p-3">
                   <h3 className="text-lg pb-2 font-semibold">Profile Views</h3>
                   <div className="flex justify-between items-center">
@@ -74,7 +80,7 @@ function Page() {
                     <span className="font-semibold text-sm">789</span>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
               <div className="md:block hidden">
                 <FooterS />
               </div>
@@ -106,7 +112,7 @@ function Page() {
                   </div>
                 </div>
               </Card>
-              <Card className="bg-background flex-grow-0 p-3 gap-2 shadow-md w-full">
+              {/* <Card className="bg-background flex-grow-0 p-3 gap-2 shadow-md w-full">
                 <CardTitle>Stories</CardTitle>
                 <CardContent
                   style={{ scrollbarWidth: "none" }}
@@ -124,78 +130,11 @@ function Page() {
                     </div>
                   ))}
                 </CardContent>
-              </Card>
+              </Card> */}
               {posts.map((post: any) => (
                 <Post key={post._id} cardClass="w-full" post={post} />
               ))}
             </section>
-            <aside className="min-h-screen flex-shrink-0 md:block hidden w-64">
-              <div className="bg-background flex flex-col gap-2 h-min rounded-xl shadow-2xl p-3">
-                <h2 className="text-lg font-bold">Trending</h2>
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-col gap-0">
-                    <a
-                      href="#"
-                      className="text-sm opacity-80 hover:underline hover:opacity-100"
-                    >
-                      Latest React Updates
-                    </a>
-                    <div className="flex text-xs opacity-50 gap-2">
-                      <span>2 hours ago</span>
-                      <span>1.2k views</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <a
-                      href="#"
-                      className="text-sm opacity-80 hover:underline hover:opacity-100"
-                    >
-                      Node.js Best Practices
-                    </a>
-                    <div className="flex text-xs opacity-50 gap-2">
-                      <span>5 hours ago</span>
-                      <span>900 views</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <a
-                      href="#"
-                      className="text-sm opacity-80 hover:underline hover:opacity-100"
-                    >
-                      MongoDB Performance Tips
-                    </a>
-                    <div className="flex text-xs opacity-50 gap-2">
-                      <span>1 day ago</span>
-                      <span>3.4k views</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <a
-                      href="#"
-                      className="text-sm opacity-80 hover:underline hover:opacity-100"
-                    >
-                      Express.js Middleware
-                    </a>
-                    <div className="flex text-xs opacity-50 gap-2">
-                      <span>2 days ago</span>
-                      <span>2.1k views</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <a
-                      href="#"
-                      className="text-sm opacity-80 hover:underline hover:opacity-100"
-                    >
-                      JavaScript ES2023 Features
-                    </a>
-                    <div className="flex text-xs opacity-50 gap-2">
-                      <span>3 days ago</span>
-                      <span>1.8k views</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </aside>
           </section>
         </div>
       </main>

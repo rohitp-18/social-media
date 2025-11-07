@@ -39,7 +39,17 @@ function Page() {
     <>
       <Navbar />
       <section className="container lg:max-w-[1100px] mx-auto py-6">
-        <section className="grid grid-cols-[1fr_300px]  gap-4">
+        <div className="mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-semibold">Recommended Posts</h2>
+              <p className="text-sm text-gray-500">
+                Trending, viral, and most liked posts curated for you
+              </p>
+            </div>
+          </div>
+        </div>
+        <section className="md:grid grid-cols-[1fr_300px] block gap-4">
           <div className="flex flex-col max-w-screen-md w-full gap-3 md:gap-5 overflow-auto">
             {posts.length > 0 ? (
               posts.map((post: any) => (

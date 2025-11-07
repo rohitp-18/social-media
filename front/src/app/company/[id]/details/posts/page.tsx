@@ -40,9 +40,11 @@ function Page() {
                 <h2 className="text-base font-semibold">Back</h2>
               </Link>
               <Button className="border-primary">
-                <Link href={`/post/create?company=${id}&user=${user.id}`}>
-                  Create Post
-                </Link>
+                {user && (
+                  <Link href={`/post/create?company=${id}&user=${user._id}`}>
+                    Create Post
+                  </Link>
+                )}
               </Button>
             </CardHeader>
           </Card>

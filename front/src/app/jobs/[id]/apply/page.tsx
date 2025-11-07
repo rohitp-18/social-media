@@ -148,8 +148,8 @@ function Page() {
   }, [created, error]);
 
   useEffect(() => {
-    if (user && user.resumes) {
-      setUserResumes(user.resumes);
+    if (user && user.resume) {
+      setUserResumes([user.resume]);
     }
   }, [user]);
 

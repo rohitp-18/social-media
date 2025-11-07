@@ -33,6 +33,8 @@ import {
 } from "@/store/user/userSlice";
 import axios from "@/store/axios";
 import { isAxiosError } from "axios";
+import RecommendCompany from "./recommend/recommendCompany";
+import RecommendUser from "./recommend/recommendUser";
 
 function Sidebar() {
   const [language, setLanguage] = useState("english");
@@ -303,74 +305,8 @@ function Sidebar() {
           </CardContent>
         </Card>
       )}
-      <Card className="flex flex-col gap-3">
-        <CardHeader className="pb-2">
-          <h3 className="text-base font-semibold">People also viewed</h3>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {[1, 2, 3, 4, 5].map((_, i) => (
-            <Fragment key={i}>
-              <div className="flex justify-start items-start gap-3">
-                <Avatar className="w-10 h-10">
-                  <AvatarImage src="" />
-                  <AvatarFallback>
-                    <User2 className="w-8 h-8 p-1.5" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-semibold">John Doe</span>
-                  <span className="text-sm opacity-70 line-clamp-2 leading-tight text-ellipsis overflow-hidden">
-                    Software Engineer | Microsoft | 500+ connections | India |
-                    React | Node.js | MongoDB
-                  </span>
-                  <Button
-                    className="flex items-center mt-2 px-3 rounded-full"
-                    variant={"outline"}
-                    size={"sm"}
-                  >
-                    <Plus /> Follow
-                  </Button>
-                </div>
-              </div>
-              <hr />
-            </Fragment>
-          ))}
-        </CardContent>
-      </Card>
-      <Card className="flex flex-col gap-3">
-        <CardHeader className="pb-2">
-          <h3 className="text-base font-semibold">People also viewed</h3>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {[1, 2, 3, 4, 5].map((_, i) => (
-            <Fragment key={i}>
-              <div className="flex justify-start items-start gap-3">
-                <Avatar className="w-10 h-10">
-                  <AvatarImage src="" />
-                  <AvatarFallback>
-                    <User2 className="w-8 h-8 p-1.5" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-semibold">John Doe</span>
-                  <span className="text-sm opacity-70 line-clamp-2 leading-tight text-ellipsis overflow-hidden">
-                    Software Engineer | Microsoft | 500+ connections | India |
-                    React | Node.js | MongoDB
-                  </span>
-                  <Button
-                    className="flex items-center mt-2 px-3 rounded-full"
-                    variant={"outline"}
-                    size={"sm"}
-                  >
-                    <Plus /> Follow
-                  </Button>
-                </div>
-              </div>
-              <hr />
-            </Fragment>
-          ))}
-        </CardContent>
-      </Card>
+      <RecommendCompany />
+      <RecommendUser />
       <FooterS />
     </aside>
   );

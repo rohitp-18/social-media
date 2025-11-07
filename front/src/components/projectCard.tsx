@@ -187,7 +187,7 @@ function ProjectCard({
         )}
         <div className="flex justify-start px-3 py-2 -mt-2 items-center gap-2">
           <Diamond className="w-5 stroke-2 h-5" />
-          <div className="flex gap-2 text-base">
+          <div className="flex gap-2 text-base flex-wrap">
             {project.skills.map((skill: any, i: number) => (
               <span key={i} className="text-sm font-semibold opacity-80">
                 {skill.name}

@@ -108,7 +108,7 @@ function Page() {
     }, [router, pathname, user]);
 
     return (
-      <div className="flex items-center gap-2 mt-2">
+      <div className="flex items-center flex-wrap gap-2 mt-2">
         <Button disabled={!job.isActive} variant="default">
           {isApplied ? (
             "Applied"
@@ -168,21 +168,21 @@ function Page() {
     <>
       {user ? <Navbar /> : <IntroNavbar />}
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
-        <div className="container mx-auto">
+        <div className="md:mx-10">
           {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}
-          <section className="md:grid grid-cols-[300px_1fr_300px] block mx-auto max-w-7xl min-h-screen gap-2">
-            <aside className="md:flex flex-col gap-3 shrink hidden h-min">
-              <RecommendedJobs company={job.company._id} />
+          <section className="md:grid lg:grid-cols-[300px_1fr_300px] grid-cols-[1fr_300px] block mx-auto max-w-7xl min-h-screen gap-2">
+            <aside className="lg:flex flex-col gap-3 shrink hidden h-min">
               <CompanyCard company={job.company} />
+              <FooterS />
             </aside>
             <Card className="md:flex flex-col gap-3 h-min">
-              <CardHeader className="flex flex-col justify-between gap-3 items-start space-y-4">
+              <CardHeader className="flex flex-col justify-between gap-3 md:p-6 p-3 items-start space-y-4">
                 {!job.isActive && (
                   <Badge className="bg-red-100 text-red-800">
                     This job is currently inactive
                   </Badge>
                 )}
-                <div className="flex flex-col gap-2 w-full p-4 bg-white rounded-lg shadow">
+                <div className="flex flex-col gap-2 w-full sm:p-4 p-2 bg-white rounded-lg shadow">
                   <Link
                     href={`/company/${job.company._id}`}
                     className="flex items-center gap-4"
@@ -385,7 +385,7 @@ function Page() {
                 </div>
               </CardFooter>
             </Card>
-            <aside className="w-64 md:flex hidden flex-col gap-5">
+            <aside className="w-full md:flex hidden flex-col gap-5">
               <RecommendedJobs />
               <RecommendCompany />
               <RecommendUser />

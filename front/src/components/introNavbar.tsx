@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { useDispatch, useSelector } from "react-redux";
@@ -35,6 +35,7 @@ const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { setTheme, theme } = useTheme();
   const router = useRouter();
+  const param = useSearchParams();
 
   const { user, loading } = useSelector((state: RootState) => state.user);
   const { history } = useSelector((state: RootState) => state.searchHistory);
@@ -49,6 +50,12 @@ const Navbar: React.FC = () => {
     },
     [search, open, searchDrop]
   );
+
+  useEffect(() => {
+    if (param.get("q")) {
+      setSearch(param.get("q") || "");
+    }
+  }, [param]);
 
   const HistoryRender = () => (
     <div className="absolute top-full left-0 w-full z-10 mt-1 bg-white rounded-md border shadow-md max-h-60 overflow-y-auto">
@@ -74,7 +81,7 @@ const Navbar: React.FC = () => {
   );
 
   return (
-    <nav className="sticky top-0 z-50 left-0 w-full bg-opacity-20 backdrop-blur-md shadow-md p-4 flex justify-between items-center bg-background/40 dark:shadow-lg">
+    <nav className="sticky top-0 z-50 left-0 w-full bg-opacity-20 backdrop-blur-md shadow-md sm:p-4 p-2 py-4 flex justify-between items-center bg-background/50 dark:shadow-lg">
       <section className="max-w-6xl mx-auto flex items-center justify-between w-full space-x-4">
         <div className="flex gap-4 items-center">
           <h2 className="text-2xl font-bold italic">TS</h2>
@@ -104,7 +111,7 @@ const Navbar: React.FC = () => {
             className="md:hidden block w-5 h-5 cursor-pointer"
           />
         </div>
-        <div className="flex items-center gap-3 md:gap-5 space-x-3 md:space-x-6">
+        <div className="flex items-center gap-2 lg:gap-5 space-x-3 md:space-x-6">
           <Link
             href="/"
             className={`no-underline hover:underline flex flex-col items-center ${
@@ -174,6 +181,8 @@ const Navbar: React.FC = () => {
           <Button
             variant={"outline"}
             size={"icon"}
+            style={{ margin: "10px" }}
+            className="xs:inline-flex hidden relative"
             onClick={() =>
               theme === "light" ? setTheme("dark") : setTheme("light")
             }
@@ -183,9 +192,10 @@ const Navbar: React.FC = () => {
           </Button>
         </div>
       </section>
-      <div className="md:hidden block w-full">
+      <div className="md:hidden block">
         {searchDrop && (
           <div className="absolute top-16 left-0 w-full z-50 bg-background backdrop-blur-md shadow-md p-4">
+            <Search className="absolute top-6 left-7 h-5 w-5 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search..."

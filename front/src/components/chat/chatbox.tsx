@@ -34,6 +34,8 @@ function Chatbox({
 
   const { user } = useSelector((state: RootState) => state.user);
 
+  if (!user) return null;
+
   // fetch messages from the server
   async function fetchMessages() {
     if (!selectedChat || !selectedChat._id || !user) return;
@@ -116,7 +118,7 @@ function Chatbox({
   }, [selectedChat]);
 
   return (
-    <div className="flex flex-col justify-between relative w-full bg-white dark:bg-gray-800 rounded-lg p-3">
+    <div className="flex flex-col justify-between relative w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
       {/* Messages container */}
       <div
         style={{ scrollbarWidth: "thin" }}
@@ -141,14 +143,23 @@ function Chatbox({
 
             // Show avatar only if next message is from a different sender or it's the last message
             const nextMsg = allMessages[index + 1];
-            const showAvatar =
-              !nextMsg || nextMsg.sender._id !== msg.sender._id;
+
             const otherMembers = msg.chat.members.filter(
               (member: any) => member !== user._id
             );
             const msgReaded = otherMembers.every((member: any) =>
               msg.readBy.includes(member)
             );
+
+            const nextDate = nextMsg ? new Date(nextMsg.createdAt) : null;
+            const isNewDayNext =
+              nextDate &&
+              (currDate.getDate() !== nextDate.getDate() ||
+                currDate.getMonth() !== nextDate.getMonth() ||
+                currDate.getFullYear() !== nextDate.getFullYear());
+
+            const showAvatar =
+              !nextMsg || nextMsg.sender._id !== msg.sender._id || isNewDayNext;
 
             // check messages readed by you or not
             if (!unreadMessage) {
@@ -226,7 +237,7 @@ function Chatbox({
                   ) : (
                     <span className="w-10"></span>
                   )}
-                  <div className="flex flex-col max-w-xs">
+                  <div className="flex flex-col md:max-w-sm max-w-[70%]">
                     <div
                       className={`px-4 py-2 rounded-2xl text-sm shadow relative ${
                         isOwn
@@ -258,7 +269,7 @@ function Chatbox({
                                   href={part}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="hover:underline text-green-300 hover:text-green-200 transition-colors"
+                                  className="hover:underline text-green-300 text-wrap break-words whitespace-normal hover:text-green-200 transition-colors"
                                   aria-label={`Visit ${part}`}
                                 >
                                   {part}

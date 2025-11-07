@@ -33,7 +33,7 @@ export default function RootLayout({
         // className={`
         //   ${geistSans.variable} ${geistMono.variable}
         // bg-background text-foreground antialiased`}
-        className="  bg-background text-foreground antialiased"
+        className="bg-[#f2f6f8] dark:bg-[#151515] antialiased"
       >
         <ThemeProvider
           enableSystem

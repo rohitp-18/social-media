@@ -55,7 +55,7 @@ function Page() {
       {user ? <Navbar /> : <IntroNavbar />}
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container mx-auto">
-          <section className="md:grid feed block mx-auto max-w-7xl min-h-screen gap-2">
+          <section className="md:grid lg:grid-cols-[240px_1fr_300px] md:grid-cols-[240px_1fr] block mx-auto max-w-7xl min-h-screen gap-2">
             <aside className="md:flex flex-col gap-3 shrink hidden h-min w-60">
               <ProfileCard />
               <FooterS />
