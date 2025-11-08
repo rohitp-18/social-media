@@ -83,9 +83,9 @@ function Page() {
     <AuthProvider>
       <Navbar />
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
-        <div className="container mx-auto">
+        <div className="mx-5">
           {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}
-          <section className="md:grid grid-cols-[300px_1fr_300px] block mx-auto max-w-7xl min-h-screen gap-2">
+          <section className="md:grid grid-cols-[300px_1fr_256px] block mx-auto max-w-7xl min-h-screen gap-2">
             <aside className="md:flex flex-col gap-3 shrink hidden h-min">
               <CompanyCard />
               {company && <RecommendedJobs company={company._id} />}

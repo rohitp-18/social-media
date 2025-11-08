@@ -148,7 +148,11 @@ function Post({
   }, [post, user]);
 
   if (!post) {
-    return null; // Handle case where post is not available
+    return null;
+  }
+
+  if (!post.userId) {
+    return null;
   }
 
   const CommentPreview = ({ comment }: any) => {
@@ -205,7 +209,7 @@ function Post({
       <CardHeader className="flex flex-row justify-between items-start gap-2 py-3 md:px-6 px-3">
         <div className="flex flex-row items-start gap-3">
           <Link
-            href={`/u/${post.userId.username}`}
+            href={`/u/${post.userId?.username || ""}`}
             className="flex items-start gap-3"
           >
             <Avatar className="h-12 w-12">

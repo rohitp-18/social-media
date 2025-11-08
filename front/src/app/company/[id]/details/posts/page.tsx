@@ -10,7 +10,7 @@ import { RootState, AppDispatch } from "@/store/store";
 import { MoveLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { Fragment, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 function Page() {
@@ -28,8 +28,8 @@ function Page() {
   if (!company) return null;
   return (
     <CompanyWrapper>
-      <section className="w-full h-full md:grid block md:grid-cols-[200px_1fr] lg:grid-cols-[280px_1fr] gap-5">
-        <aside className="hidden md:block">
+      <section className="w-full h-full lg:grid block lg:grid-cols-[280px_1fr] gap-5">
+        <aside className="hidden lg:block">
           <CompanyCard />
         </aside>
         <section className="w-full h-full flex flex-col gap-5">
@@ -48,9 +48,11 @@ function Page() {
               </Button>
             </CardHeader>
           </Card>
-          {company.posts.length > 0 ? (
-            company.posts.map((post: any) => (
-              <Post key={post._id} post={post} />
+          {posts.length > 0 ? (
+            posts.map((post: any) => (
+              <Fragment key={post._id}>
+                <Post cardClass={"w-full"} post={post} />
+              </Fragment>
             ))
           ) : (
             <Card className="w-full min-h-40 flex items-center justify-center p-5">

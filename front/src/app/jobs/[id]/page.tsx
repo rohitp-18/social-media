@@ -160,6 +160,11 @@ function Page() {
             <Link href={`/jobs/${id}/applications`}>Manage Applications</Link>
           </Button>
         )}
+        {isApplied && (
+          <Button disabled={!job.isActive} variant="outline">
+            <Link href={`/jobs/${id}/status`}>View Status</Link>
+          </Button>
+        )}
       </div>
     );
   };

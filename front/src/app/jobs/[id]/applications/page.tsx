@@ -122,9 +122,10 @@ function Page() {
 
   useEffect(() => {
     if (user && applications && job && job._id === id) {
-      if (job.company.admin.some((admin: any) => admin._id === user._id)) {
+      if (job.company.admin.some((admin: any) => admin === user._id)) {
         setIsAdmin(true);
       } else {
+        console.log("company admin not found", job.company.admin, user._id);
         router.push(`/jobs/${id}`);
       }
     }

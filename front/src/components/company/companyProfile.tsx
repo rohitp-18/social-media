@@ -94,7 +94,7 @@ function CompanyProfile({ tab, setTab }: { tab: string; setTab: any }) {
               <span className="text-sm">Employees</span>
             </div>
           </div>
-          <div className="flex justify-start items-center gap-3 mt-5">
+          <div className="flex justify-start flex-wrap items-center gap-3 mt-5">
             <Button
               className={`flex items-center rounded-full ${
                 following ? "bg-white text-black border" : ""

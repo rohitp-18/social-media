@@ -498,9 +498,9 @@ function CreateForm({
                     <Button
                       disabled={loading}
                       type="submit"
-                      aria-label="Create company"
+                      aria-label={edit ? "Update Company" : "Create Company"}
                     >
-                      Create Company
+                      {edit ? "Update Company" : "Create Company"}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </div>

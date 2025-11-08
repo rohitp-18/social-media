@@ -97,7 +97,7 @@ function Invite({ company }: { company: any }) {
           <CardHeader className="text-lg font-semibold pb-2">
             Invite Users to {company?.name}
           </CardHeader>
-          <CardContent className="pb-3 flex flex-col gap-4">
+          <CardContent className="pb-3 flex flex-col gap-4 sm:p-6 p-2">
             <div className="flex overflow-auto my-2">
               {selectedUsers.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -161,7 +161,7 @@ function Invite({ company }: { company: any }) {
                       className="flex items-center justify-between p-1 hover:bg-gray-100 cursor-pointer transition-all rounded-sm max-w-full overflow-hidden"
                       key={person._id}
                     >
-                      <div className="grid grid-cols-[1fr_200px] items-center gap-2">
+                      <div className="w-full items-center gap-2">
                         <Avatar className="hover:shadow-md transition-all">
                           <AvatarImage
                             src={person.avatar?.url || ""}
