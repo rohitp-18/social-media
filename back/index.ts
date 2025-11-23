@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
 import morgan from "morgan";
 import http from "http";
+import webpush from "web-push";
 
 import mongodb from "./config/mongodb";
 import path from "path";
@@ -39,6 +40,12 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_KEY,
   api_secret: process.env.CLOUDINARY_SECRET,
 });
+
+webpush.setVapidDetails(
+  "mailto:your@email.com",
+  process.env.VAPID_PUBLIC_KEY || "",
+  process.env.VAPID_PRIVATE_KEY || ""
+);
 
 const server = http.createServer(app);
 

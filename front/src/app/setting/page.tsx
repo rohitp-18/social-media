@@ -92,13 +92,23 @@ const Page: React.FC = () => {
               </p>
             </div>
             <button
+              type="button"
               onClick={() =>
                 theme === "dark" ? setTheme("light") : setTheme("dark")
+              }
+              aria-label={
+                theme === "dark" ? "Disable dark mode" : "Enable dark mode"
+              }
+              title={
+                theme === "dark" ? "Disable dark mode" : "Enable dark mode"
               }
               className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
                 theme === "dark" ? "bg-blue-600" : "bg-gray-300"
               }`}
             >
+              <span className="sr-only">
+                {theme === "dark" ? "Disable dark mode" : "Enable dark mode"}
+              </span>
               <span
                 className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 ${
                   theme === "dark" ? "transform translate-x-6" : ""

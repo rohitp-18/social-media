@@ -7,6 +7,7 @@ import Notification from "../model/notificationModel";
 import { v2 as cloudinary } from "cloudinary";
 import Post from "../model/postModel";
 import Job from "../model/jobModel";
+import sendNotification from "../utils/sendNotification";
 
 const createCompany = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -422,8 +423,9 @@ const followCompany = expressAsyncHandler(
 
     user.companies.push(company._id as any);
 
+    let notification;
     try {
-      await Notification.create(
+      notification = await Notification.create(
         company.admin.map(async (admin) => {
           if (admin._id.toString() !== req.user._id.toString()) {
             return {
@@ -437,6 +439,12 @@ const followCompany = expressAsyncHandler(
             };
           }
         })
+      );
+      await Promise.all(
+        notification.map(
+          async (admin) =>
+            await sendNotification(admin, admin.recipient.toString())
+        )
       );
     } catch (error) {}
 

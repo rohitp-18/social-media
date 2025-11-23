@@ -9,19 +9,16 @@ import axios from "@/store/axios";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { InheritUser } from "@/store/user/typeUser";
+import { chat } from "@/store/chat/typeChat";
+import { useSocket } from "@/store/utils/socketContext";
 
 function Chatbox({
-  selectedUser,
-  socket,
-  selectedChat,
   isGroup,
   allMessages,
   setAllMessages,
   setUpdatedChats,
 }: {
-  selectedUser: string;
-  socket: any;
-  selectedChat: any;
   isGroup?: boolean;
   allMessages: any[];
   setAllMessages: any;
@@ -32,9 +29,13 @@ function Chatbox({
   const [message, setMessage] = useState<string>("");
   const [replyTo, setReplyTo] = useState<any>(null);
 
+  const { socket, selectedChat } = useSocket();
+
   const { user } = useSelector((state: RootState) => state.user);
 
   if (!user) return null;
+
+  if (!socket || !selectedChat) return null;
 
   // fetch messages from the server
   async function fetchMessages() {

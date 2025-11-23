@@ -67,6 +67,7 @@ function CompanyHeader({ isAdmin }: { isAdmin: boolean }) {
   const handleBannerSubmit = useCallback(
     async (e: any) => {
       e.preventDefault();
+      if (!company) return;
       const formData = new FormData();
       if (!bannerImage) {
         formData.append("remove", "true");
@@ -76,7 +77,7 @@ function CompanyHeader({ isAdmin }: { isAdmin: boolean }) {
       setLoading(true);
       dispatch(updateCompanyBanner({ id: company._id, form: formData }));
     },
-    [bannerImage, company._id, dispatch]
+    [bannerImage, company, dispatch]
   );
 
   useEffect(() => {
@@ -94,6 +95,9 @@ function CompanyHeader({ isAdmin }: { isAdmin: boolean }) {
       dispatch(clearError());
     }
   }, [updated, error]);
+
+  if (!company) return null;
+
   return (
     <CardHeader className="p-0 rounded-2xl pb-3 flex flex-row justify-between items-center gap-2">
       <div className="flex flex-col relative w-full">

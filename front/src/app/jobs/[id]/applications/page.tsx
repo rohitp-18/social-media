@@ -100,6 +100,7 @@ function Page() {
 
   const handleStatusChange = useCallback(() => {
     if (selectApplication && status) {
+      console.log(interviewDate);
       if (status === "interview" && !interviewDate) {
         toast.error("Please select an interview date", {
           position: "top-center",
@@ -118,11 +119,11 @@ function Page() {
         );
       });
     }
-  }, [dispatch, selectApplication, status]);
+  }, [dispatch, selectApplication, status, interviewDate]);
 
   useEffect(() => {
     if (user && applications && job && job._id === id) {
-      if (job.company.admin.some((admin: any) => admin === user._id)) {
+      if (job.company.admin.some((admin: string) => admin === user._id)) {
         setIsAdmin(true);
       } else {
         console.log("company admin not found", job.company.admin, user._id);
@@ -172,7 +173,7 @@ function Page() {
       const applicationId = searchParams.get("applicationId");
       if (applicationId) {
         const application = applications.find(
-          (app: any) => app._id === applicationId
+          (app) => app._id === applicationId
         );
         if (application) {
           setSelectApplication(application);
@@ -185,6 +186,8 @@ function Page() {
       }
     }
   }, [searchParams, applications]);
+
+  if (!job) return null;
 
   return (
     <AuthProvider>
@@ -367,10 +370,9 @@ function Page() {
                                           .slice(0, 16)
                                       : ""
                                   }
-                                  onChange={(e) => {
-                                    console.log(e.target.value);
-                                    setInterviewDate(e.target.value);
-                                  }}
+                                  onChange={(e) =>
+                                    setInterviewDate(e.target.value)
+                                  }
                                 />
                               </div>
                             )}

@@ -9,9 +9,12 @@ import { useSelector } from "react-redux";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { sUser } from "@/store/user/typeUser";
 
 function Page() {
   const { profile } = useSelector((state: RootState) => state.user);
+
+  if (!profile?.user) return null;
   return (
     <Wrapper>
       <PeopleTabs />
@@ -26,7 +29,7 @@ function Page() {
           <Separator className="mb-2" />
           <CardContent className="flex flex-col gap-2">
             {profile.user.following.length > 0 ? (
-              profile.user.following.map((follower: any) => (
+              profile.user.following.map((follower: sUser) => (
                 <Link
                   href={`/u/${follower.username}`}
                   key={follower._id}

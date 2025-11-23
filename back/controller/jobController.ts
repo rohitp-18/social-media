@@ -4,6 +4,7 @@ import ErrorHandler from "../utils/errorHandler";
 import Job from "../model/jobModel";
 import Company from "../model/companyModel";
 import Notification from "../model/notificationModel";
+import sendNotification from "../utils/sendNotification";
 
 const createJob = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -74,7 +75,7 @@ const createJob = expressAsyncHandler(
     await tempCompany.save();
 
     try {
-      await Notification.create(
+      const notification = await Notification.create(
         tempCompany.followers.map(
           (follower: any) =>
             follower !== req.user._id && {
@@ -88,7 +89,14 @@ const createJob = expressAsyncHandler(
         )
       );
 
-      await Notification.create(
+      await Promise.all(
+        notification.map(
+          async (notify) =>
+            await sendNotification(notify, notify.recipient.toString())
+        )
+      );
+
+      const notificationM = await Notification.create(
         tempCompany.members.map(
           (member: any) =>
             member !== req.user._id && {
@@ -102,7 +110,14 @@ const createJob = expressAsyncHandler(
         )
       );
 
-      await Notification.create(
+      await Promise.all(
+        notificationM.map(
+          async (notify) =>
+            await sendNotification(notify, notify.recipient.toString())
+        )
+      );
+
+      const notificationA = await Notification.create(
         tempCompany.admin.map(
           (member: any) =>
             member !== req.user._id && {
@@ -113,6 +128,13 @@ const createJob = expressAsyncHandler(
               job: job._id,
               company: tempCompany._id,
             }
+        )
+      );
+
+      await Promise.all(
+        notificationA.map(
+          async (notify) =>
+            await sendNotification(notify, notify.recipient.toString())
         )
       );
     } catch (error) {}

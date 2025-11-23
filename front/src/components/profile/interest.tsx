@@ -73,6 +73,8 @@ function Interest({ isUser }: { isUser: boolean }) {
     }
   }, [profile]);
 
+  if (!profile?.user) return null;
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -85,8 +87,8 @@ function Interest({ isUser }: { isUser: boolean }) {
       </CardHeader>
       <CardContent className="-mt-4">
         {profile.user.topVoice.length > 0 ||
-        profile.user.schools.length > 0 ||
-        profile.user.newsLetter.length > 0 ||
+        // profile.user.schools.length > 0 ||
+        // profile.user.newsLetter.length > 0 ||
         profile.user.companies.length > 0 ? (
           <Tabs onValueChange={(value) => setInterest(value)} value={interest}>
             <TabsList className="flex gap-3 pb-0 rounded-none transition-all bg-transparent border-b border-foreground/40 items-center justify-start">
@@ -129,6 +131,7 @@ function Interest({ isUser }: { isUser: boolean }) {
                   Groups
                 </TabsTrigger>
               )}
+              {/*  future update
               {profile.user.newsLetter.length > 0 && (
                 <TabsTrigger
                   style={{ boxShadow: "none" }}
@@ -141,7 +144,8 @@ function Interest({ isUser }: { isUser: boolean }) {
                 >
                   News Letter
                 </TabsTrigger>
-              )}
+              )} */}
+              {/* future update
               {profile.user.schools.length > 0 && (
                 <TabsTrigger
                   style={{ boxShadow: "none" }}
@@ -154,7 +158,7 @@ function Interest({ isUser }: { isUser: boolean }) {
                 >
                   Schools
                 </TabsTrigger>
-              )}
+              )} */}
             </TabsList>
 
             <TabsContent value="top">
@@ -221,7 +225,7 @@ function Interest({ isUser }: { isUser: boolean }) {
                       <Button
                         variant={"outline"}
                         className={`flex items-center mt-2 px-3 w-32 rounded-full ${
-                          !company.followers.includes(profile.user._id)
+                          !company.followers.includes(profile.user?._id)
                             ? "bg-primary text-primary-foreground"
                             : ""
                         }`}
@@ -230,11 +234,11 @@ function Interest({ isUser }: { isUser: boolean }) {
                           e.preventDefault();
                           handleFollowCompany(
                             company._id,
-                            !company.followers.includes(profile.user._id)
+                            !company.followers.includes(profile.user?._id)
                           );
                         }}
                       >
-                        {company.followers.includes(profile.user._id)
+                        {company.followers.includes(profile.user?._id)
                           ? "Following"
                           : "Follow"}
                       </Button>
@@ -260,10 +264,10 @@ function Interest({ isUser }: { isUser: boolean }) {
       <CardFooter className="p-0 flex-col">
         <hr className="w-full" />
         {((profile.user.companies.length > 0 && interest === "companies") ||
-          (profile.user.topVoice.length > 0 && interest === "top") ||
-          (profile.user.schools.length > 0 && interest === "school") ||
-          (profile.user.newsLetter.length > 0 &&
-            interest === "newsletter")) && (
+          (profile.user.topVoice.length > 0 && interest === "top")) && (
+          // (profile.user.schools.length > 0 && interest === "school") ||
+          // (profile.user.newsLetter.length > 0 &&
+          //   interest === "newsletter"))
           <Button
             variant={"link"}
             className="w-full h-12 hover:no-underline hover:bg-secondary text-foreground"
@@ -271,11 +275,11 @@ function Interest({ isUser }: { isUser: boolean }) {
             Show all{" "}
             {interest === "companies"
               ? "Companies"
-              : interest === "newsletter"
-              ? "Newsletters"
-              : interest === "school"
-              ? "Schools"
-              : ""}{" "}
+              : // : interest === "newsletter"
+                // ? "Newsletters"
+                // : interest === "school"
+                // ? "Schools"
+                ""}{" "}
             <ArrowRight className="w-10 h-10" />
           </Button>
         )}

@@ -115,10 +115,12 @@ function Page() {
   }, [isUser, pathname]);
 
   useEffect(() => {
-    if (profile) {
-      setIsUser(profile?.user._id === user?._id);
+    if (profile?.user && user) {
+      setIsUser(profile?.user._id === user._id);
     }
   }, [profile]);
+
+  if (!profile?.user) return null;
   return (
     <Wrapper>
       {(create || edit) && isUser && (
@@ -253,7 +255,7 @@ function Page() {
                       </div>
                     )}
                   </div>
-                  {profile.user.skills.length > i + 1 && (
+                  {profile?.user && profile.user.skills.length > i + 1 && (
                     <Separator className="my-1" />
                   )}
                 </Fragment>

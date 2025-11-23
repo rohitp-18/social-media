@@ -156,6 +156,10 @@ const logoutUser = expressAsyncHandler(
         expires: new Date(Date.now()),
         httpOnly: true,
       })
+      .cookie("testPush", null, {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+      })
       .status(200)
       .json({
         success: true,

@@ -36,6 +36,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createChat } from "@/store/chat/chatSlice";
 
 function ProfilePageCard({
   profile,
@@ -180,6 +181,20 @@ function ProfilePageCard({
     setEdit(val);
     setBannerImagePreview(null);
     setBannerImage(null);
+  }
+
+  function handleMessageClick() {
+    if (!user) {
+      router.push(`/login?back=${location.pathname}`);
+      return;
+    }
+
+    dispatch(createChat(profile.user._id)).then((res) => {
+      const chatId = (res.payload as any).chat._id;
+      router.push(
+        `/chat?chatId=${chatId}&selectedUser=${profile.user._id}&isGroup=false`
+      );
+    });
   }
 
   useEffect(() => {
@@ -366,6 +381,7 @@ function ProfilePageCard({
           <Button
             className="flex items-center border-primary text-primary rounded-full hover:text-white hover:bg-primary"
             variant={"outline"}
+            onClick={() => setEditIntro(true)}
           >
             Edit Profile
           </Button>
@@ -391,6 +407,7 @@ function ProfilePageCard({
             <Button
               className="flex items-center border-primary text-primary rounded-full"
               variant={"outline"}
+              onClick={handleMessageClick}
             >
               Message
             </Button>

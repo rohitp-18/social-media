@@ -20,6 +20,9 @@ function PeopleTabs() {
       dispatch(userProfile(name as string));
     }
   }, []);
+
+  if (!profile || !profile.user) return null;
+
   return (
     <Card className="w-full">
       <div className="bg-background rounded-xl border text-card-foreground shadow-sm w-full flex justify-start items-center py-4 px-2 gap-10">

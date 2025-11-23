@@ -181,6 +181,8 @@ function Questions({
         <div className="flex items-center justify-between gap-2 mt-2 bg-blue-50 p-2 rounded-md">
           <Label htmlFor="isActive">Is Active</Label>
           <button
+            type="button"
+            aria-label="Toggle Active Status"
             onClick={() => setIsActive((prev) => !prev)}
             className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
               isActive ? "bg-blue-600" : "bg-gray-300"

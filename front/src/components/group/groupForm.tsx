@@ -121,10 +121,10 @@ function GroupForm({ edit, id }: { edit: boolean; id?: string }) {
       setName(group.name);
       setEmail(group.email);
       setAllLocation(group.location || []);
-      setWebsite(group.website);
+      setWebsite(group.website || "");
       setHeadline(group.headline);
       setAbout(group.about);
-      setPreviousBanner(group.banner?.url || null);
+      setPreviousBanner(group.bannerImage?.url || null);
       setPreviousLogo(group.avatar?.url || null);
     }
   }, [group, edit]);

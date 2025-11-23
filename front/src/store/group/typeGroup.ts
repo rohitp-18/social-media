@@ -2,6 +2,7 @@ import { chat } from "../chat/typeChat";
 import { Post, user } from "../user/typeUser";
 
 interface Group {
+  _id: string;
   name: string;
   headline: string;
   about: string;
@@ -26,6 +27,7 @@ interface Group {
   bannerImage?: { public_id: string; url: string } | null;
   isDeleted?: boolean;
   createdAt: Date;
+  notification: Notification[];
   updatedAt: Date;
 }
 

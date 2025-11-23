@@ -6,6 +6,7 @@ import Message from "../model/messageModel";
 import Group from "../model/groupModel";
 import Notification from "../model/notificationModel";
 import User from "../model/userModel";
+import sendNotification from "../utils/sendNotification";
 
 const createChat = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -63,6 +64,7 @@ const sendMessage = expressAsyncHandler(
     }
 
     let chatDoc: any;
+    let notification;
 
     // If chat is provided, fetch and validate it
     if (chat) {
@@ -89,13 +91,15 @@ const sendMessage = expressAsyncHandler(
           members: [req.user._id, userId],
         });
 
-        const notification = await Notification.create({
+        notification = await Notification.create({
           sender: req.user._id,
           recipient: userId,
           type: "chat",
           message: `${req.user.name} started a chat with you`,
           relatedId: chatDoc._id,
         });
+
+        await sendNotification(notification, userId.toString());
 
         if (!notification) {
           return next(new ErrorHandler("Notification not created", 500));

@@ -35,6 +35,13 @@ function Page() {
   const { id } = useParams();
 
   const handleInviteSubmit = async () => {
+    if (!company) {
+      toast.error("Company data is not available.", {
+        position: "top-center",
+      });
+      return;
+    }
+
     if (inviteuserId.length === 0) {
       toast.error("Please select at least one user to invite.", {
         position: "top-center",
@@ -84,6 +91,10 @@ function Page() {
   };
 
   useEffect(() => {
+    if (!company) {
+      return;
+    }
+
     if (peoples) {
       let tempPeoples: any[] = [];
       peoples.forEach((person: any) => {
@@ -94,22 +105,21 @@ function Page() {
 
       setFoundPeoples(
         tempPeoples.filter((us: any) => {
-          console.log(company.admin, us);
-          if (company.admin.some((u: any) => u._id === us._id)) {
+          if (company.admin.some((u) => u === us._id)) {
             return false;
           }
-          if (company.members.some((u: any) => u._id === us._id)) {
+          if (company.members.some((u) => u === us._id)) {
             return false;
           }
           return true;
         })
       );
     }
-  }, [peoples, inviteuserId]);
+  }, [peoples, inviteuserId, company]);
 
   useEffect(() => {
     if (company && user) {
-      if (company.admin.some((u: any) => u._id === user._id)) {
+      if (company.admin.some((u) => u === user._id)) {
         setIsAdmin(true);
       } else {
         router.push(`/company/${company._id}`);

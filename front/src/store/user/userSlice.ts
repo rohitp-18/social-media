@@ -3,7 +3,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
-import { UserState } from "./typeUser";
+import { sUser, UserState } from "./typeUser";
 
 const initialState: UserState = {
   user: null,
@@ -200,7 +200,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.login = true;
       })
-      .addCase(getUser.rejected, (state, action: any) => {
+      .addCase(getUser.rejected, (state) => {
         state.loading = false;
       })
 
@@ -243,6 +243,7 @@ const userSlice = createSlice({
           state.user.language = action.payload.language;
         }
         if (state.profile) {
+          if (state.profile.user == null) return;
           state.profile.user.language = action.payload.language;
         }
         state.updated = true;
@@ -263,7 +264,7 @@ const userSlice = createSlice({
         if (state.user) {
           state.user.username = action.payload.username;
         }
-        if (state.profile) {
+        if (state.profile?.user) {
           state.profile.user.username = action.payload.username;
         }
         state.updated = true;
@@ -283,7 +284,9 @@ const userSlice = createSlice({
         state.loading = false;
         state.changeFollow = true;
         if (!state.user) return;
+        if (!state.profile) return;
         if (action.payload.follow) {
+          if (state.profile?.user == null || state.user == null) return;
           state.user.following.push(action.payload.userId);
           if (state.profile?.user?._id === action.payload.userId) {
             state.profile.user.followers.push(state.user._id);
@@ -291,13 +294,35 @@ const userSlice = createSlice({
               state.profile.user.followers.length;
           }
         } else {
+          if (state.profile?.user == null || state.user == null) return;
           state.user.following = state.user.following.filter(
-            (user: any) => user !== action.payload.userId
+            (user) => user !== action.payload.userId
           );
           if (state.profile?.user?._id === action.payload.userId) {
-            state.profile.user.followers = state.profile.user.followers.filter(
-              (user: any) => user !== state.user?._id
-            );
+            // handle followers which can be either string[] or sUser[]
+            if (Array.isArray(state.profile.user.followers)) {
+              if (
+                state.profile.user.followers.length > 0 &&
+                typeof state.profile.user.followers[0] === "string"
+              ) {
+                // followers is string[]
+                state.profile.user.followers = (
+                  state.profile.user.followers as unknown as string[]
+                ).filter(
+                  (user: string) => user !== state.user?._id
+                ) as unknown as typeof state.profile.user.followers;
+              } else {
+                // followers is sUser[]
+                state.profile.user.followers = (
+                  state.profile.user.followers as unknown as sUser[]
+                ).filter(
+                  (user: sUser) => user._id !== state.user?._id
+                ) as unknown as typeof state.profile.user.followers;
+              }
+            } else {
+              // unexpected shape -> ensure empty array
+              state.profile.user.followers = [];
+            }
             state.profile.user.totalFollowers =
               state.profile.user.followers.length;
           }

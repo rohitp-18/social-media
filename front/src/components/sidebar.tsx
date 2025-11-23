@@ -143,11 +143,13 @@ function Sidebar() {
   }, [updated, error, message]);
 
   useEffect(() => {
-    if (profile) {
+    if (profile?.user) {
       setUsername(profile.user.username);
       setLanguage(profile.user.language);
     }
   }, [profile]);
+
+  if (!profile?.user) return null;
 
   return (
     <aside className="md:flex flex-col gap-3 w-full shrink hidden h-min">
@@ -216,7 +218,10 @@ function Sidebar() {
             </div>
             <div className="opacity-80 text-sm">
               {languageOptions
-                .filter((lang: any) => lang.value === profile.user.language)
+                .filter(
+                  (lang: any) =>
+                    profile?.user && lang.value === profile.user.language
+                )
                 .map((lang: any) => lang.label)
                 .join(", ")}
             </div>

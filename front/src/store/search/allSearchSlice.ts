@@ -3,6 +3,13 @@ import axios from "../axios";
 import { isAxiosError } from "axios";
 import { IAllSearch } from "./typeSearch";
 
+function handleError(error: unknown) {
+  if (isAxiosError(error) && error.response) {
+    throw new Error(error.response.data.message);
+  }
+  throw new Error((error as Error).message);
+}
+
 const getAllSearch = createAsyncThunk(
   "allSearch/getAllSearch",
   async (query: string) => {
@@ -14,10 +21,7 @@ const getAllSearch = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data.message);
-      }
-      throw new Error("Something went wrong");
+      handleError(error);
     }
   }
 );
@@ -33,10 +37,7 @@ const searchInConnections = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data.message);
-      }
-      throw new Error("Something went wrong");
+      handleError(error);
     }
   }
 );
@@ -50,10 +51,7 @@ const searchProjects = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data.message);
-      }
-      throw new Error("Something went wrong");
+      handleError(error);
     }
   }
 );
@@ -67,10 +65,7 @@ const searchPeoples = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data.message);
-      }
-      throw new Error("Something went wrong");
+      handleError(error);
     }
   }
 );
@@ -84,10 +79,7 @@ const searchPosts = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data.message);
-      }
-      throw new Error("Something went wrong");
+      handleError(error);
     }
   }
 );
@@ -101,10 +93,7 @@ const searchGroups = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data.message);
-      }
-      throw new Error("Something went wrong");
+      handleError(error);
     }
   }
 );
@@ -118,10 +107,7 @@ const searchJobs = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data.message);
-      }
-      throw new Error("Something went wrong");
+      handleError(error);
     }
   }
 );
@@ -135,10 +121,7 @@ const searchCompany = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data.message);
-      }
-      throw new Error("Something went wrong");
+      handleError(error);
     }
   }
 );
@@ -188,7 +171,7 @@ const getAllSearchSlice = createSlice({
         state.total = 0;
         state.page = 1;
       })
-      .addCase(getAllSearch.fulfilled, (state, action: any) => {
+      .addCase(getAllSearch.fulfilled, (state, action) => {
         const { peoples, companies, posts, projects, groups, jobs } =
           action.payload;
         state.peoples = peoples;
@@ -212,7 +195,7 @@ const getAllSearchSlice = createSlice({
       .addCase(searchInConnections.pending, (state) => {
         state.connections = [];
       })
-      .addCase(searchInConnections.fulfilled, (state, action: any) => {
+      .addCase(searchInConnections.fulfilled, (state, action) => {
         const { connections } = action.payload;
         state.connections = connections;
       })
@@ -224,7 +207,7 @@ const getAllSearchSlice = createSlice({
       .addCase(searchProjects.pending, (state) => {
         state.projects = [];
       })
-      .addCase(searchProjects.fulfilled, (state, action: any) => {
+      .addCase(searchProjects.fulfilled, (state, action) => {
         state.projects = action.payload.projects;
       })
       .addCase(searchProjects.rejected, (state, action) => {
@@ -235,7 +218,7 @@ const getAllSearchSlice = createSlice({
       .addCase(searchPeoples.pending, (state) => {
         state.peoples = [];
       })
-      .addCase(searchPeoples.fulfilled, (state, action: any) => {
+      .addCase(searchPeoples.fulfilled, (state, action) => {
         state.peoples = action.payload.peoples;
       })
       .addCase(searchPeoples.rejected, (state) => {
@@ -246,7 +229,7 @@ const getAllSearchSlice = createSlice({
       .addCase(searchPosts.pending, (state) => {
         state.posts = [];
       })
-      .addCase(searchPosts.fulfilled, (state, action: any) => {
+      .addCase(searchPosts.fulfilled, (state, action) => {
         state.posts = action.payload.posts;
       })
       .addCase(searchPosts.rejected, (state, action) => {
@@ -257,7 +240,7 @@ const getAllSearchSlice = createSlice({
       .addCase(searchGroups.pending, (state) => {
         state.groups = [];
       })
-      .addCase(searchGroups.fulfilled, (state, action: any) => {
+      .addCase(searchGroups.fulfilled, (state, action) => {
         state.groups = action.payload.groups;
       })
       .addCase(searchGroups.rejected, (state) => {
@@ -267,7 +250,7 @@ const getAllSearchSlice = createSlice({
       .addCase(searchJobs.pending, (state) => {
         state.jobs = [];
       })
-      .addCase(searchJobs.fulfilled, (state, action: any) => {
+      .addCase(searchJobs.fulfilled, (state, action) => {
         state.jobs = action.payload.jobs;
       })
       .addCase(searchJobs.rejected, (state) => {
@@ -277,7 +260,7 @@ const getAllSearchSlice = createSlice({
       .addCase(searchCompany.pending, (state) => {
         state.companies = [];
       })
-      .addCase(searchCompany.fulfilled, (state, action: any) => {
+      .addCase(searchCompany.fulfilled, (state, action) => {
         state.companies = action.payload.companies;
       })
       .addCase(searchCompany.rejected, (state) => {

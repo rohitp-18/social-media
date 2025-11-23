@@ -1,10 +1,12 @@
+import { education } from "./educationSlice";
+
 interface user {
   _id: string;
   name: string;
   email: string;
   password: string;
   avatar: { url: string; public_id: string } | null;
-  skills?: { skill: string; proficiency?: string; description?: string }[];
+  skills: { skill: string; proficiency?: string; description?: string }[];
   following: string[];
   followers: string[];
   connections: string[];
@@ -17,8 +19,8 @@ interface user {
   headline: string;
   location: { city: string; country: string; state: string } | null;
   experience: { jobTitle: string; company: string; years: number }[];
-  projects: { title: string; description: string; link: string }[];
-  topVoices: { user: user; message: string }[];
+  projects: project[];
+  topVoice: sUser[];
   companies: string[];
   groups: string[];
   education: string[];
@@ -32,12 +34,39 @@ interface user {
   updatedAt: Date;
 }
 
+interface media {
+  _id: string;
+  user: string;
+  thumbnail?: string;
+  post?: string;
+  project?: string;
+  url: string;
+  type: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date;
+  deletedBy?: string;
+  isDeleted: boolean;
+}
+
 interface UserState {
   user: user | null;
   loading: boolean;
   error: string | null;
   login: boolean;
-  profile?: any;
+  profile?: {
+    user:
+      | (user & {
+          following: sUser[];
+          followers: sUser[];
+          connections: sUser[];
+        })
+      | null;
+    posts: Post[];
+    media: media[];
+    comments: Comment[];
+    educations: education[];
+  } | null;
   logout?: boolean;
   updated?: boolean;
   message?: string;
@@ -110,4 +139,56 @@ interface sUser {
   following: string[];
 }
 
-export type { user, UserState, Post, InheritUser, sUser };
+interface project {
+  _id: string;
+  user: string;
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate?: Date;
+  current: boolean;
+  skills: string[];
+  githubLink?: string;
+  liveLink?: string;
+  likes: { _id: string }[];
+  comments: { _id: string }[];
+  media: { url: string; public_id: string; type: string; order: number }[];
+  likedCount: number;
+  commentCount: number;
+  shareCount: number;
+  repostCount: number;
+  repost: string;
+  edited: boolean;
+  editedAt?: Date;
+  isDeleted: boolean;
+  deletedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Comment {
+  _id: string;
+  user: InheritUser;
+  content: string;
+  post: string;
+  type: "comment" | "reply";
+  edited: boolean;
+  editedAt?: Date;
+  parent?: (Comment & { user: string }) | null;
+  reply: { _id: string }[];
+  likes: string[];
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date[];
+}
+
+export type {
+  user,
+  UserState,
+  Post,
+  InheritUser,
+  sUser,
+  project,
+  Comment,
+  media,
+};

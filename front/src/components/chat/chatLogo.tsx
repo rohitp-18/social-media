@@ -4,22 +4,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCheck } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { useSocket } from "@/store/utils/socketContext";
 
 function ChatLogo({
   chat,
-  selectedUser,
   handleChatSelection,
-  selectedChat,
 }: {
   chat: any;
-  selectedUser: any;
   handleChatSelection?: any;
-  selectedChat: any;
 }) {
   const [msgReaded, setMsgReaded] = React.useState(true);
 
   const { user } = useSelector((state: RootState) => state.user);
   const chatUser = chat.members.find((member: any) => member._id !== user?._id);
+
+  const { selectedChat, selectedUser } = useSocket();
 
   useEffect(() => {
     if (chat) {

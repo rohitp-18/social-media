@@ -11,9 +11,10 @@ import Navbar from "@/components/userNavbar";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { Job } from "@/store/jobs/typeJob";
 
 function Page() {
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
 
   const { user } = useSelector((state: RootState) => state.user);
 
@@ -47,7 +48,7 @@ function Page() {
             </div>
             <CardContent className="flex flex-col gap-2 py-5">
               {jobs.length > 0 ? (
-                jobs.map((job: any) => (
+                jobs.map((job) => (
                   <Link
                     href={`/jobs/${job._id}`}
                     className="block"

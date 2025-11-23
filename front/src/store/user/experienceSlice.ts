@@ -2,17 +2,21 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
 
+function handleError(error: unknown) {
+  if (isAxiosError(error) && error.response) {
+    throw new Error(error.response.data.message);
+  }
+  throw new Error((error as Error).message);
+}
+
 const getProfileExperiences = createAsyncThunk(
   "experience/getProfileExperiences",
   async (userId: string, thunkAPI) => {
     try {
       const { data } = await axios.get(`/experiences/user/${userId}`);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -23,11 +27,8 @@ const getExperienceById = createAsyncThunk(
     try {
       const { data } = await axios.get(`/experiences/exp/${experienceId}`);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -50,11 +51,8 @@ const updateExperience = createAsyncThunk(
         experienceData
       );
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -65,11 +63,8 @@ const deleteExperience = createAsyncThunk(
     try {
       await axios.delete(`/experiences/exp/${experienceId}`);
       return experienceId;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -80,17 +75,32 @@ const createExperience = createAsyncThunk(
     try {
       const { data } = await axios.post(`/experiences/create`, experienceData);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
 
+interface experience {
+  _id: string;
+  user: string;
+  company: string;
+  companyName: string;
+  title: string;
+  working: boolean;
+  startDate: string;
+  jobType: string;
+  skills: { _id: string; name: string; proficiency: string }[];
+  workType: string;
+  endDate?: string;
+  location?: string;
+  description?: string;
+  isDeleted: boolean;
+  deletedAt?: string;
+}
+
 interface InitialState {
-  experiences: any[];
+  experiences: experience[];
   loading: boolean;
   error: string | null;
   created: boolean;

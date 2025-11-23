@@ -27,7 +27,7 @@ import EditAbout from "./editAbout";
 import Sidebar from "../../../components/sidebar";
 import { useDispatch, useSelector } from "react-redux";
 import { userProfile } from "@/store/user/userSlice";
-import { AppDispatch } from "@/store/store";
+import { AppDispatch, RootState } from "@/store/store";
 import Interest from "@/components/profile/interest";
 import ProfilePageCard from "@/components/profile/profilePageCard";
 import ActivityCard from "@/components/profile/activityCard";
@@ -48,7 +48,9 @@ function ProfilePage() {
 
   const dispatch = useDispatch<AppDispatch>();
   const { name } = useParams();
-  const { user, loading, profile } = useSelector((state: any) => state.user);
+  const { user, loading, profile } = useSelector(
+    (state: RootState) => state.user
+  );
 
   useEffect(() => {
     if (name) {
@@ -58,13 +60,13 @@ function ProfilePage() {
   }, [name]);
 
   useEffect(() => {
-    if (profile) {
+    if (profile?.user) {
       setIsUser(profile?.user._id === user?._id);
     }
   }, [dispatch, profile]);
 
   useEffect(() => {
-    if (profile) {
+    if (profile?.user) {
       setIsUser(profile?.user._id === user?._id);
     }
   }, [dispatch, user]);
@@ -72,6 +74,8 @@ function ProfilePage() {
   if (loading) {
     return <PrimaryLoader />;
   }
+
+  if (!profile?.user) return null;
 
   return (
     <>
@@ -391,9 +395,10 @@ function ProfilePage() {
                                   {skill.proficiency}
                                 </Badge>
                               </div>
-                              {profile.user.skills.length > i + 1 && (
-                                <Separator className="my-2" />
-                              )}
+                              {profile?.user &&
+                                profile.user.skills.length > i + 1 && (
+                                  <Separator className="my-2" />
+                                )}
                             </div>
                           ))
                       ) : (
@@ -430,8 +435,8 @@ function ProfilePage() {
                   </Card>
                   {/* Interest card */}
                   {(profile.user.topVoice?.length > 0 ||
-                    profile.user.schools?.length > 0 ||
-                    profile.user.newsLetter?.length > 0 ||
+                    // profile.user.schools?.length > 0 ||
+                    // profile.user.newsLetter?.length > 0 ||
                     profile.user.companies?.length > 0) && (
                     <Interest isUser={isUser} />
                   )}

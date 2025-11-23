@@ -71,7 +71,7 @@ function GroupCard() {
             {group.headline || "No headline available"}
           </p>
           <p className="text-opacity-50 text-xs opacity-50">
-            {group.location.join(", ")}
+            {group.location?.join(", ")}
           </p>
         </Link>
         <p className="text-sm text-gray-600 mt-2">

@@ -141,7 +141,7 @@ function CreateForm({
       setState(company.address ? company.address[0].state : "");
       setCity(company.address ? company.address[0].city : "");
       setCountry(company.address ? company.address[0].country : "");
-      setPreviousBanner(company.banner?.url || null);
+      setPreviousBanner(company.bannerImage?.url || null);
       setPreviousLogo(company.avatar?.url || null);
     }
   }, [company, edit]);

@@ -30,13 +30,8 @@ function Page() {
       }
       return;
     }
-    if (job && job?._id === id) {
-      console.log(
-        job.company.admin,
-        user?._id,
-        job.company.admin.includes(user?._id)
-      );
-      setIsAdmin(job.company.admin.includes(user?._id));
+    if (user && job && job?._id === id) {
+      setIsAdmin(job.company.admin.includes(user._id));
       console.log("Is Admin:", isAdmin);
     }
     if (id && job?._id !== id) {

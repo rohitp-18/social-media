@@ -6,6 +6,8 @@ import ErrorHandler from "../utils/errorHandler";
 import Group from "../model/groupModel";
 import User from "../model/userModel";
 import Company from "../model/companyModel";
+import sendNotification from "../utils/sendNotification";
+import Chat from "../model/chatModel";
 
 const createInvitation = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -99,8 +101,9 @@ const updateInvitation = expressAsyncHandler(
       return next(new ErrorHandler("Invitation not found", 404));
     }
 
+    let notification;
     if (status === "accepted" && invitation.sender) {
-      await Notification.create({
+      notification = await Notification.create({
         sender: req.user._id,
         recipient: invitation.sender,
         type: "invitation",
@@ -109,6 +112,8 @@ const updateInvitation = expressAsyncHandler(
         relatedId: invitation._id,
         refModel: "Invitation",
       });
+
+      await sendNotification(notification, invitation.sender + "");
 
       // If the invitation is accepted, you might want to perform additional actions,
       // such as adding the user to a group, following them, etc.
@@ -136,7 +141,7 @@ const updateInvitation = expressAsyncHandler(
       }
     }
     if (status === "rejected") {
-      await Notification.create({
+      notification = await Notification.create({
         sender: req.user._id,
         recipient: invitation.sender,
         type: "invitation",
@@ -145,12 +150,15 @@ const updateInvitation = expressAsyncHandler(
         relatedId: invitation._id,
         refModel: "Invitation",
       });
+
+      await sendNotification(notification, notification.recipient.toString());
     }
 
     res.status(200).json({
       success: true,
       invitation,
       message: "Invitation updated successfully",
+      notification,
     });
   }
 );
@@ -211,7 +219,7 @@ const createInvitationForAll = expressAsyncHandler(
       return next(new ErrorHandler("Invitations not created", 400));
     }
 
-    await Notification.create(
+    const notification = await Notification.create(
       recipientId.map((id) => ({
         sender,
         recipient: id,
@@ -221,6 +229,13 @@ const createInvitationForAll = expressAsyncHandler(
         relatedId: targetId,
         refModel,
       }))
+    );
+
+    await Promise.all(
+      notification.map(
+        async (notify) =>
+          await sendNotification(notify, notify.recipient.toString())
+      )
     );
 
     if (!invitations || invitations.length === 0) {
@@ -235,6 +250,41 @@ const createInvitationForAll = expressAsyncHandler(
   }
 );
 
+const getAllInvitationsWithCount = expressAsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const totalInvitations = await Invitation.countDocuments({
+      recipientUser: req.user._id,
+      unread: true,
+    });
+
+    const chats = await Chat.find({
+      members: { $in: [req.user._id] },
+    }).populate("lastMessage");
+
+    const totalChats = chats.filter((chat) => {
+      const lastMessage = chat.lastMessage as any;
+      return (
+        lastMessage &&
+        Array.isArray(lastMessage.unreadBy) &&
+        lastMessage.unreadBy.includes(req.user._id)
+      );
+    }).length;
+
+    const totalNotifications = await Notification.countDocuments({
+      recipient: req.user._id,
+      read: false,
+    });
+
+    res.status(200).json({
+      success: true,
+      totalInvitations,
+      totalChats,
+      totalNotifications,
+      message: "Invitations fetched successfully",
+    });
+  }
+);
+
 export {
   createInvitation,
   getAllInvitations,
@@ -242,4 +292,5 @@ export {
   updateInvitation,
   deleteInvitation,
   createInvitationForAll,
+  getAllInvitationsWithCount,
 };

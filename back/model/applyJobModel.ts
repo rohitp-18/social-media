@@ -54,6 +54,9 @@ const applyJobModel = new mongoose.Schema(
         answer: {
           type: String,
         },
+        type: {
+          type: String,
+        },
       },
     ],
     isDeleted: {

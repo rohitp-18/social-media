@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 
 interface IUser extends Document {
+  _id: string;
   name: string;
   username: string;
   deactivated: boolean;
@@ -37,6 +38,7 @@ interface IUser extends Document {
     link: string;
     text: string;
   };
+  pushSubscription: Object[];
   totalFollowers: number;
   totalFollowing: number;
   totalConnections: number;
@@ -154,6 +156,7 @@ const UserSchema: Schema = new Schema(
         type: String,
       },
     },
+    pushSubscription: [{ type: Object }],
     images: [{ public_id: { type: String }, url: { type: String } }],
     totalFollowers: { type: Number, default: 0 },
     totalFollowing: { type: Number, default: 0 },

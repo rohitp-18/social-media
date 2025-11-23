@@ -34,7 +34,7 @@ function Page() {
       return;
     }
     if (company && company?._id === searchParams.get("company")) {
-      if (company.admin.some((admin: any) => admin._id === user?._id)) {
+      if (company.admin.some((admin) => admin === user?._id)) {
         setIsAdmin(true);
         setType("company");
         setTarget(company._id);
@@ -43,7 +43,7 @@ function Page() {
       }
     }
     if (searchParams.get("group") && group?._id === searchParams.get("group")) {
-      if (group.admin.some((admin: any) => admin._id === user?._id)) {
+      if (group.admin.some((admin) => admin._id === user?._id)) {
         setIsAdmin(true);
         setType("group");
         setTarget(group._id);
@@ -63,7 +63,7 @@ function Page() {
   }, [searchParams, company, user, dispatch, router]);
 
   useEffect(() => {
-    if (created && !loading) {
+    if (created && !loading && post) {
       toast.success("Post created successfully", {
         position: "top-center",
       });

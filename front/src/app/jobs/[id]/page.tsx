@@ -76,7 +76,7 @@ function Page() {
       toast.error(error, { position: "top-center" });
       dispatch(clearError());
     }
-    if (saved && job._id === saved) {
+    if (saved && job && job._id === saved) {
       toast.success(
         message ||
           (!isSaved ? "Job unsaved successfully" : "Job saved successfully"),
@@ -216,7 +216,7 @@ function Page() {
                       {job.location.length > 1
                         ? "Multiple Locations"
                         : job.location[0]}{" "}
-                      | Posted {timeAgo(job.createdAt)} |{" "}
+                      | Posted {timeAgo(job.createdAt.toString())} |{" "}
                       {job.applications.length}{" "}
                       {job.applications.length === 1
                         ? "Application"
@@ -251,7 +251,7 @@ function Page() {
                       Essential Skills
                     </h2>
                     <ul className="mt-2 grid grid-cols-2 gap-2">
-                      {job.essentialSkills.map((skill: any) => (
+                      {job.essentialSkills.map((skill) => (
                         <li key={skill._id} className="flex items-center">
                           <Badge className="mr-2 bg-blue-100 text-blue-800">
                             {skill.name}
@@ -267,7 +267,7 @@ function Page() {
                       Preferred Skills
                     </h2>
                     <ul className="mt-2 grid grid-cols-2 gap-2">
-                      {job.preferredSkills.map((skill: any) => (
+                      {job.preferredSkills.map((skill) => (
                         <li key={skill._id} className="flex items-center">
                           <Badge className="mr-2 bg-green-100 text-green-800">
                             {skill.name}

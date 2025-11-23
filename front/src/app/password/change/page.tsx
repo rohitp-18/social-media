@@ -9,7 +9,7 @@ import { Eye, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "@/store/store";
+import { AppDispatch, RootState } from "@/store/store";
 import { registerUser, resetUser } from "@/store/user/userSlice";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isAxiosError } from "axios";
@@ -25,10 +25,17 @@ function Page() {
   const [changeLoading, setChangeLoading] = useState(false);
 
   const router = useRouter();
-  const { user } = useSelector((state: any) => state.user);
+  const { user } = useSelector((state: RootState) => state.user);
 
   async function submitHandler(e: React.FormEvent): Promise<void> {
     e.preventDefault();
+
+    if (!user) {
+      toast.error("User not found. Please login again.", {
+        position: "top-center",
+      });
+      return;
+    }
 
     if (!passworValue || !newPassword || !confirmPassword) {
       toast.error("Please fill all required fields", {
@@ -39,6 +46,20 @@ function Page() {
 
     if (!checkbox) {
       toast.error("Please accept our terms and conditions", {
+        position: "top-center",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New Password and Confirm Password do not match", {
+        position: "top-center",
+      });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long", {
         position: "top-center",
       });
       return;
@@ -60,7 +81,7 @@ function Page() {
       setTimeout(() => {
         router.push(`/u/${user.username}`);
       }, 1000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
         isAxiosError(error)
           ? error.response?.data.message

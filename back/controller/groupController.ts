@@ -5,6 +5,7 @@ import Group from "../model/groupModel";
 import { v2 as cloudinary } from "cloudinary";
 import Notification from "../model/notificationModel";
 import Post from "../model/postModel";
+import sendNotification from "../utils/sendNotification";
 
 const createGroup = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -371,8 +372,9 @@ const updateGroupRequest = expressAsyncHandler(
       );
     }
 
+    let notification;
     try {
-      Notification.create({
+      notification = await Notification.create({
         sender: req.user._id,
         recipient: userId,
         group: group._id,
@@ -380,12 +382,15 @@ const updateGroupRequest = expressAsyncHandler(
         message: `You are now a member of the group ${group.name}`,
         url: `/group/${group._id}`,
       });
+
+      await sendNotification(notification, userId);
     } catch (error) {}
 
     res.status(200).json({
       success: true,
       message: "Request accepted successfully",
       group,
+      notification,
     });
   }
 );

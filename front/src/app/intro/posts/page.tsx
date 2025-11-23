@@ -9,9 +9,10 @@ import FooterS from "@/components/footerS";
 import Navbar from "@/components/introNavbar";
 import Post from "@/components/post";
 import { isAxiosError } from "axios";
+import { Post as tPost } from "@/store/user/typeUser";
 
 function Page() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<tPost[]>([]);
 
   async function fetchPosts() {
     try {
@@ -52,7 +53,7 @@ function Page() {
         <section className="md:grid grid-cols-[1fr_300px] block gap-4">
           <div className="flex flex-col max-w-screen-md w-full gap-3 md:gap-5 overflow-auto">
             {posts.length > 0 ? (
-              posts.map((post: any) => (
+              posts.map((post) => (
                 <Fragment key={post._id}>
                   <Post post={post} cardClass="w-full" />
                 </Fragment>

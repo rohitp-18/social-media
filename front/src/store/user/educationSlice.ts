@@ -2,17 +2,21 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
 
+function handleError(error: unknown) {
+  if (isAxiosError(error) && error.response) {
+    throw new Error(error.response.data.message);
+  }
+  throw new Error((error as Error).message);
+}
+
 const getProfileEducations = createAsyncThunk(
   "education/getProfileEducations",
   async (userId: string, thunkAPI) => {
     try {
       const { data } = await axios.get(`/educations/profile/${userId}`);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -23,11 +27,8 @@ const getEducationById = createAsyncThunk(
     try {
       const { data } = await axios.get(`/educations/user/${educationId}`);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -47,11 +48,8 @@ const updateEducation = createAsyncThunk(
     try {
       const { data } = await axios.put(`/educations/user/${educationId}`, form);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -62,11 +60,8 @@ const deleteEducation = createAsyncThunk(
     try {
       await axios.delete(`/educations/user/${educationId}`);
       return educationId;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -77,17 +72,31 @@ const createEducation = createAsyncThunk(
     try {
       const { data } = await axios.post(`/educations/create`, form);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
 
+interface education {
+  _id: string;
+  school: string;
+  degree: string;
+  fieldOfStudy: string;
+  startDate: Date;
+  currentlyStudying: boolean;
+  endDate?: Date;
+  grade?: string;
+  description?: string;
+  skills: string[];
+  user: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isDeleted: boolean;
+}
+
 interface InitialState {
-  educations: any[];
+  educations: education[];
   loading: boolean;
   error: string | null;
   created: boolean;
@@ -212,4 +221,5 @@ export {
   updateEducation,
   deleteEducation,
 };
+export type { education };
 export default educationSlice.reducer;

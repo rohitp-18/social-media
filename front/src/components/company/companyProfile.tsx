@@ -42,10 +42,8 @@ function CompanyProfile({ tab, setTab }: { tab: string; setTab: any }) {
 
   useEffect(() => {
     if (company && company.admin && user) {
-      setIsAdmin(company.admin.some((admin: any) => admin._id === user._id));
-      setFollowing(
-        company.followers.some((follower: any) => follower._id === user._id)
-      );
+      setIsAdmin(company.admin.some((admin) => admin === user._id));
+      setFollowing(company.followers.some((follower) => follower === user._id));
     }
   }, [company, user]);
 
@@ -61,6 +59,8 @@ function CompanyProfile({ tab, setTab }: { tab: string; setTab: any }) {
       dispatch(resetcompany());
     }
   }, [followed, following]);
+
+  if (!company) return null;
 
   return (
     <Card>

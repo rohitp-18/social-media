@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 // Define the notification types
-export enum NotificationType {
+enum NotificationType {
   JOB = "job",
   NEWSLETTER = "newsletter",
   POST = "post",
@@ -63,7 +63,7 @@ const NotificationSchema: Schema = new Schema(
         "groups",
         "users",
         "newsletter",
-        "invitations",
+        "Invitation",
         "company",
         "chats",
       ],

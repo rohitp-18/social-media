@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
+import { Post } from "../user/typeUser";
 
 const createPost = createAsyncThunk<any, any, { rejectValue: string }>(
   "post/createPost",
@@ -62,8 +63,8 @@ const getPost = createAsyncThunk<any, string, { rejectValue: string }>(
 );
 
 interface PostState {
-  posts: any[];
-  post: any;
+  posts: Post[];
+  post: Post | null;
   loading: boolean;
   error: string | null;
   created: boolean;
@@ -74,7 +75,7 @@ interface PostState {
   reposted: boolean;
   liked: boolean;
   message: string | null;
-  savedPosts: any[];
+  savedPosts: Post[];
 }
 
 const initialState: PostState = {
@@ -119,13 +120,16 @@ const postSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createPost.fulfilled, (state, action: PayloadAction<any>) => {
-        state.loading = false;
-        state.created = true;
-        state.post = action.payload.post;
-        state.message = action.payload.message;
-        state.error = null;
-      })
+      .addCase(
+        createPost.fulfilled,
+        (state, action: PayloadAction<{ post: Post; message: string }>) => {
+          state.loading = false;
+          state.created = true;
+          state.post = action.payload.post;
+          state.message = action.payload.message;
+          state.error = null;
+        }
+      )
       .addCase(createPost.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to create post";

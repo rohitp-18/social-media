@@ -6,8 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/functions";
+import { Job } from "@/store/jobs/typeJob";
 
-function JobCard({ job }: any) {
+function JobCard({ job }: { job: Job }) {
   return (
     <Card className="md:flex flex-col gap-3 h-min">
       <CardHeader className="flex flex-col justify-between gap-3 items-start">
@@ -40,7 +41,8 @@ function JobCard({ job }: any) {
           <div className="text-sm text-gray-600">
             <p>
               {job.location.length > 1 ? "Multiple Locations" : job.location[0]}{" "}
-              | Posted {timeAgo(job.createdAt)} | {job.applications.length}{" "}
+              | Posted {timeAgo(job.createdAt.toString())} |{" "}
+              {job.applications.length}{" "}
               {job.applications.length === 1 ? "Application" : "Applications"}
             </p>
             <div className="mt-2 flex gap-2">

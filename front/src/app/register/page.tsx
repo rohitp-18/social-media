@@ -9,7 +9,7 @@ import { Eye, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "@/store/store";
+import { AppDispatch, RootState } from "@/store/store";
 import { registerUser, resetUser } from "@/store/user/userSlice";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/introNavbar";
@@ -26,7 +26,7 @@ function Page() {
   const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const { user, login, loading, error } = useSelector(
-    (state: any) => state.user
+    (state: RootState) => state.user
   );
 
   function submitHandler(e: React.FormEvent): void {

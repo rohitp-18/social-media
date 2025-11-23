@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "../axios";
-import { isAxiosError } from "axios";
+import { AxiosError, isAxiosError } from "axios";
 import { skillsState } from "./typeSkill";
 
 const searchSkill = createAsyncThunk(
@@ -9,11 +9,11 @@ const searchSkill = createAsyncThunk(
     try {
       const { data } = await axios.get(`/skills/search?query=${query}`);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         return thunkAPI.rejectWithValue(error.response.data.message);
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );

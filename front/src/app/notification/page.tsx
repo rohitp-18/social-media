@@ -19,10 +19,11 @@ import { RootState } from "@/store/store";
 import { timeAgo } from "@/lib/functions";
 import { PrimaryLoader, SecondaryLoader } from "@/components/loader";
 import Link from "next/link";
+import AuthProvider from "@/components/authProvider";
 
 function Page() {
   const [value, setValue] = useState("all");
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [nLoading, setNLoading] = useState(true);
 
   const { user, loading, login } = useSelector(
@@ -30,6 +31,7 @@ function Page() {
   );
 
   async function fetchNotifications() {
+    if (!user) return;
     try {
       setNLoading(true);
       const { data } = await axios.get("/notifications/all");
@@ -49,14 +51,10 @@ function Page() {
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
-
-  if (loading || !user) {
-    return <PrimaryLoader />;
-  }
+  }, [user]);
 
   return (
-    <>
+    <AuthProvider>
       <Navbar />
 
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
@@ -121,8 +119,8 @@ function Page() {
                   {nLoading ? (
                     <SecondaryLoader />
                   ) : notifications.length > 0 ? (
-                    notifications.map((notification: any, i: number) => (
-                      <Fragment key={notification.id}>
+                    notifications.map((notification, i: number) => (
+                      <Fragment key={notification._id}>
                         <div
                           className={`w-full min-h-10 hover:bg-gray-50 justify-between items-center ${
                             notification.read
@@ -175,7 +173,7 @@ function Page() {
           </section>
         </div>
       </main>
-    </>
+    </AuthProvider>
   );
 }
 

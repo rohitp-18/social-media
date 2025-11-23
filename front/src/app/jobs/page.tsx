@@ -130,9 +130,7 @@ function Page() {
                           size={"icon"}
                           onClick={() => {
                             setJobs((prevjobs) =>
-                              prevjobs.filter(
-                                (temp: any) => temp._id !== job._id
-                              )
+                              prevjobs.filter((temp) => temp._id !== job._id)
                             );
                           }}
                         >

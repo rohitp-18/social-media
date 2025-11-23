@@ -38,19 +38,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import CompanyCard from "@/components/company/companyCard";
 import axios from "@/store/axios";
 import { isAxiosError } from "axios";
 
@@ -70,6 +60,13 @@ function Page() {
 
   const handleReschedule = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
+      if (!application) {
+        toast.error("Something went wrong", {
+          position: "top-center",
+        });
+        return;
+      }
+
       e.preventDefault();
       if (dates.length < 1 || !reason) {
         toast.error("Please fill all fields", { position: "top-center" });
@@ -127,8 +124,8 @@ function Page() {
       <main className="bg-[#f2f6f8] dark:bg-[#151515] w-full overflow-hidden py-5">
         <div className="container mx-auto">
           {/* <section className="flex mx-auto max-w-7xl justify-center gap-2"> */}
-          <section className="md:grid grid-cols-[300px_1fr_300px] block mx-auto max-w-7xl min-h-screen gap-2">
-            <aside className="md:flex flex-col gap-3 shrink hidden h-min">
+          <section className="md:grid lg:grid-cols-[300px_1fr_300px] md:grid-cols-[1fr_300px] block mx-auto max-w-7xl min-h-screen gap-2">
+            <aside className="lg:flex flex-col gap-3 shrink hidden h-min">
               {application && (
                 <RecommendedJobs company={application.company._id} />
               )}
@@ -170,26 +167,27 @@ function Page() {
                           />
                         </div>
                       )}
-                    {application.reschedule?.newInterviewDate.length > 0 && (
-                      <div className="mt-4">
-                        <h3 className="text-lg font-semibold">
-                          Reschedule Request Submitted
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          You have already applied for rescheduling your
-                          interview. Please await further updates.
-                        </p>
-                        <ul className="mt-2">
-                          {application.reschedule.newInterviewDate.map(
-                            (d: Date, i: number) => (
-                              <li key={i} className="text-sm text-gray-500">
-                                {new Date(d).toLocaleString()}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
+                    {application.reschedule &&
+                      application.reschedule?.newInterviewDate.length > 0 && (
+                        <div className="mt-4">
+                          <h3 className="text-lg font-semibold">
+                            Reschedule Request Submitted
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            You have already applied for rescheduling your
+                            interview. Please await further updates.
+                          </p>
+                          <ul className="mt-2">
+                            {application.reschedule.newInterviewDate.map(
+                              (d: Date, i: number) => (
+                                <li key={i} className="text-sm text-gray-500">
+                                  {new Date(d).toLocaleString()}
+                                </li>
+                              )
+                            )}
+                          </ul>
+                        </div>
+                      )}
                     <CardFooter className="mt-4 flex gap-3 justify-end">
                       <Dialog>
                         <DialogTrigger asChild>

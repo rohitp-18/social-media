@@ -2,6 +2,15 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
 import store from "../store";
+import { Post, sUser } from "../user/typeUser";
+import { Group } from "./typeGroup";
+
+function handleError(error: unknown) {
+  if (isAxiosError(error) && error.response) {
+    throw new Error(error.response.data.message);
+  }
+  throw new Error((error as Error).message);
+}
 
 const searchGroupsAction = createAsyncThunk(
   "group/searchGroups",
@@ -9,11 +18,8 @@ const searchGroupsAction = createAsyncThunk(
     try {
       const { data } = await axios.get(`/groups/search?search=${searchTerm}`);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -28,11 +34,8 @@ const createGroup = createAsyncThunk(
         },
       });
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -43,11 +46,8 @@ const getSingleGroup = createAsyncThunk(
     try {
       const { data } = await axios.get(`/groups/group/${id}`);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -66,11 +66,8 @@ const updateGroup = createAsyncThunk(
         }
       );
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -81,11 +78,8 @@ const deleteGroup = createAsyncThunk(
     try {
       const { data } = await axios.delete(`/groups/group/${id}`);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -99,11 +93,8 @@ const toggleJoinRequest = createAsyncThunk(
     try {
       const { data } = await axios.put(`/groups/${type}/${id}`, { message });
       return { ...data, type, reqMessage: message };
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -120,11 +111,8 @@ const updateGroupRequest = createAsyncThunk(
         userId,
       });
       return { ...data, status, userId };
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -140,34 +128,31 @@ const removeUserFromGroup = createAsyncThunk(
         userId,
       });
       return { ...data, userId };
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
 
 interface groupSliceIntra {
-  groups: any[];
-  group: any;
+  groups: Group[];
+  group: Group | null;
   created: boolean;
   deleted: boolean;
   updated: boolean;
   message: string | null;
   groupError: string | null;
   error: string | null;
-  searchGroups: any[];
+  searchGroups: Group[];
   searchLoading: boolean;
   searchError: string | null;
   loading: boolean;
-  posts: any[];
+  posts: Post[];
   requested: boolean;
   users: {
-    admin: any[];
-    requests: any[];
-    members: any[];
+    admin: sUser[];
+    requests: { user: sUser; message: string }[];
+    members: sUser[];
   };
 }
 
@@ -288,12 +273,12 @@ const groupSlice = createSlice({
         const userId = action.payload.user._id;
         if (action.payload.type === "leave") {
           state.users.members = state.users.members.filter(
-            (member: any) => member !== userId
+            (member) => member !== userId
           );
         } else {
           if (!action.payload.requested) {
             state.users.requests = state.users.requests.filter(
-              (member: any) => member.user._id.toString() !== userId.toString()
+              (member) => member.user._id.toString() !== userId.toString()
             );
           } else {
             state.users.requests.push({
@@ -331,7 +316,7 @@ const groupSlice = createSlice({
         state.loading = false;
         state.message = action.payload.message;
         state.users.requests = state.users.requests.filter(
-          (request: any) => request.user._id !== action.payload.userId
+          (request) => request.user._id !== action.payload.userId
         );
       })
       .addCase(updateGroupRequest.rejected, (state, action) => {
@@ -347,7 +332,7 @@ const groupSlice = createSlice({
         state.loading = false;
         state.message = action.payload.message;
         state.users.members = state.users.members.filter(
-          (member: any) => member._id !== action.payload.userId
+          (member) => member._id !== action.payload.userId
         );
       })
       .addCase(removeUserFromGroup.rejected, (state, action) => {

@@ -27,7 +27,7 @@ function Page() {
           <Separator className="mb-2" />
           <CardContent className="flex flex-col gap-4">
             {users.admin.length > 0 ? (
-              users.admin.map((admin: any) => (
+              users.admin.map((admin) => (
                 <Link
                   href={`/u/${admin.username}`}
                   key={admin._id}

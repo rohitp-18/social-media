@@ -54,6 +54,12 @@ function GroupProfile() {
 
   const toggleJoin = useCallback(() => {
     if (isRequested) {
+      if (!group) {
+        toast.error("Something went wrong", {
+          position: "top-center",
+        });
+        return;
+      }
       dispatch(
         toggleJoinRequest({
           id: group._id,
@@ -179,7 +185,7 @@ function GroupProfile() {
           {/* locations list */}
           <div className="flex justify-start items-center gap-2">
             <h3 className="text-opacity-50 text-sm -mt-1 opacity-50">
-              {group.location.join(", ")}
+              {group.location?.join(", ")}
             </h3>
           </div>
           {/* members, admin, requests count */}

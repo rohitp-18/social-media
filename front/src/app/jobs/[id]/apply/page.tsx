@@ -46,7 +46,15 @@ import { toast } from "sonner";
 
 function Page() {
   const [coverletter, setCoverletter] = useState("");
-  const [questions, setQuestion] = useState<any[]>([]);
+  const [questions, setQuestion] = useState<
+    {
+      _id: string;
+      ques: string;
+      answer: string;
+      options?: string[];
+      type: string;
+    }[]
+  >([]);
   const [resume, setResume] = useState<File | null>(null);
   const [userResumes, setUserResumes] = useState<any[]>([]);
   const [readResume, setReadResume] = useState<any>();
@@ -129,7 +137,7 @@ function Page() {
       });
     }
     if (job && job._id === id && job.questions) {
-      setQuestion(job.questions.map((q: any) => ({ ...q, answer: "" })));
+      setQuestion(job.questions.map((q) => ({ ...q, answer: "" })));
     }
   }, [id, job]);
 
@@ -203,7 +211,7 @@ function Page() {
                             {job.location.length > 1
                               ? "Multiple Locations"
                               : job.location[0]}{" "}
-                            | Posted {timeAgo(job.createdAt)} |{" "}
+                            | Posted {timeAgo(job.createdAt.toString())} |{" "}
                             {job.applications.length}{" "}
                             {job.applications.length === 1
                               ? "Application"
@@ -317,7 +325,7 @@ function Page() {
                           <Label className="text-lg" htmlFor="questions">
                             Questions
                           </Label>
-                          {questions.map((question: any) => (
+                          {questions.map((question) => (
                             <div
                               key={question._id}
                               className="grid w-full mb-2 gap-1"
@@ -350,7 +358,7 @@ function Page() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectGroup>
-                                      {question.options.map((option: any) => (
+                                      {question.options?.map((option) => (
                                         <SelectItem key={option} value={option}>
                                           {option}
                                         </SelectItem>

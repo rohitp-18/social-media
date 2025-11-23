@@ -13,11 +13,12 @@ import { toggleFollowCompany } from "@/store/company/companySlice";
 import { toast } from "sonner";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { company } from "@/store/company/typeCompany";
 
 function CompanyCard({ company: propsCompany }: { company?: any }) {
   const [following, setFollowing] = useState(false);
   const [companyData, setCompanyData] = useState<any>(null);
-  const [company, setCompany] = useState<any>(null);
+  const [company, setCompany] = useState<company | null>(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -33,6 +34,12 @@ function CompanyCard({ company: propsCompany }: { company?: any }) {
       return;
     }
     try {
+      if (!company) {
+        toast.error("Company data is not available", {
+          position: "top-center",
+        });
+        return;
+      }
       await dispatch(
         toggleFollowCompany({ companyId: company._id, follow: !following })
       ).unwrap();
@@ -58,7 +65,7 @@ function CompanyCard({ company: propsCompany }: { company?: any }) {
       setCompanyData(company);
       user &&
         setFollowing(
-          company.followers?.some((follower: any) => follower._id === user?._id)
+          company.followers?.some((follower) => follower === user?._id)
         );
     }
   }, [company, user]);
@@ -66,7 +73,6 @@ function CompanyCard({ company: propsCompany }: { company?: any }) {
   useEffect(() => {
     if (propsCompany) {
       setCompany(propsCompany);
-      console.log(propsCompany);
     } else {
       setCompany(rootCompany);
     }

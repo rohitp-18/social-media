@@ -42,6 +42,13 @@ function Page() {
       return;
     }
 
+    if (!group) {
+      toast.error("Company data is not available", {
+        position: "top-center",
+      });
+      return;
+    }
+
     const invitationData = {
       groupId: group._id,
       recipientId: inviteuserId,

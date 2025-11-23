@@ -1,17 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
-import { isAxiosError } from "axios";
+import { AxiosError, isAxiosError } from "axios";
 import { chatState } from "./typeChat";
 
 const fetchChats = createAsyncThunk("chat/fetchChats", async () => {
   try {
     const { data } = await axios.get("/chat/fetch");
     return data;
-  } catch (error: any) {
+  } catch (error: unknown | AxiosError) {
     if (isAxiosError(error) && error.response) {
       throw error.response.data.message;
     }
-    throw error.message;
+    throw (error as Error).message;
   }
 });
 
@@ -21,11 +21,11 @@ const readMessage = createAsyncThunk(
     try {
       const { data } = await axios.post("/chat/read", { chatId, messageId });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         throw error.response.data.message;
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
@@ -36,11 +36,11 @@ const createChat = createAsyncThunk(
     try {
       const { data } = await axios.post("/chat/create", { userId });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         throw error.response.data.message;
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
@@ -101,6 +101,6 @@ const chatSlice = createSlice({
 
 const { resetChat, clearError } = chatSlice.actions;
 
-export { resetChat, clearError, fetchChats, readMessage };
+export { resetChat, clearError, fetchChats, readMessage, createChat };
 
 export default chatSlice.reducer;

@@ -194,6 +194,8 @@ function PostForm({
     }
   }, [created, updated, error, message]);
 
+  if (!company && type === "company") return null;
+
   return (
     <section className="flex flex-col items-center gap-10">
       {/* get back button */}
@@ -209,35 +211,39 @@ function PostForm({
       </div>
       <div className="w-full">
         {/* post owner details */}
-        <Card className="w-full max-w-2xl mx-auto p-4 mb-4 shadow-sm border border-gray-200 rounded-lg">
-          <Link
-            href={
-              type === "company"
-                ? `/company/${company.id}`
-                : `/group/${group.id}`
-            }
-            className="flex items-center space-x-4"
-          >
-            <Avatar className="h-12 w-12">
-              <AvatarImage
-                src={
-                  type === "company" ? company?.avatar?.url : group?.avatar?.url
-                }
-              />
-              <AvatarFallback>
-                <User2 className="h-8 w-8" />
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <CardTitle className="text-lg font-bold">
-                {type === "company" ? company.name : group.name}
-              </CardTitle>
-              <p className="text-sm text-gray-500">
-                {type === "company" ? "Company" : "Group"}
-              </p>
-            </div>
-          </Link>
-        </Card>
+        {(company || group) && (
+          <Card className="w-full max-w-2xl mx-auto p-4 mb-4 shadow-sm border border-gray-200 rounded-lg">
+            <Link
+              href={
+                type === "company"
+                  ? `/company/${company?._id}`
+                  : `/group/${group?._id}`
+              }
+              className="flex items-center space-x-4"
+            >
+              <Avatar className="h-12 w-12">
+                <AvatarImage
+                  src={
+                    type === "company"
+                      ? company?.avatar?.url
+                      : group?.avatar?.url
+                  }
+                />
+                <AvatarFallback>
+                  <User2 className="h-8 w-8" />
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <CardTitle className="text-lg font-bold">
+                  {type === "company" ? company?.name : group?.name}
+                </CardTitle>
+                <p className="text-sm text-gray-500">
+                  {type === "company" ? "Company" : "Group"}
+                </p>
+              </div>
+            </Link>
+          </Card>
+        )}
         {/* post form */}
         <form onSubmit={handleSubmit}>
           <Card className="w-full max-w-2xl mx-auto p-6">

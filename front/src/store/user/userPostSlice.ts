@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
-import { isAxiosError } from "axios";
+import { AxiosError, isAxiosError } from "axios";
+import { Comment, media, Post } from "./typeUser";
 
 const getProfileActivity = createAsyncThunk(
   "userPost/getProfileActivity",
@@ -9,11 +10,11 @@ const getProfileActivity = createAsyncThunk(
       if (username.length < 4) return;
       const { data } = await axios.get(`/user/profile/activity/${username}`);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         throw error.response.data.message;
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
@@ -24,11 +25,11 @@ const getSinglePost = createAsyncThunk(
     try {
       const { data } = await axios.get(`/posts/user/${userPostId}`);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         throw error.response.data.message;
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
@@ -39,11 +40,11 @@ const deletePost = createAsyncThunk(
     try {
       const { data } = await axios.delete(`/posts/user/${userPostId}`);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         throw error.response.data.message;
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
@@ -62,11 +63,11 @@ const updatePost = createAsyncThunk(
         }
       );
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         throw error.response.data.message;
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
@@ -81,26 +82,26 @@ const createPost = createAsyncThunk(
         },
       });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         throw error.response.data.message;
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
 
 interface PostState {
-  userPosts: any[];
+  userPosts: Post[];
   loading: boolean;
-  singlePost: any | null;
+  singlePost: (Post & { isFollowing: boolean }) | null;
   error: string | null;
   message: string | null;
   updated: boolean;
   deleted: boolean;
-  comments: any[];
-  images: any[];
-  videos: any[];
+  comments: Comment[];
+  images: media[];
+  videos: media[];
   created: boolean;
   isFollowing: boolean;
 }

@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { isAxiosError } from "axios";
 import axios from "../axios";
 import { stat } from "fs";
+import { Job } from "./typeJob";
 
 const recommendedJobsAction = createAsyncThunk(
   "job/recommendedJobs",
@@ -102,16 +103,16 @@ const toggleSaveJobAction = createAsyncThunk(
 );
 
 interface jobInterface {
-  jobs: any[];
+  jobs: Job[];
   loading: boolean;
   error: string | null;
   created: boolean;
   saved: string | null;
   updated: boolean;
   deleted: boolean;
-  job: any;
+  job: Job | null;
   message: string | null;
-  recommendedJobs: any[];
+  recommendedJobs: Job[];
 }
 
 const initialState: jobInterface = {

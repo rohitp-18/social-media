@@ -9,7 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/userNavbar";
 import axios from "@/store/axios";
-import { RootState } from "@/store/store";
+import { AppDispatch, RootState } from "@/store/store";
+import {
+  getAllInvitations,
+  updateInvitations,
+} from "@/store/user/notificationSlice";
 import { isAxiosError } from "axios";
 import {
   CalendarDays,
@@ -22,34 +26,20 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 
 function Page() {
   const [value, setValue] = useState("updates");
-  const [networkLoading, setNetworkLoading] = useState(false);
-  const [updates, setUpdates] = useState<any[]>([]);
   const [meet, setMeet] = useState<any[]>([]);
 
   const { user, loading, login } = useSelector(
     (state: RootState) => state.user
   );
-
-  async function getUpdates() {
-    try {
-      const { data } = await axios.get("/invitations/all");
-
-      setUpdates(data.invitations);
-    } catch (error) {
-      toast.error(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
-    } finally {
-      setNetworkLoading(false);
-    }
-  }
+  const { invitations, loading: networkLoading } = useSelector(
+    (state: RootState) => state.notification
+  );
+  const dispatch = useDispatch<AppDispatch>();
 
   async function updateInvitationStatus(
     invitationId: string,
@@ -62,9 +52,11 @@ function Page() {
       toast.success(data.message, {
         position: "top-center",
       });
-      setUpdates((prev) =>
-        prev.map((update) =>
-          update._id === invitationId ? { ...update, status } : update
+      dispatch(
+        updateInvitations(
+          invitations.map((invite) =>
+            invite._id === invitationId ? { ...invite, status } : invite
+          )
         )
       );
     } catch (error) {
@@ -87,21 +79,19 @@ function Page() {
           : "Something went wrong"
       );
     } finally {
-      setNetworkLoading(false);
+      // setLoading(false);
     }
   }
 
   useEffect(() => {
     if (value === "updates") {
-      setNetworkLoading(true);
-      getUpdates();
+      dispatch(getAllInvitations());
     } else {
-      setNetworkLoading(true);
       getMeet();
     }
   }, [value]);
 
-  if (loading) {
+  if (loading || networkLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
@@ -216,12 +206,12 @@ function Page() {
                     <div className="flex justify-center items-center h-20">
                       <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
                     </div>
-                  ) : updates.length === 0 ? (
+                  ) : invitations.length === 0 ? (
                     <div className="flex justify-center items-center h-20">
                       <p className="text-gray-500">No updates available</p>
                     </div>
                   ) : (
-                    updates.map((update: any, i) => (
+                    invitations.map((update: any, i) => (
                       <div
                         key={update._id}
                         className="flex justify-between gap-3 items-center p-3 rounded-md hover:bg-gray-100 bg-white dark:bg-gray-800 transition-all duration-200"

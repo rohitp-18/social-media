@@ -47,9 +47,10 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
   const [activity, setActivity] = useState("post");
 
   const dispatch = useDispatch<AppDispatch>();
-  const { user, profile } = useSelector(
-    (state: RootState) => state.user as { user: any; profile: any }
-  );
+  const { user, profile } = useSelector((state: RootState) => state.user);
+
+  if (!profile?.user) return null;
+
   return (
     <>
       {(profile.posts.length > 0 ||
@@ -374,15 +375,15 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
               <TabsContent value="image">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {profile.media && profile.media.length > 0 ? (
-                    profile.media.map((img: any, i: number) => (
+                    profile.media.map((img, i) => (
                       <div
-                        key={i}
+                        key={img._id}
                         className="h-48 overflow-hidden rounded-lg bg-muted flex items-center justify-center border border-border"
                       >
                         <img
                           loading="lazy"
                           src={img.url}
-                          alt={img.name}
+                          alt="Internal error"
                           className="object-cover w-full h-full"
                         />
                       </div>

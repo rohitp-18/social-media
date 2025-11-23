@@ -29,8 +29,6 @@ import { useSocket } from "@/store/utils/socketContext";
 import { SecondaryLoader } from "@/components/loader";
 
 function Page() {
-  const [selectedChat, setSelectedChat] = useState<any>();
-  const [selectedUser, setSelectedUser] = useState<any>();
   const [isGroup, setIsGroup] = useState(false);
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +38,13 @@ function Page() {
 
   const { user } = useSelector((state: RootState) => state.user);
   const { chats: chatState } = useSelector((state: RootState) => state.chats);
-  const { socket } = useSocket();
+  const {
+    socket,
+    selectedChat,
+    selectedUser,
+    setSelectedChat,
+    setSelectedUser,
+  } = useSocket();
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -107,8 +111,8 @@ function Page() {
   );
 
   const handleRemoveChatSelection = useCallback(() => {
-    setSelectedUser("");
-    setSelectedChat("");
+    setSelectedUser(null);
+    setSelectedChat(null);
     setIsGroup(false);
     window.history.replaceState({}, "", `/chat`);
   }, []);
@@ -157,14 +161,14 @@ function Page() {
   useEffect(() => {
     if (!user) return;
     if (!socket) return;
-    socket.emit("register_user", user._id);
+    // console.log(socket);
 
-    socket.on("connect", () => {
-      console.log("Connected to socket server");
-    });
+    // socket.on("connect", () => {
+    //   console.log("Connected to socket server");
+    // });
 
     return () => {};
-  }, [user]);
+  }, [user, socket]);
 
   // handle chat selection from URL params
   useEffect(() => {
@@ -265,9 +269,7 @@ function Page() {
                     <ChatLogo
                       chat={chat}
                       key={chat._id}
-                      selectedUser={selectedUser}
                       handleChatSelection={handleChatSelection}
-                      selectedChat={selectedChat}
                     />
                   ))}
                 </div>
@@ -283,19 +285,19 @@ function Page() {
                       <Avatar className="h-10 w-10">
                         <AvatarImage
                           src={
-                            isGroup
+                            isGroup && selectedChat.group
                               ? selectedChat.group.avatar?.url
-                              : selectedUser.avatar?.url || ""
+                              : selectedUser?.avatar?.url || ""
                           }
                         />
                         <AvatarFallback>
-                          {isGroup
+                          {isGroup && selectedChat.group
                             ? selectedChat.group.name
-                            : selectedUser.name?.charAt(0) || "C"}
+                            : selectedUser?.name?.charAt(0) || "C"}
                         </AvatarFallback>
                       </Avatar>
                       <h2 className="text-lg font-semibold">
-                        {selectedUser.name || "Chat"}
+                        {selectedUser?.name || "Chat"}
                       </h2>
                     </div>
                     <div className="flex items-center gap-2">
@@ -323,7 +325,7 @@ function Page() {
                           <DropdownMenuGroup>
                             <DropdownMenuItem asChild>
                               <Link
-                                href={`/u/${selectedChat.username}`}
+                                href={`/u/${selectedUser?.username}`}
                                 passHref
                               >
                                 View Profile{" "}
@@ -346,10 +348,7 @@ function Page() {
                     </div>
                   </div>
                   <Chatbox
-                    socket={socket}
-                    selectedUser={selectedUser}
                     isGroup={isGroup}
-                    selectedChat={selectedChat}
                     allMessages={allMessages}
                     setAllMessages={setAllMessages}
                     setUpdatedChats={setUpdatedChats}

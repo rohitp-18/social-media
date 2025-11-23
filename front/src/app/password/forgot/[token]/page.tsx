@@ -9,7 +9,7 @@ import { Eye, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "@/store/store";
+import { AppDispatch, RootState } from "@/store/store";
 import { registerUser, resetUser } from "@/store/user/userSlice";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { isAxiosError } from "axios";
@@ -26,7 +26,7 @@ function Page() {
 
   const router = useRouter();
   const { token } = useParams();
-  const { user } = useSelector((state: any) => state.user);
+  const { user } = useSelector((state: RootState) => state.user);
 
   async function submitHandler(e: React.FormEvent): Promise<void> {
     e.preventDefault();
@@ -64,7 +64,6 @@ function Page() {
       setTimeout(() => {
         user ? router.push(`/u/${user.username}`) : router.push("/login");
       }, 1000);
-      
     } catch (error: any) {
       toast.error(
         isAxiosError(error)

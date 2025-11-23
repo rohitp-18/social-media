@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { timeAgo } from "@/lib/functions";
 import { RootState } from "@/store/store";
+import { sUser } from "@/store/user/typeUser";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -40,7 +41,7 @@ function CompanyTabs({ tab }: { tab: string }) {
 
   useEffect(() => {
     if (user && company) {
-      setIsAdmin(company.admin.some((admin: any) => admin.id === user._id));
+      setIsAdmin(company.admin.some((admin) => admin === user._id));
     }
   }, [user, company]);
 
@@ -50,6 +51,10 @@ function CompanyTabs({ tab }: { tab: string }) {
         <SecondaryLoader />
       </div>
     );
+  }
+
+  interface member extends sUser {
+    position?: string;
   }
 
   return (
@@ -78,7 +83,7 @@ function CompanyTabs({ tab }: { tab: string }) {
                   <div className="">
                     <h3 className="text-sm font-semibold">Company size</h3>
                     <p className="text-sm opacity-60 font-normal">
-                      {company.totalEmployees || "0"} employees <br />
+                      {company.totalFollowers || "0"} followers <br />
                       {company.totalMembers || "0"} members
                     </p>
                   </div>
@@ -91,12 +96,12 @@ function CompanyTabs({ tab }: { tab: string }) {
                       {company.address?.[0]?.country || ""}
                     </p>
                   </div>
-                  <div className="">
+                  {/* <div className="">
                     <h3 className="text-sm font-semibold">Industry</h3>
                     <p className="text-sm opacity-60 font-normal">
                       {company.industry || ""}
                     </p>
-                  </div>
+                  </div> */}
                   <div className="">
                     <h3 className="text-sm font-semibold">Specialized</h3>
                     <p className="text-sm opacity-60 font-normal">
@@ -188,10 +193,10 @@ function CompanyTabs({ tab }: { tab: string }) {
                         </h2>
                         <p className="text-sm opacity-80">
                           {job.company.name} <br />
-                          {job.location.map((loc: any) => loc).join(", ")}
+                          {job.location.map((loc) => loc).join(", ")}
                         </p>
                         <p className="pt-7 text-xs opacity-70">
-                          {timeAgo(job.createdAt)}
+                          {timeAgo(String(job.createdAt))}
                         </p>
                       </Link>
                       {isAdmin && (
@@ -257,7 +262,7 @@ function CompanyTabs({ tab }: { tab: string }) {
             </CardContent>
           </Card>
           {posts.length > 0 ? (
-            posts.map((post: any) => (
+            posts.map((post) => (
               <Fragment key={post._id}>
                 <Post cardClass={"w-full"} post={post} />
               </Fragment>
@@ -277,24 +282,26 @@ function CompanyTabs({ tab }: { tab: string }) {
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {company.members.length > 0 ? (
-                company.members.map((member: any) => (
-                  <Link
-                    href={`/u/${member.username}`}
-                    key={member._id}
-                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-md"
-                  >
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={member.avatar?.url} />
-                      <AvatarFallback>{member.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <span className="font-semibold">{member.name}</span>
-                      <span className="text-sm opacity-70">
-                        {member.position || "Employee"}
-                      </span>
-                    </div>
-                  </Link>
-                ))
+                company.members
+                  .filter((m) => typeof m !== "string")
+                  .map((member) => (
+                    <Link
+                      href={`/u/${member.username}`}
+                      key={member._id}
+                      className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-md"
+                    >
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={member.avatar?.url} />
+                        <AvatarFallback>{member.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{member.name}</span>
+                        <span className="text-sm opacity-70">
+                          {member.position || "Employee"}
+                        </span>
+                      </div>
+                    </Link>
+                  ))
               ) : (
                 <p className="text-sm opacity-60">No employees found.</p>
               )}

@@ -10,6 +10,7 @@ import { io } from "socket.io-client";
 import type { Socket } from "socket.io-client";
 import { SocketProvider, useSocket } from "@/store/utils/socketContext";
 import { PrimaryLoader, SecondaryLoader } from "@/components/loader";
+import NotificationMiddle from "@/components/notificationMiddle";
 
 interface MiddlewareProps {
   children: React.ReactNode;
@@ -42,18 +43,18 @@ const Middleware: React.FC<MiddlewareProps> = ({ children }) => {
     return () => {};
   }, []); // Empty dependency array to run only once
 
-  useEffect(() => {
-    if (!user) return;
-    if (socket) return;
-    let newSocket = io("ws://localhost:5000", {
-      query: { selectedUser: user._id },
-      transports: ["websocket"],
-    });
-    newSocket.on("connect", () => {});
-    connectSocket(newSocket);
+  // useEffect(() => {
+  //   if (!user) return;
+  //   if (socket) return;
+  //   let newSocket = io("ws://localhost:5000", {
+  //     query: { selectedUser: user._id },
+  //     transports: ["websocket"],
+  //   });
+  //   connectSocket(newSocket);
 
-    newSocket.on("disconnect", () => {});
-  }, [user]);
+  //   newSocket.on("disconnect", () => {});
+  // }, [user]);
+
   useEffect(() => {
     if (!user) return;
     if (!socket) return;
@@ -68,9 +69,11 @@ const Middleware: React.FC<MiddlewareProps> = ({ children }) => {
     <Provider store={store}>
       <SocketProvider>
         <Toaster />
-        {/* <Suspense fallback={<SecondaryLoader />}> */}
-        {children}
-        {/* </Suspense> */}
+        <NotificationMiddle>
+          {/* <Suspense fallback={<SecondaryLoader />}> */}
+          {children}
+          {/* </Suspense> */}
+        </NotificationMiddle>
       </SocketProvider>
     </Provider>
   );

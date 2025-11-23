@@ -36,6 +36,9 @@ import {
   createSearchHistoryAction,
   getAllSearchHistoryAction,
 } from "@/store/history/searchHistory";
+import { Badge } from "./ui/badge";
+import { getAllInvitationsCount } from "@/store/user/notificationSlice";
+import { removePushSubscription } from "./notificationMiddle";
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -55,6 +58,9 @@ const Navbar: React.FC = () => {
     error,
   } = useSelector((state: RootState) => state.user);
   const { history } = useSelector((state: RootState) => state.searchHistory);
+  const { totalInvitations, totalNotifications, totalChats } = useSelector(
+    (state: RootState) => state.notification
+  );
 
   const searchCall = useCallback(
     (e: any) => {
@@ -67,7 +73,8 @@ const Navbar: React.FC = () => {
     [search, open, searchDrop]
   );
 
-  function logoutAction() {
+  async function logoutAction() {
+    await removePushSubscription(dispatch);
     dispatch(logout());
   }
 
@@ -100,6 +107,10 @@ const Navbar: React.FC = () => {
     }
   }, [logout2, error]);
 
+  useEffect(() => {
+    user && dispatch(getAllInvitationsCount());
+  }, [dispatch, user]);
+
   const HistoryRender = () => (
     <div className="absolute top-full left-0 w-full z-10 mt-1 bg-white rounded-md border shadow-md max-h-60 overflow-y-auto">
       {history.length === 0 ? (
@@ -128,7 +139,7 @@ const Navbar: React.FC = () => {
   );
 
   return (
-    <nav className="sticky h-[70px] top-0 z-50 left-0 w-full border text-card-foreground bg-opacity-20 backdrop-blur-md shadow-md p-4 flex flex-col justify-between items-center bg-background/40 dark:shadow-lg">
+    <nav className="sticky h-[70px] top-0 z-50 left-0 w-full border text-card-foreground bg-opacity-20 backdrop-blur-md shadow-md p-2 pt-3 flex flex-col justify-between bg-background/40 dark:shadow-lg">
       <section className="max-w-6xl mx-auto flex items-center justify-between w-full space-x-4">
         <div className="flex gap-4 items-center">
           <h2 className="text-2xl font-bold italic">TS</h2>
@@ -169,10 +180,17 @@ const Navbar: React.FC = () => {
           </Link>
           <Link
             href="/network"
-            className={`no-underline hover:underline flex flex-col items-center ${
+            className={`no-underline hover:underline flex relative flex-col items-center w-fit ${
               pathname === "/network" ? "font-bold" : ""
             }`}
           >
+            <div className="inline-block relative">
+              {totalInvitations > 0 && (
+                <Badge className="absolute -top-2.5 -right-2.5 h-5 min-w-5 rounded-full px-1 tabular-nums">
+                  {totalInvitations}
+                </Badge>
+              )}
+            </div>
             <Users className="w-[1rem] h-[1rem]" />
             <span className="md:block hidden text-sm">Network</span>
           </Link>
@@ -187,19 +205,34 @@ const Navbar: React.FC = () => {
           </Link>
           <Link
             href="/chat"
-            className={` no-underline hover:underline flex flex-col items-center ${
+            className={` no-underline hover:underline flex flex-col relative items-center ${
               pathname === "/chat" ? "font-bold" : ""
             }`}
           >
-            <MessageCircleMore className="w-[1rem] h-[1rem]" />
+            <div className="inline-block relative">
+              {totalChats > 0 && (
+                <Badge className="absolute -top-2.5 -right-2.5 h-5 min-w-5 rounded-full px-1 tabular-nums">
+                  {totalChats}
+                </Badge>
+              )}
+
+              <MessageCircleMore className="w-[1rem] h-[1rem]" />
+            </div>
             <span className="md:block hidden text-sm"> Messages</span>
           </Link>
           <Link
             href="/notification"
-            className={` no-underline hover:underline flex flex-col items-center ${
+            className={` no-underline hover:underline flex flex-col relative items-center ${
               pathname === "/notification" ? "font-bold" : ""
             }`}
           >
+            <div className="inline-block relative">
+              {totalNotifications > 0 && (
+                <Badge className="absolute -top-2.5 -right-2.5 h-5 min-w-5 rounded-full px-1 tabular-nums">
+                  {totalNotifications}
+                </Badge>
+              )}
+            </div>
             <Bell className="w-[1rem] h-[1rem]" />
             <span className="md:block hidden text-sm"> Notification</span>
           </Link>

@@ -1,6 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
 
+import { isAxiosError } from "axios";
+
+function handleError(error: unknown) {
+  if (isAxiosError(error) && error.response) {
+    throw new Error(error.response.data.message);
+  }
+  throw new Error((error as Error).message);
+}
+
 const getAllSearchHistoryAction = createAsyncThunk(
   "searchHistory/getAll",
   async (query: string, { rejectWithValue }) => {
@@ -9,8 +18,8 @@ const getAllSearchHistoryAction = createAsyncThunk(
         `/searchHistory${query ? `?q=${query}` : ""}`
       );
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.response.data.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -21,8 +30,8 @@ const createSearchHistoryAction = createAsyncThunk(
     try {
       const { data } = await axios.post("/searchHistory", { query });
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.response.data.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -33,8 +42,8 @@ const deleteSearchHistoryAction = createAsyncThunk(
     try {
       const { data } = await axios.delete(`/searchHistory/${id}`);
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.response.data.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -45,8 +54,8 @@ const clearSearchHistoryAction = createAsyncThunk(
     try {
       const { data } = await axios.delete("/searchHistory/clear");
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.response.data.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );

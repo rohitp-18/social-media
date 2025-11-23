@@ -11,6 +11,7 @@ import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import axios from "@/store/axios";
 import { isAxiosError } from "axios";
+import { RootState } from "@/store/store";
 
 function Page() {
   const [checkbox, setCheckbox] = useState(true);
@@ -19,7 +20,7 @@ function Page() {
   const [eLoading, setELoading] = useState(false);
 
   const router = useRouter();
-  const { user, loading } = useSelector((state: any) => state.user);
+  const { user, loading } = useSelector((state: RootState) => state.user);
 
   async function submitHandler(e: React.FormEvent): Promise<void> {
     e.preventDefault();

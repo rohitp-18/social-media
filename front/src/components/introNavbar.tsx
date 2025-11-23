@@ -81,7 +81,7 @@ const Navbar: React.FC = () => {
   );
 
   return (
-    <nav className="sticky top-0 z-50 left-0 w-full bg-opacity-20 backdrop-blur-md shadow-md sm:p-4 p-2 py-4 flex justify-between items-center bg-background/50 dark:shadow-lg">
+    <nav className="sticky top-0 z-50 left-0 w-full bg-opacity-20 backdrop-blur-md shadow-md p-2 flex justify-between items-center bg-background/50 dark:shadow-lg">
       <section className="max-w-6xl mx-auto flex items-center justify-between w-full space-x-4">
         <div className="flex gap-4 items-center">
           <h2 className="text-2xl font-bold italic">TS</h2>

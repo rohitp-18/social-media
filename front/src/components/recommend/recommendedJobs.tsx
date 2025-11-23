@@ -55,7 +55,7 @@ function RecommendedJobs({ company }: { company?: string }) {
                   </p>
 
                   <p className="text-xs text-gray-500">
-                    {timeAgo(job.createdAt)}
+                    {timeAgo(job.createdAt.toString())} ago
                   </p>
                 </div>
               </div>

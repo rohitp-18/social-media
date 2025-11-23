@@ -1,21 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { isAxiosError } from "axios";
+import { AxiosError, isAxiosError } from "axios";
 import axios from "../axios";
-
-const searchCompaniesAction = createAsyncThunk(
-  "company/searchCompanies",
-  async (searchTerm: string, thunkAPI) => {
-    try {
-      const { data } = await axios.get(`/company/search?search=${searchTerm}`);
-      return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
-    }
-  }
-);
+import { Post } from "../user/typeUser";
+import { company } from "./typeCompany";
+import { Job } from "../jobs/typeJob";
+import { handleError } from "../handleError";
 
 const getSingleCompany = createAsyncThunk(
   "company/getSingleCompany",
@@ -23,11 +12,8 @@ const getSingleCompany = createAsyncThunk(
     try {
       const { data } = await axios.get(`/company/one/${id}`);
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -42,11 +28,8 @@ const createCompany = createAsyncThunk(
         },
       });
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -64,11 +47,8 @@ const updateCompany = createAsyncThunk(
         }
       );
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -87,11 +67,8 @@ const updateCompanyBanner = createAsyncThunk(
         }
       );
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
@@ -107,39 +84,32 @@ const toggleFollowCompany = createAsyncThunk(
         `/company/${follow ? "follow" : "unfollow"}/${companyId}`
       );
       return data;
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message);
+    } catch (error) {
+      handleError(error);
     }
   }
 );
 
 interface companyInterface {
-  companies: any[];
   loading: boolean;
   error: string | null;
-  company: any;
+  company: company | null;
   created: boolean;
   updated: boolean;
   deleted: boolean;
-  searchCompanies: any[];
   searchLoading: boolean;
   followed: boolean;
-  posts: any[];
-  jobs: any[];
+  posts: Post[];
+  jobs: Job[];
 }
 
 const initialState: companyInterface = {
-  companies: [],
   loading: false,
   error: null,
   company: null,
   created: false,
   updated: false,
   deleted: false,
-  searchCompanies: [],
   searchLoading: false,
   followed: false,
   posts: [],
@@ -155,7 +125,6 @@ const companySlice = createSlice({
       state.updated = false;
       state.deleted = false;
       state.error = null;
-      state.searchCompanies = [];
       state.searchLoading = false;
       state.loading = false;
       state.followed = false;
@@ -166,18 +135,6 @@ const companySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(searchCompaniesAction.pending, (state) => {
-        state.searchLoading = true;
-      })
-      .addCase(searchCompaniesAction.fulfilled, (state, action) => {
-        state.searchLoading = false;
-        state.searchCompanies = action.payload;
-      })
-      .addCase(searchCompaniesAction.rejected, (state, action) => {
-        state.searchLoading = false;
-        state.error = action.error.message || "Something went wrong";
-      })
-
       .addCase(getSingleCompany.pending, (state) => {
         state.loading = true;
       })
@@ -249,7 +206,6 @@ const { resetcompany, clearError } = companySlice.actions;
 export {
   resetcompany,
   clearError,
-  searchCompaniesAction,
   getSingleCompany,
   createCompany,
   updateCompany,

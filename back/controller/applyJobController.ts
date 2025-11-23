@@ -5,6 +5,7 @@ import ErrorHandler from "../utils/errorHandler";
 import Job from "../model/jobModel";
 import Notification from "../model/notificationModel";
 import { v2 as cloudinary } from "cloudinary";
+import sendNotification from "../utils/sendNotification";
 
 const createJobApplication = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -73,7 +74,7 @@ const createJobApplication = expressAsyncHandler(
     await application.populate("job", "title location category noOfOpening");
     await application.populate("company", "name avatar");
 
-    await Notification.create({
+    const notification = await Notification.create({
       recipient: job.user,
       sender: req.user._id,
       type: "application",
@@ -83,6 +84,8 @@ const createJobApplication = expressAsyncHandler(
       url: `/jobs/${jobId}/applications/${application._id}`,
     });
 
+    await sendNotification(notification, job.user.toString());
+
     job.noOfApplied += 1;
     job.applyBy.push(req.user._id);
     job.applications.push(application._id);
@@ -91,6 +94,7 @@ const createJobApplication = expressAsyncHandler(
     res.status(201).json({
       message: "Job application created successfully",
       application,
+      notification,
     });
   }
 );
@@ -187,7 +191,7 @@ const updateJobApplication = expressAsyncHandler(
       return next(new ErrorHandler("Job not found", 404));
     }
 
-    await Notification.create({
+    const notification = await Notification.create({
       recipient: application.user,
       sender: req.user._id,
       type: "job",
@@ -197,9 +201,12 @@ const updateJobApplication = expressAsyncHandler(
       url: `/jobs/${application.job._id}/status?applicationId=${application._id}`,
     });
 
+    await sendNotification(notification, application.user.toString());
+
     res.status(200).json({
       message: "Job application updated successfully",
       application,
+      notification,
     });
   }
 );
@@ -272,7 +279,7 @@ const rescheduleInterview = expressAsyncHandler(
       return next(new ErrorHandler("Job not found", 404));
     }
 
-    await Notification.create({
+    const notification = await Notification.create({
       recipient: applyJob.user,
       sender: req.user._id,
       type: "job",
@@ -282,9 +289,12 @@ const rescheduleInterview = expressAsyncHandler(
       url: `/jobs/${applyJob.job._id}/applications?applicationId=${applyJob._id}`,
     });
 
+    await sendNotification(notification, job.user.toString());
+
     res.status(200).json({
       success: true,
       message: "Your request successfully created",
+      notification,
     });
   }
 );
@@ -323,7 +333,7 @@ const acceptReschedule = expressAsyncHandler(
     };
     await application.save();
 
-    await Notification.create({
+    const notification = await Notification.create({
       recipient: application.user,
       sender: req.user._id,
       type: "job",
@@ -337,9 +347,12 @@ const acceptReschedule = expressAsyncHandler(
       url: `/jobs/${application.job._id}/status?applicationId=${application._id}`,
     });
 
+    await sendNotification(notification, job.user.toString());
+
     res.status(200).json({
       message: "Interview rescheduled successfully",
       application,
+      notification,
     });
   }
 );

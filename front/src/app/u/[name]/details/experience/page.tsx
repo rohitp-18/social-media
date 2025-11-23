@@ -121,7 +121,7 @@ function Page() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {experiences.length > 0 ? (
-            experiences.map((exp: any, i: number) => (
+            experiences.map((exp, i: number) => (
               <Fragment key={exp._id}>
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-start gap-3">
@@ -226,7 +226,7 @@ function Page() {
                   <div className="flex justify-start px-3 py-2 -mt-2 items-center gap-2">
                     <Diamond className="w-5 stroke-2 h-5" />
                     <div className="flex gap-2 text-base">
-                      {exp.skills.map((skill: any, i: number) => (
+                      {exp.skills.map((skill, i: number) => (
                         <span
                           key={skill._id}
                           className="text-sm font-semibold opacity-80"

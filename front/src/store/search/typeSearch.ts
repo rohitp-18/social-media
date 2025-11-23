@@ -1,20 +1,22 @@
+import { company } from "../company/typeCompany";
 import { Group } from "../group/typeGroup";
 import { Job } from "../jobs/typeJob";
-import { InheritUser, Post } from "../user/typeUser";
+import { skill } from "../skill/typeSkill";
+import { InheritUser, Post, project } from "../user/typeUser";
 
 interface IAllSearch {
   peoples: (InheritUser & { isFollowing?: boolean })[];
-  companies: any[];
+  companies: company[];
   posts: Post[];
-  projects: any[];
+  projects: project[];
   groups: Group[];
-  connections: any[];
+  connections: InheritUser[];
   jobs: Job[];
   total: number;
   page: number;
   loading: boolean;
   error: string | null;
-  skills: any[];
+  skills: skill[];
 }
 
 export type { IAllSearch };

@@ -10,6 +10,7 @@ import Group from "../model/groupModel";
 import Company from "../model/companyModel";
 import Media from "../model/mediaModel";
 import { isArray, isNullOrUndefined } from "util";
+import sendNotification from "../utils/sendNotification";
 
 const createPost = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -171,7 +172,7 @@ const createPost = expressAsyncHandler(
         await group.save();
       }
 
-      await Notification.create(
+      const notification = await Notification.create(
         listOfUsers.map((u: any) => ({
           recipient: u,
           sender: req.user._id,
@@ -187,6 +188,13 @@ const createPost = expressAsyncHandler(
           relatedId: post._id,
           refModel: "post",
         }))
+      );
+
+      await Promise.all(
+        notification.map(
+          async (notify) =>
+            await sendNotification(notify, notify.recipient.toString())
+        )
       );
     } catch (error) {
       await post.save();

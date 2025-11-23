@@ -66,7 +66,7 @@ function Page() {
       }
       const post = searchParams.get("post");
       if (post) {
-        const postId = userPosts.find((p: any) => p._id === post);
+        const postId = userPosts.find((p) => p._id === post);
         if (postId) {
           setSelect(postId);
         }
@@ -257,7 +257,7 @@ function Page() {
                 className="w-full flex flex-col gap-2"
               >
                 {comments.length > 0 ? (
-                  comments.map((c: any, i: number) => (
+                  comments.map((c, i: number) => (
                     <Post
                       post={c.post}
                       key={c._id}

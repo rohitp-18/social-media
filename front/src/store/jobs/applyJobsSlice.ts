@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
+import { application, Job } from "./typeJob";
 
 const createJobApplicationAction = createAsyncThunk(
   "applyJob/createJobApplication",
@@ -112,11 +113,11 @@ interface applyJobInterface {
   created: boolean;
   loading: boolean;
   error: string | null;
-  applications: any[];
-  application: any | null;
+  applications: application[];
+  application: application | null;
   deleted: boolean;
-  appliedJobs: any[] | null;
-  job: any | null;
+  appliedJobs: application[] | null;
+  job: Job | null;
   updated: boolean;
 }
 

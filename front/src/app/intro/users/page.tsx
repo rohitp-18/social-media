@@ -8,9 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import FooterS from "@/components/footerS";
 import Navbar from "@/components/introNavbar";
 import { Button } from "@/components/ui/button";
+import { sUser } from "@/store/user/typeUser";
+import Link from "next/link";
 
 function Page() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<sUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function fetchUsers() {
@@ -62,10 +64,13 @@ function Page() {
           <Card className="flex flex-col max-w-screen-md w-full gap-3 overflow-auto">
             <CardContent className="flex flex-col gap-3 md:gap-5 py-5">
               {users.length > 0 ? (
-                users.map((user: any) => (
+                users.map((user) => (
                   <Fragment key={user._id}>
                     <div className="flex gap-5 justify-between items-center">
-                      <div className="flex gap-5 items-center">
+                      <Link
+                        href={`/u/${user.username}`}
+                        className="flex gap-5 items-center"
+                      >
                         <Avatar className="w-14 h-14">
                           <AvatarImage src={user.avatar?.url} />
                           <AvatarFallback>
@@ -96,15 +101,13 @@ function Page() {
                             {user.followers.length} followers
                           </span>
                         </div>
-                      </div>
+                      </Link>
                       <div className="flex items-center h-full">
                         <Button
                           size={"icon"}
                           variant={"ghost"}
                           onClick={() =>
-                            setUsers(
-                              users.filter((u: any) => u._id !== user._id)
-                            )
+                            setUsers(users.filter((u) => u._id !== user._id))
                           }
                         >
                           <X className="w-5 h-5" />

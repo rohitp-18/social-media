@@ -1,11 +1,13 @@
 import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
-import { data } from "react-router-dom";
+
+let onlineUsers: Map<string, string>;
+let io: Server;
 
 function setupSocket(server: HttpServer): void {
-  let onlineUsers = new Map<string, string>();
+  onlineUsers = new Map<string, string>();
 
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: {
       origin: "http://localhost:3000",
       methods: ["GET", "POST"],
@@ -31,7 +33,6 @@ function setupSocket(server: HttpServer): void {
     socket.emit("joinChat", (data: any) => {
       const { chatId, userId } = data;
       socket.join(chatId);
-      console.log(`User ${userId} joined chat ${chatId}`);
     });
 
     socket.on("check_online_users", (data: any) => {
@@ -43,7 +44,6 @@ function setupSocket(server: HttpServer): void {
         userId,
         socketId: onlineUsers.get(userId),
       }));
-      console.log(`Online users:`, onlineUserSockets);
       socket.to(socket.id).emit("online_users", onlineUserSockets);
     });
 
@@ -56,6 +56,7 @@ function setupSocket(server: HttpServer): void {
     });
 
     socket.on("disconnect", () => {
+      console.log(socket.id);
       onlineUsers.forEach((socketId, userId) => {
         if (socketId === socket.id) {
           onlineUsers.delete(userId);
@@ -73,5 +74,7 @@ function setupSocket(server: HttpServer): void {
     });
   });
 }
+
+export { io, onlineUsers };
 
 export default setupSocket;

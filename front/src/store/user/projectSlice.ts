@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
-import { isAxiosError } from "axios";
+import { AxiosError, isAxiosError } from "axios";
+import { project } from "./typeUser";
 
 const getProfileProjects = createAsyncThunk(
   "project/getProfileProjects",
@@ -9,11 +10,11 @@ const getProfileProjects = createAsyncThunk(
       if (username.length < 4) return;
       const { data } = await axios.get(`/projects/profile/${username}`);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         return thunkAPI.rejectWithValue(error.response.data.message);
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
@@ -24,11 +25,11 @@ const deleteProject = createAsyncThunk(
     try {
       const { data } = await axios.delete(`/projects/user/${projectId}`);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         return thunkAPI.rejectWithValue(error.response.data.message);
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
@@ -47,11 +48,11 @@ const updateProject = createAsyncThunk(
         }
       );
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         return thunkAPI.rejectWithValue(error.response.data.message);
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
@@ -66,17 +67,17 @@ const createProject = createAsyncThunk(
         },
       });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown | AxiosError) {
       if (isAxiosError(error) && error.response) {
         return thunkAPI.rejectWithValue(error.response.data.message);
       }
-      throw error.message;
+      throw (error as Error).message;
     }
   }
 );
 
 interface ProjectState {
-  projects: any[];
+  projects: project[];
   loading: boolean;
   error: string | null;
   message: string | null;
