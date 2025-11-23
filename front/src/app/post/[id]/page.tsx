@@ -42,7 +42,6 @@ function Page() {
 
   useEffect(() => {
     if (userName && user) {
-      console.log(userName, user?.username, user?.username === userName);
       setIsUser(userName === user?.username);
     }
   }, [userName, user]);

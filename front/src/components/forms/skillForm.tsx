@@ -111,7 +111,6 @@ function SkillForm({
     }
     try {
       setLoading(true);
-      console.log(skill._id, proficiency, description);
       await axios.post("/skills/user/new", {
         skillId: skill._id,
         proficiency,
@@ -259,7 +258,6 @@ function SkillForm({
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => console.log(skill)}
             >
               {edit ? "Save Changes" : "Add Skill"}
             </Button>

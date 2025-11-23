@@ -23,7 +23,7 @@ const createJobApplication = expressAsyncHandler(
       return next(new ErrorHandler("Job not found", 404));
     }
 
-    let resume: any = null;
+    let resume: { url: string; public_id: string; name: string } | null = null;
     if (req.file) {
       if (req.file.mimetype !== "application/pdf") {
         return next(new ErrorHandler("Only PDF files are allowed", 400));

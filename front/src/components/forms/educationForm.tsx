@@ -154,12 +154,6 @@ function EducationForm({
     }
   }, [skillName]);
 
-  useEffect(() => {
-    if (skills) {
-      console.log(skills.map((skill) => skill._id));
-    }
-  }, [skills]);
-
   return (
     <DialogContent
       style={{ scrollbarWidth: "thin", scrollbarColor: "gray transparent" }}

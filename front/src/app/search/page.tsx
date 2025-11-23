@@ -90,7 +90,6 @@ function Page() {
 
   const changeType = (str: string) => {
     setType(str);
-    console.log(str);
     setSelectValues({ q: query });
   };
 
@@ -99,7 +98,6 @@ function Page() {
     const t = searchParam.get("type");
     if (q == query && t == type) return;
     if (q) {
-      console.log(q, t, searchParam.get("type"), 102);
       router.push(
         `/search?q=${decodeURIComponent(q)}&type=${decodeURIComponent(
           t ? t : "all"
@@ -442,10 +440,6 @@ function Page() {
     // urlChange();
     setIndex(selectedFilter ? searchFilters.indexOf(selectedFilter) : 0);
   }, [type, searchFilters]);
-
-  useEffect(() => {
-    console.log(searchParam.toString());
-  }, [searchParam]);
 
   useEffect(() => {
     if (type === "not") {

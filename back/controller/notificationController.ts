@@ -18,14 +18,6 @@ const getAllNotifications = expressAsyncHandler(
       return next(new ErrorHandler("Notifications not found", 404));
     }
 
-    const tempNotifications = notifications.map(async (notification) => {
-      notification.read = true;
-      await notification.save();
-      return notification;
-    });
-
-    await Promise.all(tempNotifications);
-
     res.status(200).json({
       success: true,
       notifications,
@@ -89,7 +81,6 @@ const subscribeUser = expressAsyncHandler(
     }
 
     if (req.cookies.testPush) {
-      console.log("Test push cookie found, skipping subscription save.");
       return next(
         res.status(200).json({
           success: true,
@@ -112,9 +103,7 @@ const subscribeUser = expressAsyncHandler(
         data: { url: "/" },
       })
     )
-      .then(() => {
-        console.log("Sent");
-      })
+      .then(() => {})
       .catch((err: any) => {
         console.error(err);
       });

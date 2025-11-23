@@ -62,7 +62,6 @@ function Page() {
   async function deleteSkill() {
     try {
       setLoading2(true);
-      console.log(select);
 
       const { data } = await axios.delete(`/skills/user/${select._id._id}`);
 

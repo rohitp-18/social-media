@@ -309,7 +309,6 @@ function PostForm({
                             onClick={() => {
                               setVideoPreview("");
                               setNewVideo(null);
-                              console.log("videoPreview", videoPreview);
                             }}
                             className="absolute top-2 right-2 z-10"
                           >

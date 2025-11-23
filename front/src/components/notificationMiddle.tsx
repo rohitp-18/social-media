@@ -37,7 +37,6 @@ async function setupPushSubscription(dispatch: AppDispatch) {
 
     // Ensure we have a VAPID public key from server
     const res: any = await dispatch(getKey());
-    console.log(res);
     const publicKey = res?.payload?.key;
     if (!publicKey) {
       console.warn("No VAPID public key returned");
@@ -45,22 +44,16 @@ async function setupPushSubscription(dispatch: AppDispatch) {
     }
     const applicationServerKey = urlBase64ToUint8Array(publicKey);
 
-    console.log(subscription);
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey,
       });
-      console.log("New push subscription created:", subscription);
     } else {
-      console.log("Existing push subscription found:", subscription);
     }
-
-    console.log(subscription);
 
     // send subscription to server (ensure subscribeUser accepts { subscription })
     await dispatch(subscribeUser(subscription));
-    console.log("Subscription sent to server");
   } catch (err) {
     console.error("Failed to setup push subscription:", err);
   }
@@ -81,7 +74,6 @@ async function removePushSubscription(dispatch: AppDispatch) {
     // Reuse existing subscription if present
     let subscription = await registration.pushManager.getSubscription();
 
-    console.log(subscription);
     if (subscription) {
       await subscription.unsubscribe();
       await dispatch(unSubscribeUser(subscription));
@@ -105,13 +97,11 @@ export default function NotificationMiddle({
         if (permission === "granted") {
           setupPushSubscription(dispatch);
         } else {
-          console.warn("Notification permission not granted:", permission);
         }
       });
     } else if (Notification.permission === "granted") {
       setupPushSubscription(dispatch);
     } else {
-      console.warn("Notifications are denied by user");
     }
   }, [user, dispatch]);
 

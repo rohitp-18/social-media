@@ -56,11 +56,9 @@ function setupSocket(server: HttpServer): void {
     });
 
     socket.on("disconnect", () => {
-      console.log(socket.id);
       onlineUsers.forEach((socketId, userId) => {
         if (socketId === socket.id) {
           onlineUsers.delete(userId);
-          console.log(`❌ User disconnected: ${userId}`);
         }
       });
     });

@@ -452,7 +452,6 @@ const toggleSaveJob = expressAsyncHandler(
     }
 
     const isSaved = job.savedBy.includes(userId);
-    console.log(isSaved);
     if (isSaved) {
       job.savedBy = job.savedBy.filter(
         (id) => id.toString() !== userId.toString()
@@ -461,7 +460,6 @@ const toggleSaveJob = expressAsyncHandler(
       job.savedBy.push(userId);
     }
 
-    console.log(job.savedBy);
     await job.save();
 
     res.status(200).json({

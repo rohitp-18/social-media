@@ -61,7 +61,6 @@ function PersonalInfo({
       if (reader.readyState === 2) {
         setAvatarPreview(reader.result as string);
         setAvatar(file);
-        console.log(file);
       }
     };
     reader.readAsDataURL(file);

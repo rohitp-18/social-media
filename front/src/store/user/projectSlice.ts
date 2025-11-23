@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { AxiosError, isAxiosError } from "axios";
 import { project } from "./typeUser";
+import { handleError } from "../handleError";
 
 const getProfileProjects = createAsyncThunk(
   "project/getProfileProjects",
@@ -11,10 +12,7 @@ const getProfileProjects = createAsyncThunk(
       const { data } = await axios.get(`/projects/profile/${username}`);
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        return thunkAPI.rejectWithValue(error.response.data.message);
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
@@ -26,10 +24,7 @@ const deleteProject = createAsyncThunk(
       const { data } = await axios.delete(`/projects/user/${projectId}`);
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        return thunkAPI.rejectWithValue(error.response.data.message);
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
@@ -49,10 +44,7 @@ const updateProject = createAsyncThunk(
       );
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        return thunkAPI.rejectWithValue(error.response.data.message);
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
@@ -68,10 +60,7 @@ const createProject = createAsyncThunk(
       });
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        return thunkAPI.rejectWithValue(error.response.data.message);
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
@@ -125,7 +114,7 @@ const projectSlice = createSlice({
       .addCase(getProfileProjects.rejected, (state, action) => {
         state.loading = false;
         if (action.payload) {
-          state.error = action.payload as string;
+          state.error = action.error as string;
         }
       })
 
@@ -144,7 +133,7 @@ const projectSlice = createSlice({
       .addCase(deleteProject.rejected, (state, action) => {
         state.loading = false;
         if (action.payload) {
-          state.error = action.payload as string;
+          state.error = action.error as string;
         }
       })
 
@@ -163,7 +152,7 @@ const projectSlice = createSlice({
       .addCase(updateProject.rejected, (state, action) => {
         state.loading = false;
         if (action.payload) {
-          state.error = action.payload as string;
+          state.error = action.error as string;
         }
       })
 
@@ -180,7 +169,7 @@ const projectSlice = createSlice({
       .addCase(createProject.rejected, (state, action) => {
         state.loading = false;
         if (action.payload) {
-          state.error = action.payload as string;
+          state.error = action.error as string;
         }
       });
   },

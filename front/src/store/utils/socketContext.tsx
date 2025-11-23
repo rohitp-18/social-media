@@ -24,10 +24,6 @@ interface SocketState {
   isConnected: boolean;
   error: string | null;
   socket: Socket | null;
-  // selectedChat: any;
-  // setSelectedChat: any;
-  // selectedUser: any;
-  // setSelectedUser: any;
 }
 
 interface SocketContextProps extends SocketState {
@@ -119,7 +115,6 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     newSocket.connect();
     newSocket.on("connect", () => {
       newSocket.emit("register_user", user._id);
-      console.log("connected");
     });
     connectSocket(newSocket);
 
@@ -141,7 +136,6 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
   // handle new messages
   useEffect(() => {
-    console.log(user, state.socket);
     if (!user || !state.socket) return;
     const { socket } = state;
 

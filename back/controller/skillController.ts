@@ -156,8 +156,6 @@ const addUserSkill = expressAsyncHandler(
     const userId = req.user._id; // Assuming you have user ID in req.user
     const { skillId, proficiency, description } = req.body;
 
-    console.log(skillId);
-
     // Validate input
     if (!skillId) {
       return next(new ErrorHandler("Please provide all required fields", 400));

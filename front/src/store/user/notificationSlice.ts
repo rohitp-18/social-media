@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { AxiosError, isAxiosError } from "axios";
 import { InheritUser } from "./typeUser";
+import { handleError } from "../handleError";
 
 const getAllNotifications = createAsyncThunk(
   "notification/getallnotification",
@@ -11,10 +12,7 @@ const getAllNotifications = createAsyncThunk(
 
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        throw error.response.data.message;
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
@@ -26,10 +24,7 @@ const getAllInvitations = createAsyncThunk(
       const { data } = await axios.get("/invitations/all");
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        throw error.response.data.message;
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
@@ -42,57 +37,45 @@ const getAllInvitationsCount = createAsyncThunk(
 
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        throw error.response.data.message;
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
 
 const readNotification = createAsyncThunk(
   "notification/readNotification",
-  async (id) => {
+  async (id: string) => {
     try {
       const { data } = await axios.get(`/notifications/read/${id}`);
 
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        throw error.response.data.message;
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
 const readAllNotification = createAsyncThunk(
   "notification/readAllNotification",
-  async (id) => {
+  async () => {
     try {
       const { data } = await axios.get("/notifications/read/all");
 
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        throw error.response.data.message;
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
 
 const deleteNotification = createAsyncThunk(
   "notification/deleteNotification",
-  async (id) => {
+  async (id: string) => {
     try {
       const { data } = await axios.delete(`/notifications/user/${id}`);
 
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        throw error.response.data.message;
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
@@ -118,10 +101,7 @@ const subscribeUser = createAsyncThunk(
       });
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        throw error.response.data.message;
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
@@ -135,10 +115,7 @@ const unSubscribeUser = createAsyncThunk(
       });
       return data;
     } catch (error: unknown | AxiosError) {
-      if (isAxiosError(error) && error.response) {
-        throw error.response.data.message;
-      }
-      throw (error as Error).message;
+      handleError(error);
     }
   }
 );
@@ -317,6 +294,8 @@ export {
   updateChatNotifications,
   updateNotificationCount,
   unSubscribeUser,
+  readAllNotification,
+  readNotification,
 };
 export type { notificationT };
 export default notificationSlice.reducer;

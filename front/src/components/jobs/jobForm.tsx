@@ -99,7 +99,6 @@ function JobForm({
   // It validates the current step's inputs and moves to the next step if valid
   const stepSubmit = useCallback(
     (step: number) => {
-      console.log(step, experience, category, noOfOpening);
       if (step === 2) {
         if (!title || !description || allLocations.length === 0) {
           return toast.error("please fill all fields", {

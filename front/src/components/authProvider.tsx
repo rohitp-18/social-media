@@ -15,9 +15,7 @@ function AuthProvider(props: any) {
 
   useEffect(() => {
     if (!loading && !user) {
-      console.log("first");
       if (props.url) {
-        console.log(props.url);
         router.push(props.url);
       } else {
         router.push("/login");

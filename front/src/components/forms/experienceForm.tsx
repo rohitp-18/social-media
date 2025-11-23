@@ -73,8 +73,6 @@ function ExperienceForm({ onClose, experience, edit }: any) {
       companyName,
     };
 
-    console.log(form);
-
     if (edit) {
       dispatch(
         updateExperience({ experienceId: experience._id, experienceData: form })

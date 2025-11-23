@@ -60,7 +60,6 @@ const Middleware: React.FC<MiddlewareProps> = ({ children }) => {
     if (!socket) return;
 
     (socket as Socket).on("disconnect", () => {
-      console.log("Socket disconnected");
       disconnectSocket();
     });
   }, [socket, user]);

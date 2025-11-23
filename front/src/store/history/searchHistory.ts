@@ -113,7 +113,7 @@ export const searchHistorySlice = createSlice({
       )
       .addCase(createSearchHistoryAction.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error as string;
       })
 
       .addCase(getAllSearchHistoryAction.pending, (state) => {
@@ -126,7 +126,7 @@ export const searchHistorySlice = createSlice({
       })
       .addCase(getAllSearchHistoryAction.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error as string;
       })
 
       .addCase(deleteSearchHistoryAction.pending, (state) => {
@@ -143,7 +143,7 @@ export const searchHistorySlice = createSlice({
       })
       .addCase(deleteSearchHistoryAction.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error as string;
         state.deleted = false;
       })
 

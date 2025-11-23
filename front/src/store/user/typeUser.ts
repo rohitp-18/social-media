@@ -1,3 +1,4 @@
+import { skill } from "../skill/typeSkill";
 import { education } from "./educationSlice";
 
 interface user {
@@ -141,13 +142,13 @@ interface sUser {
 
 interface project {
   _id: string;
-  user: string;
+  user: sUser;
   title: string;
   description: string;
   startDate: Date;
   endDate?: Date;
   current: boolean;
-  skills: string[];
+  skills: skill[];
   githubLink?: string;
   liveLink?: string;
   likes: { _id: string }[];

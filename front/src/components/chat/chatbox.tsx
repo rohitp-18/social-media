@@ -12,6 +12,7 @@ import { RootState } from "@/store/store";
 import { InheritUser } from "@/store/user/typeUser";
 import { chat } from "@/store/chat/typeChat";
 import { useSocket } from "@/store/utils/socketContext";
+import Link from "next/link";
 
 function Chatbox({
   isGroup,
@@ -265,7 +266,7 @@ function Chatbox({
                           .map((part: string, index: number) => {
                             if (part.match(/https?:\/\/[^\s]+/)) {
                               return (
-                                <a
+                                <Link
                                   key={index}
                                   href={part}
                                   target="_blank"
@@ -274,7 +275,7 @@ function Chatbox({
                                   aria-label={`Visit ${part}`}
                                 >
                                   {part}
-                                </a>
+                                </Link>
                               );
                             }
                             return (

@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
 import { application, Job } from "./typeJob";
+import { handleError } from "../handleError";
 
 const createJobApplicationAction = createAsyncThunk(
   "applyJob/createJobApplication",
@@ -14,11 +15,7 @@ const createJobApplicationAction = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -30,11 +27,7 @@ const getUserJobApplicationsAction = createAsyncThunk(
       const response = await axios.get("/applyjobs/user");
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -46,11 +39,7 @@ const deleteJobApplicationAction = createAsyncThunk(
       const response = await axios.delete(`/applyjobs/${jobId}`);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -62,11 +51,7 @@ const getJobApplicationAction = createAsyncThunk(
       const response = await axios.get(`/applyjobs/job/${jobId}`);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -84,11 +69,7 @@ const updateJobApplicationAction = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -100,11 +81,7 @@ const getApplication = createAsyncThunk(
       const response = await axios.get(`/applyjobs/${jobId}`);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -165,7 +142,7 @@ const applyJobsSlice = createSlice({
       .addCase(createJobApplicationAction.rejected, (state, action) => {
         state.loading = false;
         state.created = false;
-        state.error = action.payload as string;
+        state.error = action.error as string;
       })
       .addCase(getUserJobApplicationsAction.pending, (state) => {
         state.loading = true;
@@ -178,7 +155,7 @@ const applyJobsSlice = createSlice({
       })
       .addCase(getUserJobApplicationsAction.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error as string;
       })
       .addCase(deleteJobApplicationAction.pending, (state) => {
         state.loading = true;
@@ -193,7 +170,7 @@ const applyJobsSlice = createSlice({
       .addCase(deleteJobApplicationAction.rejected, (state, action) => {
         state.loading = false;
         state.deleted = false;
-        state.error = action.payload as string;
+        state.error = action.error as string;
       })
       .addCase(getJobApplicationAction.pending, (state) => {
         state.loading = true;
@@ -206,7 +183,7 @@ const applyJobsSlice = createSlice({
       })
       .addCase(getJobApplicationAction.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error as string;
       })
 
       .addCase(updateJobApplicationAction.pending, (state) => {
@@ -220,7 +197,7 @@ const applyJobsSlice = createSlice({
       })
       .addCase(updateJobApplicationAction.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error as string;
       })
 
       .addCase(getApplication.pending, (state) => {
@@ -234,7 +211,7 @@ const applyJobsSlice = createSlice({
       })
       .addCase(getApplication.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error as string;
       });
   },
 });

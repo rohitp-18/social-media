@@ -1,9 +1,23 @@
+"use client";
+
 import FooterS from "@/components/footerS";
 import Navbar from "@/components/introNavbar";
 import { Button } from "@/components/ui/button";
+import { RootState } from "@/store/store";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
 
 export default function Home() {
+  const { user } = useSelector((state: RootState) => state.user);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.push("/feed");
+    }
+  }, [user]);
   return (
     <>
       <Navbar />

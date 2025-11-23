@@ -42,6 +42,7 @@ import {
 import { toggleFollow } from "@/store/user/userSlice";
 import { timeAgo } from "@/lib/functions";
 import { toast } from "sonner";
+import Link from "next/link";
 
 function ActivityCard({ isUser }: { isUser: boolean }) {
   const [activity, setActivity] = useState("post");
@@ -70,7 +71,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                 ((profile.posts.length > 0 && isUser && activity === "post") ||
                   activity !== "post") && (
                   <div className="flex items-center gap-2">
-                    <a
+                    <Link
                       href={`/u/${user?.username}/details/activity?add=true&type=post`}
                     >
                       <Button
@@ -79,14 +80,14 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                       >
                         Create a Post
                       </Button>
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                       href={`/u/${user?.username}/details/activity?type=${activity}`}
                     >
                       <Button variant={"link"} className="hover:no-underline">
                         <Edit2 className="w-5 h-5 opacity-90 text-black" />
                       </Button>
-                    </a>
+                    </Link>
                   </div>
                 )}
             </div>
@@ -326,7 +327,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                 ) : (
                   <div className="min-h-24 h-full w-full flex flex-col gap-1 justify-center items-center">
                     {isUser && (
-                      <a
+                      <Link
                         href={`/u/${user?.username}/details/activity?add=true&type=post`}
                       >
                         <Button
@@ -335,7 +336,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                         >
                           Create a Post
                         </Button>
-                      </a>
+                      </Link>
                     )}
                     <span className="opacity-70 text-sm">
                       Here's not yet posted anything.
@@ -404,7 +405,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
             {((profile.posts.length > 0 && activity === "post") ||
               (profile.comments.length > 0 && activity === "comment") ||
               (profile.media.length > 0 && activity === "image")) && (
-              <a
+              <Link
                 href={`/u/${user?.username}/details/activity?type=${activity}`}
               >
                 <Button
@@ -419,7 +420,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                     : "Images"}{" "}
                   <ArrowRight className="w-10 h-10" />
                 </Button>
-              </a>
+              </Link>
             )}
           </CardFooter>
         </Card>

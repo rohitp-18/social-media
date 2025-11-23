@@ -9,7 +9,6 @@ import Notification from "../model/notificationModel";
 import Group from "../model/groupModel";
 import Company from "../model/companyModel";
 import Media from "../model/mediaModel";
-import { isArray, isNullOrUndefined } from "util";
 import sendNotification from "../utils/sendNotification";
 
 const createPost = expressAsyncHandler(
@@ -83,8 +82,6 @@ const createPost = expressAsyncHandler(
           // Create data URI for Cloudinary upload
           let dataURI = "data:" + val.mimetype + ";base64," + b64;
 
-          console.log(val.mimetype);
-          // Upload image to Cloudinary
           if (val.mimetype.startsWith("image/")) {
             try {
               const data = await cloudinary.uploader.upload(dataURI, {
@@ -198,7 +195,6 @@ const createPost = expressAsyncHandler(
       );
     } catch (error) {
       await post.save();
-      console.log(error);
       return next(new ErrorHandler("Failed to send notifications", 500));
     }
 
@@ -244,10 +240,9 @@ const getAllPosts = expressAsyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     // Retrieve all posts and populate with user details
 
-    let posts = await Post.find({ isDeleted: false }).populate(
-      "userId",
-      "name email avatar headline"
-    );
+    let posts = await Post.find({ isDeleted: false })
+      .populate("userId", "name email avatar headline")
+      .populate("origin", "name headline avatar username bannerImage");
 
     // Handle case when posts retrieval fails
     if (!posts) {
@@ -280,7 +275,7 @@ const getSinglePost = expressAsyncHandler(
     // Find post by ID and include user details
     const post = await Post.findById(postId)
       .populate("userId", "name email avatar headline")
-      .populate("origin", "name avatar headline username isDeleted");
+      .populate("origin", "name headline avatar username bannerImage");
 
     // Handle case when post is not found
     if (!post || post.isDeleted) {
@@ -305,7 +300,9 @@ const getUserPosts = expressAsyncHandler(
     const userId = req.params.id;
 
     // Find all posts by user ID and include user details
-    const posts = await Post.find({ userId }).populate("userId", "name email");
+    const posts = await Post.find({ userId })
+      .populate("userId", "name email")
+      .populate("origin", "name headline avatar username bannerImage");
 
     // Handle case when posts retrieval fails
     if (!posts) {
@@ -562,7 +559,9 @@ const getProfilePosts = expressAsyncHandler(
     const posts = await Post.find({
       userId: tempUser._id,
       isDeleted: false,
-    }).populate("userId", "_id name headline avatar");
+    })
+      .populate("userId", "_id name headline avatar")
+      .populate("origin", "name headline avatar username bannerImage");
 
     if (!posts) {
       return next(new ErrorHandler("posts not found", 404));
@@ -658,6 +657,7 @@ const getFeedPosts = expressAsyncHandler(
       isDeleted: false,
     })
       .populate("userId", "_id name headline avatar")
+      .populate("origin", "name headline avatar username bannerImage")
       .sort({ createdAt: -1 });
 
     const postsWithIsLike = posts.map((post: any) => {

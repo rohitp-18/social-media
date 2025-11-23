@@ -32,7 +32,6 @@ function Page() {
     if (group && user) {
       if (!group.admin.some((admin: any) => admin._id === user._id)) {
         router.push(`/group/${id}`);
-        console.log("group admin", group.admin, user._id);
       } else {
         setIsAdmin(true);
       }
@@ -44,7 +43,6 @@ function Page() {
       toast.error(error, { position: "top-center" });
       dispatch(clearGroupError());
       router.back();
-      console.log("error", error);
     }
   }, [error]);
 

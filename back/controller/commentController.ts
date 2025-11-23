@@ -177,7 +177,7 @@ const toggleLikeComment = expressAsyncHandler(
 
     if (isLiked) {
       comment.likes = comment.likes.filter(
-        (likeId: any) => likeId.toString() !== userId.toString()
+        (likeId) => likeId.toString() !== userId.toString()
       );
     } else {
       comment.likes.push(userId);

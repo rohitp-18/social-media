@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import axios from "../axios";
 import { stat } from "fs";
 import { Job } from "./typeJob";
+import { handleError } from "../handleError";
 
 const recommendedJobsAction = createAsyncThunk(
   "job/recommendedJobs",
@@ -13,11 +14,7 @@ const recommendedJobsAction = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -29,11 +26,7 @@ const getJobAction = createAsyncThunk(
       const response = await axios.get(`/jobs/job/${jobId}`);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -45,11 +38,7 @@ const createJobAction = createAsyncThunk(
       const response = await axios.post("/jobs/create", jobData);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -61,11 +50,7 @@ const updateJobAction = createAsyncThunk(
       const response = await axios.put(`/jobs/job/${jobId}`, jobData);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -77,11 +62,7 @@ const deleteJobAction = createAsyncThunk(
       const response = await axios.delete(`/jobs/job/${jobId}`);
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -93,11 +74,7 @@ const toggleSaveJobAction = createAsyncThunk(
       const response = await axios.put(`/jobs/save/${jobId}`, { save });
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong"
-      );
+      handleError(error);
     }
   }
 );
@@ -225,7 +202,6 @@ const jobSlice = createSlice({
       })
       .addCase(toggleSaveJobAction.rejected, (state, action) => {
         state.loading = false;
-        console.log("Error in toggleSaveJobAction:", action.error);
         state.error = action.error.message || "Something went wrong";
       });
   },

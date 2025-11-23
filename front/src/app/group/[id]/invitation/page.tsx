@@ -100,12 +100,11 @@ function Page() {
       });
 
       setFoundPeoples(
-        tempPeoples.filter((us: any) => {
-          console.log(users.admin, us);
-          if (users.admin.some((u: any) => u._id === us._id)) {
+        tempPeoples.filter((us) => {
+          if (users.admin.some((u) => u._id === us._id)) {
             return false;
           }
-          if (users.members.some((u: any) => u._id === us._id)) {
+          if (users.members.some((u) => u._id === us._id)) {
             return false;
           }
           return true;

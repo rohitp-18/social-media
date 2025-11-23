@@ -33,7 +33,6 @@ function Page() {
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [allMessages, setAllMessages] = useState<any[]>([]);
-  // count the fetch chats
   const [fetchCount, setFetchCount] = useState(0);
 
   const { user } = useSelector((state: RootState) => state.user);
@@ -157,19 +156,6 @@ function Page() {
     }
   };
 
-  // socket stablish connects
-  useEffect(() => {
-    if (!user) return;
-    if (!socket) return;
-    // console.log(socket);
-
-    // socket.on("connect", () => {
-    //   console.log("Connected to socket server");
-    // });
-
-    return () => {};
-  }, [user, socket]);
-
   // handle chat selection from URL params
   useEffect(() => {
     if (!searchParams || !chats) return;
@@ -216,7 +202,6 @@ function Page() {
     if (!user || !socket) return;
 
     socket.on("message_read", (data: any) => {
-      console.log("message_read", data, data.userId);
       if (selectedChat && selectedChat._id === data.chatId) {
         setAllMessages((prevMessages) =>
           prevMessages.map((msg) => ({

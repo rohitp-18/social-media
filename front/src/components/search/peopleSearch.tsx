@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { toggleFollow } from "@/store/user/userSlice";
 import RecommendUserHorizon from "../recommend/recommendUserHorizon";
 import RecommendUser from "../recommend/recommendUser";
+import Link from "next/link";
 
 function PeopleSearch({
   selectValues,
@@ -37,7 +38,7 @@ function PeopleSearch({
                 {peoples.map((people: any, i: number) => (
                   <Fragment key={people._id}>
                     <div className="flex justify-between my-2 items-start">
-                      <a
+                      <Link
                         href={`/u/${people.username}`}
                         className="flex justify-start items-start gap-3"
                       >
@@ -70,7 +71,7 @@ function PeopleSearch({
                             </span>
                           )}
                         </div>
-                      </a>
+                      </Link>
 
                       {((!people.isFollowing && people._id !== user?._id) ||
                         user?.following.includes(people._id)) && (

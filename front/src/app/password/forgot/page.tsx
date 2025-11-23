@@ -41,7 +41,6 @@ function Page() {
 
     try {
       setELoading(true);
-      console.log(window.location.origin);
       const { data } = await axios.put("/user/forgot-password/apply", {
         email,
         link: `${window.location.origin}`,

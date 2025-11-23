@@ -71,7 +71,6 @@ function page() {
 
   useEffect(() => {
     if (user) {
-      console.log(user.username, username);
       setIsUser(user.username === username);
     }
   }, [user, username]);

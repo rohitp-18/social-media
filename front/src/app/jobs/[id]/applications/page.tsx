@@ -70,7 +70,6 @@ function Page() {
 
   const handleReschedule = useCallback(async () => {
     if (!rescheduleDate) {
-      console.log(rescheduleDate);
       toast.error("Please select a new interview date", {
         position: "top-center",
       });
@@ -100,7 +99,6 @@ function Page() {
 
   const handleStatusChange = useCallback(() => {
     if (selectApplication && status) {
-      console.log(interviewDate);
       if (status === "interview" && !interviewDate) {
         toast.error("Please select an interview date", {
           position: "top-center",
@@ -126,7 +124,6 @@ function Page() {
       if (job.company.admin.some((admin: string) => admin === user._id)) {
         setIsAdmin(true);
       } else {
-        console.log("company admin not found", job.company.admin, user._id);
         router.push(`/jobs/${id}`);
       }
     }
@@ -142,12 +139,6 @@ function Page() {
         selectApplication.interview
           ? new Date(selectApplication.interview).toISOString().slice(0, 16)
           : ""
-      );
-      console.log(
-        selectApplication.interview,
-        new Date(selectApplication.interview).toISOString().slice(0, 16),
-        interviewDate,
-        new Date(selectApplication.interview).toLocaleDateString()
       );
     }
   }, [selectApplication]);

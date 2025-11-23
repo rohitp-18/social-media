@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/userNavbar";
 // import Image from "next/image";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 // import back from "@/assets/back.png";
 import { EllipsisIcon, User, UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,47 +11,63 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // import { ToggleGroup } from "@/components/ui/toggle-group";
 import FooterS from "@/components/footerS";
 import ProfileCard from "@/components/profileCard";
-import axios from "@/store/axios";
-import { toast } from "sonner";
-import { isAxiosError } from "axios";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 import { timeAgo } from "@/lib/functions";
 import { PrimaryLoader, SecondaryLoader } from "@/components/loader";
 import Link from "next/link";
 import AuthProvider from "@/components/authProvider";
+import {
+  getAllNotifications,
+  notificationT,
+  readAllNotification,
+  readNotification,
+} from "@/store/user/notificationSlice";
+import { ToggleGroup } from "@/components/ui/toggle-group";
 
 function Page() {
   const [value, setValue] = useState("all");
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [nLoading, setNLoading] = useState(true);
+  const [tempNotifications, setTempNotifications] = useState<notificationT[]>(
+    []
+  );
 
+  const dispatch = useDispatch<AppDispatch>();
   const { user, loading, login } = useSelector(
     (state: RootState) => state.user
   );
+  const { notifications, loading: nLoading } = useSelector(
+    (state: RootState) => state.notification
+  );
 
-  async function fetchNotifications() {
-    if (!user) return;
-    try {
-      setNLoading(true);
-      const { data } = await axios.get("/notifications/all");
-
-      setNotifications(data.notifications);
-    } catch (error) {
-      toast.error(
-        isAxiosError(error)
-          ? error.response?.data.message
-          : "Something went wrong",
-        { position: "top-center" }
+  const handleValueChange = useCallback(() => {
+    if (value === "all") {
+      setTempNotifications(notifications);
+    } else if (value === "post") {
+      setTempNotifications(() =>
+        notifications.filter((notify) => notify.type === "post")
       );
-    } finally {
-      setNLoading(false);
+    } else if (value === "jobs") {
+      setTempNotifications(() =>
+        notifications.filter((notify) => notify.type === "job")
+      );
+    } else if (value === "invitation") {
+      setTempNotifications(() =>
+        notifications.filter((notify) => notify.type === "invitation")
+      );
+    } else {
+      setTempNotifications(notifications);
     }
-  }
+  }, [value, notifications, setTempNotifications]);
 
   useEffect(() => {
-    fetchNotifications();
+    if (user) {
+      dispatch(getAllNotifications());
+    }
   }, [user]);
+
+  useEffect(() => {
+    handleValueChange();
+  }, [notifications, value]);
 
   return (
     <AuthProvider>
@@ -68,8 +84,12 @@ function Page() {
                   <h2 className="font-medium text-md opacity-90 -mb-1">
                     Manage Notifications
                   </h2>
-                  <Button variant={"link"} className="px-0 justify-start">
-                    view settings
+                  <Button
+                    onClick={() => dispatch(readAllNotification())}
+                    variant={"link"}
+                    className="px-0 justify-start"
+                  >
+                    read all
                   </Button>
                 </div>
               </Card>
@@ -78,7 +98,7 @@ function Page() {
               </div>
             </aside>
             <section className="min-h-screen overflow-hidden w-full flex flex-col gap-5 flex-grow-0">
-              {/* <div className="bg-background rounded-xl border text-card-foreground shadow-sm w-full flex justify-start items-center py-4 px-2 gap-10">
+              <div className="bg-background rounded-xl border text-card-foreground shadow-sm w-full flex justify-start items-center py-4 px-2 gap-10">
                 <ToggleGroup type="single" className="flex gap-2">
                   <Button
                     variant={value === "all" ? "default" : "outline"}
@@ -105,58 +125,69 @@ function Page() {
                     Jobs
                   </Button>
                   <Button
-                    variant={value === "mentions" ? "default" : "outline"}
-                    onClick={() => setValue("mentions")}
+                    variant={value === "invitations" ? "default" : "outline"}
+                    onClick={() => setValue("invitation")}
                     className="rounded-lg"
-                    value="mentions"
+                    value="invitation"
                   >
-                    Mentions
+                    Invitations
                   </Button>
                 </ToggleGroup>
-              </div> */}
+              </div>
               <Card className="p-0 rounded-xl">
                 <CardContent className="flex rounded-xl flex-col gap-1 p-0 min-h-60">
                   {nLoading ? (
                     <SecondaryLoader />
-                  ) : notifications.length > 0 ? (
-                    notifications.map((notification, i: number) => (
+                  ) : tempNotifications.length > 0 ? (
+                    tempNotifications.map((notification, i: number) => (
                       <Fragment key={notification._id}>
                         <div
                           className={`w-full min-h-10 hover:bg-gray-50 justify-between items-center ${
                             notification.read
-                              ? "rounded-t-xl p-3 bg-blue-100"
-                              : "px-3 py-5"
+                              ? "px-3 py-5"
+                              : "rounded-t-xl p-3 bg-blue-100"
                           } flex gap-2`}
                         >
-                          <Link
-                            href={notification.url || ""}
-                            className="flex gap-4 items-center"
+                          <div
+                            className="flex"
+                            onClick={() =>
+                              dispatch(readNotification(notification._id))
+                            }
                           >
-                            <Avatar className="w-12 h-12">
-                              <AvatarImage src={notification.sender.avatar} />
-                              <AvatarFallback>
-                                {notification.sender.name.charAt(0) || (
-                                  <UserIcon />
-                                )}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col gap-1">
-                              <span className="text-sm font-medium">
-                                {notification.sender.name}
-                              </span>
-                              <span className="text-xs opacity-70">
-                                {notification.message}
-                              </span>
-                            </div>
-                          </Link>
+                            <Link
+                              href={notification.url || ""}
+                              className="flex gap-4 items-center"
+                            >
+                              <Avatar className="w-12 h-12">
+                                <AvatarImage
+                                  src={notification.sender?.avatar?.url}
+                                />
+                                <AvatarFallback>
+                                  {notification.sender.name.charAt(0) || (
+                                    <UserIcon />
+                                  )}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col gap-1">
+                                <span className="text-sm font-medium">
+                                  {notification.sender.name}
+                                </span>
+                                <span className="text-xs opacity-70">
+                                  {notification.message}
+                                </span>
+                              </div>
+                            </Link>
+                          </div>
                           <div className="h-full flex flex-col justify-center items-center gap-1">
                             <span className="text-xs opacity-70">
-                              {timeAgo(notification.createdAt) || ""}
+                              {timeAgo(
+                                new Date(notification.createdAt).toString()
+                              ) || ""}
                             </span>
                             <EllipsisIcon className="opacity-80 text-sm" />
                           </div>
                         </div>
-                        {i < notifications.length - 1 && <hr />}
+                        {i < tempNotifications.length - 1 && <hr />}
                       </Fragment>
                     ))
                   ) : (

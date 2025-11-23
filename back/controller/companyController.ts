@@ -51,6 +51,7 @@ const createCompany = expressAsyncHandler(
       admin: [req.user._id],
       isDeleted: false,
       members: [req.user._id],
+      avatar: null,
     };
 
     if (req.files) {
@@ -339,7 +340,8 @@ const getCompanyPosts = expressAsyncHandler(
 
     const postsWithIsLike = company.posts.map((post: any) => {
       const isLiked = post.likes.some(
-        (like: any) => like._id.toString() === req.user?._id.toString()
+        (like: { _id: string }) =>
+          like._id.toString() === req.user?._id.toString()
       );
       return {
         ...post.toObject(),
@@ -646,8 +648,8 @@ const updateBanner = expressAsyncHandler(
           resource_type: "image",
         });
         form.bannerImage = { public_id: data.public_id, url: data.secure_url };
-      } catch (error: any | unknown) {
-        return next(new ErrorHandler(error, 501));
+      } catch (error: unknown) {
+        return next(new ErrorHandler(error as string, 501));
       }
     }
 

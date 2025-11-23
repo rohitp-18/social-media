@@ -10,8 +10,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { toast } from "sonner";
 import { toggleFollow } from "@/store/user/userSlice";
+import { project } from "@/store/user/typeUser";
 
-function ProjectSearchCard({ project, i }: { project: any; i: number }) {
+function ProjectSearchCard({ project, i }: { project: project; i: number }) {
   const [followUser, setFollowUser] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -88,7 +89,7 @@ function ProjectSearchCard({ project, i }: { project: any; i: number }) {
               {project.description}
             </span>
             <div className="flex flex-wrap gap-1 mt-1">
-              {project.skills.map((skill: any) => (
+              {project.skills.map((skill) => (
                 <span
                   key={skill.name}
                   className="bg-secondary text-xs px-2 py-0.5 rounded-full"
@@ -103,7 +104,7 @@ function ProjectSearchCard({ project, i }: { project: any; i: number }) {
               <span>{project.comments.length} comments</span>
             </div>
             <div className="text-xs opacity-70 leading-none mt-2 flex items-center gap-1">
-              <span>{timeAgo(project.createdAt)}</span>
+              <span>{timeAgo(project.createdAt.toString())}</span>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
 import { Post } from "../user/typeUser";
+import { handleError } from "../handleError";
 
 const createPost = createAsyncThunk<any, any, { rejectValue: string }>(
   "post/createPost",
@@ -14,12 +15,7 @@ const createPost = createAsyncThunk<any, any, { rejectValue: string }>(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data.message || "Failed to create post"
-        );
-      }
-      return rejectWithValue("Failed to create post");
+      handleError(error);
     }
   }
 );
@@ -35,12 +31,7 @@ const updatePost = createAsyncThunk<any, any, { rejectValue: string }>(
       });
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data.message || "Failed to update post"
-        );
-      }
-      return rejectWithValue("Failed to update post");
+      handleError(error);
     }
   }
 );
@@ -52,12 +43,7 @@ const getPost = createAsyncThunk<any, string, { rejectValue: string }>(
       const { data } = await axios.get(`/posts/post/${postId}`);
       return data;
     } catch (error) {
-      if (isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data.message || "Failed to fetch post"
-        );
-      }
-      return rejectWithValue("Failed to fetch post");
+      handleError(error);
     }
   }
 );
@@ -132,7 +118,7 @@ const postSlice = createSlice({
       )
       .addCase(createPost.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to create post";
+        state.error = action.error.message || "Failed to create post";
       })
 
       .addCase(updatePost.pending, (state) => {
@@ -148,7 +134,7 @@ const postSlice = createSlice({
       })
       .addCase(updatePost.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to update post";
+        state.error = action.error.message || "Failed to update post";
       })
 
       .addCase(getPost.pending, (state) => {
@@ -162,7 +148,7 @@ const postSlice = createSlice({
       })
       .addCase(getPost.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch post";
+        state.error = action.error.message || "Failed to fetch post";
       });
   },
 });

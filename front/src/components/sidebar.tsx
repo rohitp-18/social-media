@@ -77,13 +77,11 @@ function Sidebar() {
 
   const languageHandler = (e: any) => {
     e.preventDefault();
-    console.log(language);
     setLanguageDialog(false);
   };
 
   const userNameHandler = (e: any) => {
     e.preventDefault();
-    console.log(username);
     setUsernameDialog(false);
   };
 

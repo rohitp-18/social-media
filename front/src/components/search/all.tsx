@@ -92,14 +92,14 @@ function All({ setType, selectValues }: any) {
               ].map((item) => {
                 const Icon = item.icon;
                 return (
-                  <a
+                  <Link
                     key={item.id}
                     href={`#${item.id}`}
                     className="flex items-center gap-2 px-2 py-1 rounded transition-colors hover:bg-secondary hover:text-primary text-foreground text-sm font-medium border border-transparent hover:border-primary"
                   >
                     <Icon className="w-4 h-4" />
                     <span className="ml-1">{item.label}</span>
-                  </a>
+                  </Link>
                 );
               })}
             </nav>

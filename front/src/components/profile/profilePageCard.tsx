@@ -156,7 +156,6 @@ function ProfilePageCard({
   const handleBannerImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
-    console.log(file);
     if (file) {
       setBannerImage(file);
       const reader = new FileReader();

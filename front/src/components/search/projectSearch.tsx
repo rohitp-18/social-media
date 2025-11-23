@@ -20,14 +20,13 @@ function ProjectSearch({
 
   useEffect(() => {
     dispatch(searchProjects({ q: selectValues.query, ...selectValues }));
-    console.log(selectValues);
   }, [selectValues]);
   return (
     <section className="md:grid grid-cols-[1fr_300px] flex flex-col gap-4">
       {projects.length > 0 ? (
         <Card className="flex flex-col w-full gap-3 overflow-auto">
           <CardContent className="flex flex-col gap-2 py-5 md:p-6 p-3">
-            {projects.map((project: any, i: number) => (
+            {projects.map((project, i: number) => (
               <Fragment key={project._id}>
                 <ProjectCard
                   project={project}

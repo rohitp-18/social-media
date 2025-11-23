@@ -32,7 +32,6 @@ function Page() {
     }
     if (user && job && job?._id === id) {
       setIsAdmin(job.company.admin.includes(user._id));
-      console.log("Is Admin:", isAdmin);
     }
     if (id && job?._id !== id) {
       dispatch(getJobAction(id as string)).catch((err) => {
