@@ -27,7 +27,7 @@ function Page() {
 
   useEffect(() => {
     if (company && user) {
-      if (!company.admin.some((admin) => admin === user._id)) {
+      if (!company.admin.some((admin) => admin._id === user._id)) {
         router.push(`/company/${id}`);
       }
     }

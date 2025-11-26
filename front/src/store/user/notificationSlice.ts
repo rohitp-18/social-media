@@ -141,7 +141,11 @@ interface invitationT {
   status: string;
   message?: string;
   link?: string;
-  targetId?: string;
+  targetId?: {
+    _id: string;
+    name?: string;
+    avatar?: { url: string; public_id: string };
+  };
   refModel?: string;
   createdAt: Date;
   expiresAt?: Date;

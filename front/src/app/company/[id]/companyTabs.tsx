@@ -41,7 +41,7 @@ function CompanyTabs({ tab }: { tab: string }) {
 
   useEffect(() => {
     if (user && company) {
-      setIsAdmin(company.admin.some((admin) => admin === user._id));
+      setIsAdmin(company.admin.some((admin) => admin._id === user._id));
     }
   }, [user, company]);
 
@@ -313,7 +313,7 @@ function CompanyTabs({ tab }: { tab: string }) {
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {company.admin.length > 0 ? (
-                company.admin.map((member: any) => (
+                company.admin.map((member) => (
                   <Link
                     href={`/u/${member.username}`}
                     key={member._id}
@@ -325,9 +325,7 @@ function CompanyTabs({ tab }: { tab: string }) {
                     </Avatar>
                     <div className="flex flex-col">
                       <span className="font-semibold">{member.name}</span>
-                      <span className="text-sm opacity-70">
-                        {member.position || "Member"}
-                      </span>
+                      <span className="text-sm opacity-70">{"Member"}</span>
                     </div>
                   </Link>
                 ))
@@ -350,7 +348,7 @@ function CompanyTabs({ tab }: { tab: string }) {
             </CardContent>
           </Card>
           {posts?.length > 0 &&
-            posts.map((post: any) => (
+            posts.map((post) => (
               <Fragment key={post._id}>
                 <Post cardClass={"w-full"} post={post} />
               </Fragment>

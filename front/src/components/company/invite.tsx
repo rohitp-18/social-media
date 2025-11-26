@@ -78,7 +78,7 @@ function Invite({ company }: { company: any }) {
   useEffect(() => {
     if (peoples) {
       let tempPeoples: any[] = [];
-      peoples.forEach((person: any) => {
+      peoples.forEach((person) => {
         if (
           !inviteuserId.includes(person._id) &&
           person._id !== company?.admin._id
@@ -156,7 +156,7 @@ function Invite({ company }: { company: any }) {
               </div>
               {foundPeoples.length > 0 ? (
                 <div className="border border-gray-300 rounded p-2 mt-2 max-h-40 overflow-auto flex flex-col gap-2">
-                  {foundPeoples.map((person: any) => (
+                  {foundPeoples.map((person) => (
                     <div
                       className="flex items-center justify-between p-1 hover:bg-gray-100 cursor-pointer transition-all rounded-sm max-w-full overflow-hidden"
                       key={person._id}

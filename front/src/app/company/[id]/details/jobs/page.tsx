@@ -42,8 +42,8 @@ function Page() {
           }
         );
         dispatch(getSingleCompany(id as string));
-      } catch (error: any) {
-        toast.error(error.message || "Something went wrong", {
+      } catch (error: unknown) {
+        toast.error((error as Error).message || "Something went wrong", {
           position: "top-center",
         });
       }
@@ -55,7 +55,7 @@ function Page() {
     if (!company || company._id !== id) {
       dispatch(getSingleCompany(id as string))
         .unwrap()
-        .catch((err: any) => {
+        .catch((err: unknown) => {
           toast.error(
             isAxiosError(err)
               ? err.response?.data.message
@@ -67,7 +67,7 @@ function Page() {
         });
     }
     if (company && company._id === id) {
-      if (user && company.admin?.some((admin: any) => admin._id === user._id)) {
+      if (user && company.admin?.some((admin) => admin._id === user._id)) {
         setIsAdmin(true);
       } else {
         router.push(`/company/${id}`);

@@ -5,12 +5,13 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User2, X } from "lucide-react";
 import { Button } from "../ui/button";
+import { Job } from "@/store/jobs/typeJob";
 
 function JobSearchCard({
   job,
   removeHandler,
 }: {
-  job: any;
+  job: Job;
   removeHandler: (id: string) => void;
 }) {
   return (

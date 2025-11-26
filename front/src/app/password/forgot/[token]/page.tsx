@@ -64,7 +64,7 @@ function Page() {
       setTimeout(() => {
         user ? router.push(`/u/${user.username}`) : router.push("/login");
       }, 1000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
         isAxiosError(error)
           ? error.response?.data.message

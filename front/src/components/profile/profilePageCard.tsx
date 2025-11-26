@@ -37,16 +37,21 @@ import { AppDispatch, RootState } from "@/store/store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createChat } from "@/store/chat/chatSlice";
+import { sUser, user } from "@/store/user/typeUser";
 
-function ProfilePageCard({
-  profile,
-  isUser,
-  setEditIntro,
-}: {
-  profile: any;
+interface profileCard {
+  profile: {
+    user: user & {
+      following: sUser[];
+      followers: sUser[];
+      connections: sUser[];
+    };
+  };
   isUser: boolean;
   setEditIntro: (val: boolean) => void;
-}) {
+}
+
+function ProfilePageCard({ profile, isUser, setEditIntro }: profileCard) {
   const [bannerImage, setBannerImage] = useState<string | File | null>(null);
   const [bannerImagePreview, setBannerImagePreview] = useState<string | null>(
     null
@@ -189,7 +194,7 @@ function ProfilePageCard({
     }
 
     dispatch(createChat(profile.user._id)).then((res) => {
-      const chatId = (res.payload as any).chat._id;
+      const chatId = res.payload.chat._id;
       router.push(
         `/chat?chatId=${chatId}&selectedUser=${profile.user._id}&isGroup=false`
       );
@@ -198,9 +203,11 @@ function ProfilePageCard({
 
   useEffect(() => {
     if (profile) {
-      setBannerImage(profile.user?.bannerImage?.url);
+      setBannerImage(profile.user?.bannerImage?.url || "");
     }
   }, [profile]);
+
+  if (!profile) return;
 
   return (
     <Card>
@@ -312,7 +319,7 @@ function ProfilePageCard({
             )}
           </h3>
           <span className="text-[15px]">{profile.user.headline}</span>
-          {profile.user.educcation && profile.user.education[0] && (
+          {profile.user.education && profile.user.education[0] && (
             <span className="text-opacity-90 md:hidden text-sm opacity-70">
               {profile.user.education[0]}
             </span>

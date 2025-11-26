@@ -16,6 +16,24 @@ import { searchPeoples } from "@/store/search/allSearchSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { InheritUser, sUser } from "@/store/user/typeUser";
+
+interface link {
+  url: string;
+  text: string;
+  _id?: string;
+}
+
+interface stepProps {
+  externalLink: link[];
+  setExternalLink: React.Dispatch<React.SetStateAction<link[]>>;
+  tags: sUser[];
+  setTags: React.Dispatch<React.SetStateAction<sUser[]>>;
+  postControl: string;
+  setPostControl: React.Dispatch<React.SetStateAction<string>>;
+  location: string;
+  setLocation: React.Dispatch<React.SetStateAction<string>>;
+}
 
 function Step3({
   externalLink,
@@ -26,21 +44,12 @@ function Step3({
   setPostControl,
   location,
   setLocation,
-}: {
-  externalLink: any[];
-  setExternalLink: React.Dispatch<React.SetStateAction<any[]>>;
-  tags: any[];
-  setTags: React.Dispatch<React.SetStateAction<any[]>>;
-  postControl: string;
-  setPostControl: React.Dispatch<React.SetStateAction<string>>;
-  location: string;
-  setLocation: React.Dispatch<React.SetStateAction<string>>;
-}) {
+}: stepProps) {
   const [tagName, setTagName] = useState("");
   const [open, setOpen] = useState(false);
   const [link, setLink] = useState("");
   const [linkText, setLinkText] = useState("");
-  const [peoples, setPeoples] = useState<any[]>([]);
+  const [peoples, setPeoples] = useState<sUser[]>([]);
 
   const dispatch = useDispatch<AppDispatch>();
   const { peoples: sPeoples } = useSelector((state: RootState) => state.search);
@@ -53,11 +62,14 @@ function Step3({
 
   useEffect(() => {
     setPeoples(() =>
-      sPeoples.filter((person: any) =>
-        tags.every((tag: any) => tag._id !== person._id)
-      )
+      sPeoples
+        .filter((person) => tags.every((tag) => tag._id !== person._id))
+        .map((person) => ({
+          ...person,
+          isFollowing: person.isFollowing ?? false,
+        }))
     );
-  }, [sPeoples]);
+  }, [sPeoples, tags]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -67,9 +79,9 @@ function Step3({
         </Label>
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2 mt-1">
-            {tags.map((tag: any, index: number) => (
+            {tags.map((tag) => (
               <Badge
-                key={index}
+                key={tag._id}
                 className="flex items-center gap-1 px-1 py-1 bg-gray-200 text-gray-600 hover:bg-gray-300 rounded-md opacity-80"
               >
                 <span className="text-xs">{tag.name}</span>
@@ -79,9 +91,7 @@ function Step3({
                   size="icon"
                   className="h-4 text-xs w-4 p-0.5 text-gray-500 hover:text-red-500"
                   onClick={() => {
-                    const updatedTags = tags.filter(
-                      (s: any) => s._id !== tag._id
-                    );
+                    const updatedTags = tags.filter((s) => s._id !== tag._id);
                     setTags(updatedTags);
                   }}
                 >
@@ -116,7 +126,7 @@ function Step3({
                 </div>
               ) : (
                 <div className="max-h-60">
-                  {peoples.map((person: any) => (
+                  {peoples.map((person) => (
                     <div
                       key={person._id}
                       onClick={() => {
@@ -169,9 +179,9 @@ function Step3({
         </Label>
         {externalLink.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2 mt-1">
-            {externalLink.map((link: any, index: number) => (
+            {externalLink.map((link) => (
               <Badge
-                key={index}
+                key={link._id}
                 className="flex items-center gap-1 px-1 py-1 bg-gray-200 text-gray-600 hover:bg-gray-300 rounded-md opacity-80"
               >
                 <span className="text-xs">{link.text}</span>
@@ -183,7 +193,7 @@ function Step3({
                   onClick={(e) => {
                     e.preventDefault();
                     const updatedLinks = externalLink.filter(
-                      (s: any) => s !== link
+                      (s) => s._id !== link._id
                     );
                     setExternalLink(updatedLinks);
                   }}
@@ -214,7 +224,10 @@ function Step3({
             type="button"
             onClick={() => {
               if (link && linkText) {
-                setExternalLink((prev) => [...prev, { link, text: linkText }]);
+                setExternalLink((prev) => [
+                  ...prev,
+                  { url: link, text: linkText },
+                ]);
                 setLink("");
                 setLinkText("");
               }

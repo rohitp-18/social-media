@@ -40,7 +40,7 @@ function GroupForm({ edit, id }: { edit: boolean; id?: string }) {
   const [previousBanner, setPreviousBanner] = useState<string | null>(null);
   const [previousLogo, setPreviousLogo] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
-  const [allLocations, setAllLocation] = useState<any[]>([]);
+  const [allLocations, setAllLocation] = useState<string[]>([]);
 
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();

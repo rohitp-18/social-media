@@ -137,7 +137,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                     }}
                   >
                     <CarouselContent>
-                      {profile.posts.map((post: any, index: number) => (
+                      {profile.posts.map((post, index: number) => (
                         <CarouselItem
                           key={post._id}
                           className="min-w-0 w-full lg:basis-1/2 md:w-1/2"
@@ -169,7 +169,7 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                                   <div className="text-xs opacity-70 leading-none flex items-center gap-1">
                                     <span>
                                       {post.createdAt
-                                        ? timeAgo(post.createdAt)
+                                        ? timeAgo(post.createdAt.toString())
                                         : ""}
                                     </span>
                                     <span className="text-xs flex items-center">
@@ -244,21 +244,21 @@ function ActivityCard({ isUser }: { isUser: boolean }) {
                                         : "grid-cols-2"
                                     }`}
                                   >
-                                    {post.images.map((img: any, i: number) => (
+                                    {post.images.map((img, i: number) => (
                                       <img
                                         loading="lazy"
                                         key={i}
                                         src={img.url}
-                                        alt={img.name}
+                                        alt={img.public_id}
                                         className={`object-cover w-full rounded-lg ${
-                                          post.images.length === 1
+                                          post.images?.length === 1
                                             ? ""
-                                            : post.images.length === 3
+                                            : post.images?.length === 3
                                             ? "h-32"
                                             : "h-32"
                                         }`}
                                         style={
-                                          post.images.length === 1
+                                          post.images?.length === 1
                                             ? {
                                                 height: "10rem",
                                                 gridColumn: "1 / -1",

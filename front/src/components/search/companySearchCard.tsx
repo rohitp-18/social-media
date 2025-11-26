@@ -9,8 +9,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { toast } from "sonner";
 import { toggleFollowCompany } from "@/store/company/companySlice";
+import { company } from "@/store/company/typeCompany";
 
-function CompanySearchCard({ company, i }: { company: any; i: number }) {
+function CompanySearchCard({ company, i }: { company: company; i: number }) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followCount, setFollowCount] = useState(company.followers.length);
 
@@ -33,13 +34,13 @@ function CompanySearchCard({ company, i }: { company: any; i: number }) {
           <Avatar className="w-10 h-10">
             <AvatarImage src={company.avatar?.url} />
             <AvatarFallback>
-              <User2 className="w-8 h-8 p-1.5" />
+              {company.name.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col max-w-96">
             <span className="font-semibold">{company.name} </span>
             <span className="text-sm opacity-90 line-clamp-1 leading-tight text-ellipsis overflow-hidden">
-              {company.headline} | {company.location} |{" "}
+              {company.headline} | {company.address[0].address} |{" "}
             </span>
             <span className="opacity-70 text-[13px]">
               {followCount} followers

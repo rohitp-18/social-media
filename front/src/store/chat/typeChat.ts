@@ -7,21 +7,24 @@ interface message {
   content?: string;
   timestamp: Date;
   chat: chat;
-  readBy: InheritUser[];
+  readBy: string[];
   image?: string;
   video?: string;
   audio?: string;
   document?: string;
   replyTo?: message;
+  createdAt: Date;
 }
 
 interface chat {
   _id: string;
   members: InheritUser[];
   isGroupChat: boolean;
-  latestMessage: message | null;
+  lastMessage: message | null;
+  isGroup: boolean;
   group: Group | null;
   createdAt: Date;
+  unreadCount: number;
   isDeleted: boolean;
 }
 

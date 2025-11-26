@@ -5,18 +5,19 @@ import { CheckCheck } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useSocket } from "@/store/utils/socketContext";
+import { chat } from "@/store/chat/typeChat";
 
 function ChatLogo({
   chat,
   handleChatSelection,
 }: {
-  chat: any;
+  chat: chat;
   handleChatSelection?: any;
 }) {
   const [msgReaded, setMsgReaded] = React.useState(true);
 
   const { user } = useSelector((state: RootState) => state.user);
-  const chatUser = chat.members.find((member: any) => member._id !== user?._id);
+  const chatUser = chat.members.find((member) => member._id !== user?._id);
 
   const { selectedChat, selectedUser } = useSocket();
 
@@ -24,8 +25,8 @@ function ChatLogo({
     if (chat) {
       if (chat.lastMessage) {
         setMsgReaded(
-          chat.members.every((member: any) =>
-            chat.lastMessage.readBy.includes(member._id || member)
+          chat.members.every((member) =>
+            chat.lastMessage?.readBy.includes(member._id)
           )
         );
       }
@@ -44,14 +45,16 @@ function ChatLogo({
     >
       <div className="flex items-center gap-3 w-full overflow-hidden">
         <Avatar>
-          <AvatarImage src={chatUser.avatar?.url} />
+          <AvatarImage src={chatUser?.avatar?.url} />
           <AvatarFallback>
-            {chat.isGroup ? chat.group.name.charAt(0) : chatUser.name.charAt(0)}
+            {chat.isGroup
+              ? chat.group?.name.charAt(0)
+              : chatUser?.name.charAt(0)}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 text-left">
           <h3 className="font-semibold truncate flex items-center gap-2">
-            {chat.isGroup ? chat.group.name : chatUser.name}
+            {chat.isGroup ? chat.group?.name : chatUser?.name}
           </h3>
           <p className="text-sm text-gray-500 truncate flex gap-1 items-center">
             {chat.lastMessage
@@ -77,20 +80,14 @@ function ChatLogo({
           </p>
         </div>
       </div>
-      {chat.unreadCount > 0
-        ? chat.lastMessage.readBy.includes(user._id) &&
-          typeof chat.lastMessage.sender === "object"
-          ? chat.lastMessage.sender._id !== user._id && (
-              <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white">
-                {chat.unreadCount}
-              </span>
-            )
-          : chat.lastMessage.sender !== user._id && (
-              <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white">
-                {chat.unreadCount}
-              </span>
-            )
-        : null}
+      {chat.unreadCount > 0 &&
+        chat.lastMessage?.readBy.includes(user._id) &&
+        typeof chat.lastMessage.sender === "object" &&
+        chat.lastMessage.sender._id !== user._id && (
+          <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white">
+            {chat.unreadCount}
+          </span>
+        )}
     </div>
   );
 }

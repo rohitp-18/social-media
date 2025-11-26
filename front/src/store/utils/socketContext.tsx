@@ -9,7 +9,7 @@ import React, {
 import { io, Socket } from "socket.io-client";
 import { AppDispatch, RootState } from "../store";
 import { useDispatch, useSelector } from "react-redux";
-import { chat } from "../chat/typeChat";
+import { chat, message } from "../chat/typeChat";
 import { InheritUser } from "../user/typeUser";
 import { toast } from "sonner";
 import {
@@ -79,7 +79,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     setState((prevState) => ({ ...prevState, error }));
   };
 
-  async function handleNewMessage(newMessage: any) {
+  async function handleNewMessage(newMessage: message) {
     if (!selectedChat || selectedChat._id !== newMessage.chat._id) {
       toast.message(newMessage.content, {
         position: "bottom-right",

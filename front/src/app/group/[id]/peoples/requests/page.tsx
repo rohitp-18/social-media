@@ -25,7 +25,7 @@ function Page() {
 
   useEffect(() => {
     if (group && user) {
-      if (group.admin.some((admin: any) => admin._id === user._id)) {
+      if (group.admin.some((admin) => admin._id === user._id)) {
         setIsAdmin(true);
       } else {
         router.push(`/group/${id}`);
@@ -49,7 +49,7 @@ function Page() {
           <Separator className="mb-2" />
           <CardContent className="flex flex-col gap-4">
             {users.requests.length > 0 ? (
-              users.requests.map((request: any) => (
+              users.requests.map((request) => (
                 <div key={request._id} className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
                     <Link

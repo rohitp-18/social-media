@@ -33,18 +33,28 @@ import {
 } from "../ui/select";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { experience } from "@/store/user/typeUser";
+import { skill } from "@/store/skill/typeSkill";
 
 interface form {
   title?: string;
   update?: boolean;
 }
 
-function ExperienceForm({ onClose, experience, edit }: any) {
+function ExperienceForm({
+  onClose,
+  experience,
+  edit,
+}: {
+  onClose: () => void;
+  experience: experience;
+  edit: boolean;
+}) {
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState<string | null>();
   const [endDate, setEndDate] = useState<string | null>();
   const [description, setDescription] = useState("");
-  const [skills, setSkills] = useState<any>([]);
+  const [skills, setSkills] = useState<skill[]>([]);
   const [working, setWorking] = useState(false);
   const [jobType, setJobType] = useState("");
   const [location, setLocation] = useState("");
@@ -66,7 +76,7 @@ function ExperienceForm({ onClose, experience, edit }: any) {
       startDate,
       endDate,
       description,
-      skills: skills.map((skill: any) => skill._id),
+      skills: skills.map((skill) => skill._id),
       working,
       jobType,
       location,
@@ -235,7 +245,7 @@ function ExperienceForm({ onClose, experience, edit }: any) {
             </Label>
             {skills.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2 mt-1">
-                {skills.map((skill: any, index: number) => (
+                {skills.map((skill, index: number) => (
                   <Badge
                     key={index}
                     className="flex items-center gap-1 px-1 py-1 bg-gray-200 text-gray-600 hover:bg-gray-300 rounded-md opacity-80"
@@ -248,7 +258,7 @@ function ExperienceForm({ onClose, experience, edit }: any) {
                       className="h-4 text-xs w-4 p-0.5 text-gray-500 hover:text-red-500"
                       onClick={() => {
                         const updatedSkills = skills.filter(
-                          (s: any) => s._id !== skill._id
+                          (s) => s._id !== skill._id
                         );
                         setSkills(updatedSkills);
                       }}
@@ -284,11 +294,11 @@ function ExperienceForm({ onClose, experience, edit }: any) {
                     </div>
                   ) : (
                     <div className="max-h-60">
-                      {searchSkills.map((skill2: any) => (
+                      {searchSkills.map((skill2) => (
                         <div
                           key={skill2._id}
                           onClick={() => {
-                            setSkills((prev: any) => [...prev, skill2]);
+                            setSkills((prev) => [...prev, skill2]);
                             setSkillName("");
                             setOpen(false);
                           }}

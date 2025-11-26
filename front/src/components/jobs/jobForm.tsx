@@ -22,13 +22,15 @@ import { AppDispatch, RootState } from "@/store/store";
 import { searchSkill } from "@/store/skill/skillSlice";
 import { createJobAction, updateJobAction } from "@/store/jobs/jobSlice";
 import Questions, { SpacialBadge } from "./questions";
+import { Job } from "@/store/jobs/typeJob";
+import { skill } from "@/store/skill/typeSkill";
 
 function JobForm({
   job,
   companyId,
   edit,
 }: {
-  job?: any;
+  job?: Job;
   companyId: string;
   edit?: boolean;
 }) {
@@ -44,13 +46,13 @@ function JobForm({
   const [salary, setSalary] = useState("");
   // Step 2: Job Requirements
   const [experience, setExperience] = useState("");
-  const [pSkills, setPSkills] = useState<any[]>([]);
-  const [eSkills, setESkills] = useState<any[]>([]);
+  const [pSkills, setPSkills] = useState<skill[]>([]);
+  const [eSkills, setESkills] = useState<skill[]>([]);
   const [preferSelected, setPreferSelected] = useState(false);
   const [skillName, setSkillName] = useState("");
   const [category, setCategory] = useState("");
-  const [preferredSkills, setPreferredSkills] = useState<string[]>([]);
-  const [essentialSkills, setEssentialSkills] = useState<string[]>([]);
+  const [preferredSkills, setPreferredSkills] = useState<skill[]>([]);
+  const [essentialSkills, setEssentialSkills] = useState<skill[]>([]);
   const [noOfOpening, setNoOfOpening] = useState(1);
   const [open, setOpen] = useState(false);
   const [pSkillName, setPSkillName] = useState("");
@@ -89,7 +91,7 @@ function JobForm({
 
     if (edit) {
       // Update the job with the new data
-      dispatch(updateJobAction({ jobId: job._id, jobData: jobData }));
+      job && dispatch(updateJobAction({ jobId: job._id, jobData: jobData }));
     } else {
       dispatch(createJobAction(jobData));
     }
@@ -349,13 +351,13 @@ function JobForm({
                     </Label>
                     {essentialSkills.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-2 mt-1">
-                        {essentialSkills.map((skill: any) => (
+                        {essentialSkills.map((skill) => (
                           <SpacialBadge
                             key={skill._id}
                             text={skill.name}
                             onClick={() =>
                               setEssentialSkills((prev) =>
-                                prev.filter((s: any) => s._id !== skill._id)
+                                prev.filter((s) => s._id !== skill._id)
                               )
                             }
                           />
@@ -405,13 +407,13 @@ function JobForm({
                     </Label>
                     {preferredSkills.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-2 mt-1">
-                        {preferredSkills.map((skill: any) => (
+                        {preferredSkills.map((skill) => (
                           <SpacialBadge
                             key={skill._id}
                             text={skill.name}
                             onClick={() =>
                               setPreferredSkills((prev) =>
-                                prev.filter((s: any) => s._id !== skill._id)
+                                prev.filter((s) => s._id !== skill._id)
                               )
                             }
                           />
@@ -437,7 +439,7 @@ function JobForm({
                       />
                       {pSkills.length > 0 && pSkillName && pOpen && (
                         <div className="absolute top-full left-0 w-full z-10 mt-1 bg-white rounded-md border shadow-md max-h-60 overflow-y-auto">
-                          {pSkills.map((skill2: any) => (
+                          {pSkills.map((skill2) => (
                             <div
                               key={skill2._id}
                               onClick={() => {

@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import store from "../store";
 import { Post, sUser } from "../user/typeUser";
 import { Group } from "./typeGroup";
+import { randomUUID } from "crypto";
 
 function handleError(error: unknown) {
   if (isAxiosError(error) && error.response) {
@@ -151,7 +152,7 @@ interface groupSliceIntra {
   requested: boolean;
   users: {
     admin: sUser[];
-    requests: { user: sUser; message: string }[];
+    requests: { user: sUser; message: string; _id: string }[];
     members: sUser[];
   };
 }
@@ -282,6 +283,7 @@ const groupSlice = createSlice({
             );
           } else {
             state.users.requests.push({
+              _id: randomUUID(),
               user: action.payload.user,
               message: action.payload.reqMessage,
             });

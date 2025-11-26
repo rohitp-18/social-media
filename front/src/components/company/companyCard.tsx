@@ -53,8 +53,8 @@ function CompanyCard({ company: propsCompany }: { company?: any }) {
           position: "top-center",
         });
       }
-    } catch (error: any) {
-      toast.error(error.message || "Something went wrong", {
+    } catch (error: unknown) {
+      toast.error((error as Error).message || "Something went wrong", {
         position: "top-center",
       });
     }

@@ -20,7 +20,7 @@ function Page() {
         "/search/posts?sort=popular&page=1&limit=30"
       );
       setPosts(data.posts);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(
         isAxiosError(error)
           ? error.response?.data.message

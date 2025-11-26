@@ -48,6 +48,8 @@ import { timeAgo } from "@/lib/functions";
 import Link from "next/link";
 import { toggleFollow } from "@/store/user/userSlice";
 import { SaveIcon } from "@/assets/icons";
+import { Comment } from "@/store/user/typeUser";
+import { isAxiosError } from "axios";
 
 function Post({
   cardClass,
@@ -90,10 +92,13 @@ function Post({
       const { data } = await axios.put(`/posts/post/${postId}/save`, {});
       toast.success(data.message, { position: "top-center" });
       setIsSaved(data.isSaved);
-    } catch (error: any) {
-      toast.error(error.response?.data.message || "Internal Error", {
-        position: "top-center",
-      });
+    } catch (error: unknown) {
+      toast.error(
+        isAxiosError(error) ? error?.response?.data.message : "Internal Error",
+        {
+          position: "top-center",
+        }
+      );
     }
   }
 
@@ -155,7 +160,7 @@ function Post({
     return null;
   }
 
-  const CommentPreview = ({ comment }: any) => {
+  const CommentPreview = ({ comment }: { comment: Comment }) => {
     <div className="flex items-center gap-2 mb-3">
       <Avatar className="h-8 w-8">
         <AvatarImage
@@ -171,7 +176,7 @@ function Post({
       <div className="flex flex-col">
         <span className="text-sm font-semibold">{comment.user.name}</span>
         <span className="text-xs text-gray-600">
-          {timeAgo(comment.createdAt)}
+          {timeAgo(comment.createdAt.toString())}
         </span>
       </div>
       {comment.content}

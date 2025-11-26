@@ -117,7 +117,7 @@ const Navbar: React.FC = () => {
         <div className="py-2 px-3 text-sm text-gray-500">No result found.</div>
       ) : (
         <div className="max-h-60">
-          {history.map((q: any) => (
+          {history.map((q) => (
             <div
               key={q._id}
               onMouseDown={(e) => {

@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "../axios";
 import { isAxiosError } from "axios";
+import { skill } from "../skill/typeSkill";
 
 function handleError(error: unknown) {
   if (isAxiosError(error) && error.response) {
@@ -88,7 +89,7 @@ interface education {
   endDate?: Date;
   grade?: string;
   description?: string;
-  skills: string[];
+  skills: skill[];
   user: string;
   createdAt: Date;
   updatedAt: Date;

@@ -20,7 +20,7 @@ interface company {
     country: string;
     address: string;
   }[];
-  admin: string[];
+  admin: sUser[];
   phone: string;
   website: string;
   description: string;

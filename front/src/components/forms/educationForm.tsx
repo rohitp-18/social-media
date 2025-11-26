@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import {
   clearError,
   createEducation,
+  education,
   getProfileEducations,
   resetEducation,
   updateEducation,
@@ -31,6 +32,7 @@ import {
   SelectItem,
   SelectValue,
 } from "../ui/select";
+import { skill } from "@/store/skill/typeSkill";
 
 function EducationForm({
   onClose,
@@ -40,7 +42,7 @@ function EducationForm({
   edit,
 }: {
   onClose: () => void;
-  education: any;
+  education: education;
   username: string;
   isUser: boolean;
   edit: boolean;
@@ -53,7 +55,7 @@ function EducationForm({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [currentlyStudying, setCurrentlyStudying] = useState(false);
-  const [skills, setSkills] = useState<any[]>([]);
+  const [skills, setSkills] = useState<skill[]>([]);
   const [skillName, setSkillName] = useState("");
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
@@ -138,12 +140,16 @@ function EducationForm({
       setSchool(education.school);
       setDegree(education.degree);
       setField(education.fieldOfStudy);
-      setDescription(education.description);
-      setStartDate(education.startDate && education.startDate.split("T")[0]);
-      setEndDate(education.endDate && education.endDate.split("T")[0]);
+      setDescription(education.description || "");
+      setStartDate(
+        education.startDate && education.startDate.toString().split("T")[0]
+      );
+      setEndDate(
+        (education.endDate && education.endDate.toString().split("T")[0]) || ""
+      );
       setCurrentlyStudying(education.currentlyStudying);
       setSkills(education.skills);
-      setGrade(education.grade);
+      setGrade(education.grade || "");
       setOpen(false);
     }
   }, [education]);
@@ -298,7 +304,7 @@ function EducationForm({
             </Label>
             {skills.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2 mt-1">
-                {skills.map((skill: any, index: number) => (
+                {skills.map((skill, index: number) => (
                   <Badge
                     key={index}
                     className="flex items-center gap-1 px-1 py-1 bg-gray-200 text-gray-600 hover:bg-gray-300 rounded-md opacity-80"
@@ -311,7 +317,7 @@ function EducationForm({
                       className="h-4 text-xs w-4 p-0.5 text-gray-500 hover:text-red-500"
                       onClick={() => {
                         const updatedSkills = skills.filter(
-                          (s: any) => s._id !== skill._id
+                          (s) => s._id !== skill._id
                         );
                         setSkills(updatedSkills);
                       }}
@@ -347,7 +353,7 @@ function EducationForm({
                     </div>
                   ) : (
                     <div className="max-h-60">
-                      {searchSkills.map((skill2: any) => (
+                      {searchSkills.map((skill2) => (
                         <div
                           key={skill2._id}
                           onClick={() => {

@@ -46,7 +46,7 @@ function EditAbout({
       toast.success(data.message, { position: "top-center" });
       setAbout(data.user.about);
       setClose(false);
-    } catch (error: any | unknown) {
+    } catch (error: unknown) {
       if (isAxiosError(error) && error.response) {
         toast.error(error.response?.data.message, { position: "top-center" });
       } else {

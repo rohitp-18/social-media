@@ -49,7 +49,7 @@ function Page() {
             </CardHeader>
           </Card>
           {posts.length > 0 ? (
-            posts.map((post: any) => (
+            posts.map((post) => (
               <Fragment key={post._id}>
                 <Post cardClass={"w-full"} post={post} />
               </Fragment>

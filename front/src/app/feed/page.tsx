@@ -2,7 +2,7 @@
 
 import Navbar from "@/components/userNavbar";
 import { Image as LuImage } from "lucide-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +18,10 @@ import { RootState } from "@/store/store";
 import AuthProvider from "@/components/authProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Post as PostI } from "@/store/user/typeUser";
 
 function Page() {
-  const [posts, setPosts] = React.useState([]);
+  const [posts, setPosts] = useState<PostI[]>([]);
 
   const router = useRouter();
   const { user } = useSelector((state: RootState) => state.user);
@@ -110,7 +111,7 @@ function Page() {
                   ))}
                 </CardContent>
               </Card> */}
-              {posts.map((post: any) => (
+              {posts.map((post) => (
                 <Post key={post._id} cardClass="w-full" post={post} />
               ))}
             </section>

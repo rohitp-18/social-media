@@ -27,12 +27,14 @@ import { readMessage } from "@/store/chat/chatSlice";
 import ChatLogo from "@/components/chat/chatLogo";
 import { useSocket } from "@/store/utils/socketContext";
 import { SecondaryLoader } from "@/components/loader";
+import { InheritUser, sUser } from "@/store/user/typeUser";
+import { chat, message } from "@/store/chat/typeChat";
 
 function Page() {
   const [isGroup, setIsGroup] = useState(false);
-  const [chats, setChats] = useState<any[]>([]);
+  const [chats, setChats] = useState<chat[]>([]);
   const [loading, setLoading] = useState(false);
-  const [allMessages, setAllMessages] = useState<any[]>([]);
+  const [allMessages, setAllMessages] = useState<message[]>([]);
   const [fetchCount, setFetchCount] = useState(0);
 
   const { user } = useSelector((state: RootState) => state.user);
@@ -64,7 +66,7 @@ function Page() {
   };
 
   // update the chats when a new message is received or read the message
-  function setUpdatedChats(message: any) {
+  function setUpdatedChats(message: message) {
     setChats((prevChats) => {
       const updatedChats = prevChats.map((chat) => {
         if (chat._id === message.chat._id) {
@@ -80,13 +82,11 @@ function Page() {
   }
 
   const handleChatSelection = useCallback(
-    (chat: any, user: any) => {
+    (chat: chat, user: InheritUser) => {
       setSelectedUser(user);
       setSelectedChat(chat);
-      setChats((prev: any) =>
-        prev.map((p: any) =>
-          p._id === chat._id ? p : { ...p, unreadCount: 0 }
-        )
+      setChats((prev) =>
+        prev.map((p) => (p._id === chat._id ? p : { ...p, unreadCount: 0 }))
       );
       if (chat.unreadCount > 0) {
         chat.unreadCount = 0;
@@ -116,7 +116,7 @@ function Page() {
     window.history.replaceState({}, "", `/chat`);
   }, []);
 
-  const handleNewMessage = (newMessage: any) => {
+  const handleNewMessage = (newMessage: message) => {
     if (!user) return;
     if (selectedChat && selectedChat._id === newMessage.chat._id) {
       setAllMessages((prev) => [...prev, newMessage]);
@@ -165,7 +165,7 @@ function Page() {
 
     if (chatId && userId) {
       const chat = chats.find((c) => c._id === chatId);
-      const user = chat?.members.find((m: any) => m._id === userId);
+      const user = chat?.members.find((m) => m._id === userId);
       if (chat && user) {
         setSelectedChat(chat);
         setSelectedUser(user);
@@ -201,7 +201,14 @@ function Page() {
   useEffect(() => {
     if (!user || !socket) return;
 
-    socket.on("message_read", (data: any) => {
+    interface readData {
+      chatId: string;
+      message: message;
+      userId: string;
+      senderId: string;
+    }
+
+    socket.on("message_read", (data: readData) => {
       if (selectedChat && selectedChat._id === data.chatId) {
         setAllMessages((prevMessages) =>
           prevMessages.map((msg) => ({

@@ -14,9 +14,12 @@ import { useSelector } from "react-redux";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
 import Link from "next/link";
+import { RootState } from "@/store/store";
 
 function ProjectCard({ isUser }: { isUser: boolean }) {
-  const { user, profile } = useSelector((state: any) => state.user);
+  const { user, profile } = useSelector((state: RootState) => state.user);
+
+  if (!profile) return;
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between items-start gap-2">
@@ -33,7 +36,7 @@ function ProjectCard({ isUser }: { isUser: boolean }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3 py-4">
         {profile.projects.length > 0 ? (
-          profile.projects.map((project: any, i: number) => (
+          profile.projects.map((project, i: number) => (
             <Fragment key={project._id}>
               <Link
                 href={`/u/${profile.user.username}/details/projects/${project._id}`}
@@ -50,7 +53,7 @@ function ProjectCard({ isUser }: { isUser: boolean }) {
                       year: "numeric",
                     })}
                     -{" "}
-                    {project.current
+                    {project.current || !project.endDate
                       ? "Current"
                       : new Date(project.endDate).toLocaleString("en-US", {
                           month: "short",
@@ -64,7 +67,7 @@ function ProjectCard({ isUser }: { isUser: boolean }) {
                 <div className="flex justify-start px-3 py-3 -mt-2 items-center gap-2">
                   <Diamond className="w-5 stroke-2 h-5" />
                   <div className="flex gap-2 text-base">
-                    {project.skills.map((skill: any, i: number) => (
+                    {project.skills.map((skill, i: number) => (
                       <span
                         key={i}
                         className="text-sm font-semibold opacity-80"
@@ -80,12 +83,12 @@ function ProjectCard({ isUser }: { isUser: boolean }) {
                     style={{ scrollbarWidth: "thin" }}
                     className="flex gap-1 py-2 overflow-x-auto"
                   >
-                    {project.media.map((image: any, i: number) => (
+                    {project.media.map((image, i: number) => (
                       <img
                         loading="lazy"
                         className="h-16 md:w-32 md:h-20 rounded-lg"
                         src={image.url}
-                        alt={project.name}
+                        alt={project.title}
                         key={i}
                       />
                     ))}

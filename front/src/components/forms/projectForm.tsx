@@ -23,29 +23,35 @@ import { Button } from "../ui/button";
 import { resetSkill, searchSkill } from "@/store/skill/skillSlice";
 import { Badge } from "../ui/badge";
 import { toast } from "sonner";
+import { project } from "@/store/user/typeUser";
+import { skill } from "@/store/skill/typeSkill";
 
-function ProjectForm({
-  onClose,
-  project,
-  name,
-  isUser,
-  edit,
-}: {
+interface projectMedia {
+  url: string;
+  public_id: string;
+  type: string;
+  order: number;
+  _id: string;
+}
+
+interface projectProps {
   onClose: () => void;
-  project: any;
+  project: project;
   name: string;
   isUser: boolean;
   edit: boolean;
-}) {
+}
+
+function ProjectForm({ onClose, project, name, isUser, edit }: projectProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [current, setCurrent] = useState(false);
-  const [skills, setSkills] = useState<any[]>([]);
+  const [skills, setSkills] = useState<skill[]>([]);
   const [githubLink, setGithubLink] = useState("");
   const [liveLink, setLiveLink] = useState("");
-  const [media, setMedia] = useState<any[]>([]);
+  const [media, setMedia] = useState<projectMedia[]>([]);
   const [newMedia, setNewMedia] = useState<File[]>([]);
   const [newMediaPreview, setNewMediaPreview] = useState<string[]>([]);
   const [skillName, setSkillName] = useState("");
@@ -55,9 +61,7 @@ function ProjectForm({
   const { loading, created, error, message, updated } = useSelector(
     (state: RootState) => state.project
   );
-  const { searchSkills, searchLoading, searchError } = useSelector(
-    (state: RootState) => state.skill
-  );
+  const { searchSkills } = useSelector((state: RootState) => state.skill);
 
   function uploadMedia(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -78,18 +82,6 @@ function ProjectForm({
     setNewMedia(updatedMedia);
   }
 
-  function editProject(formData: FormData) {
-    media.forEach((file: any) => {
-      formData.append("media", file);
-    });
-    if (newMedia.length > 0) {
-      newMedia.forEach((file) => {
-        formData.append("newMedia", file);
-      });
-    }
-    dispatch(updateProject({ projectId: project._id, data: formData }));
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -104,22 +96,29 @@ function ProjectForm({
       formData.append("endDate", endDate);
       formData.append("current", String(false));
     }
-    skills.forEach((skill: any) => {
+    skills.forEach((skill) => {
       formData.append("skills", skill._id);
     });
     formData.append("githubLink", githubLink);
     formData.append("liveLink", liveLink);
 
     if (edit) {
-      editProject(formData);
-      return;
+      media.forEach((file) => {
+        formData.append("media", JSON.stringify(file));
+      });
+      if (newMedia.length > 0) {
+        newMedia.forEach((file) => {
+          formData.append("newMedia", file);
+        });
+      }
+      dispatch(updateProject({ projectId: project._id, data: formData }));
+    } else {
+      newMedia.forEach((file) => {
+        formData.append("media", file);
+      });
+
+      dispatch(createProject(formData));
     }
-
-    newMedia.forEach((file: any) => {
-      formData.append("media", file);
-    });
-
-    dispatch(createProject(formData));
   }
 
   useEffect(() => {
@@ -162,8 +161,8 @@ function ProjectForm({
       project.endDate && setEndDate(String(project.endDate)?.split("T")[0]);
       setCurrent(project.current);
       setSkills(project.skills);
-      setGithubLink(project.githubLink);
-      setLiveLink(project.liveLink);
+      setGithubLink(project.githubLink || "");
+      setLiveLink(project.liveLink || "");
       setMedia(project.media);
     }
   }, [project]);
@@ -268,7 +267,7 @@ function ProjectForm({
               Skills
             </Label>
             <div className="flex flex-wrap gap-2 mb-2 mt-1">
-              {skills.map((skill: any, index: number) => (
+              {skills.map((skill, index: number) => (
                 <Badge
                   key={index}
                   className="flex items-center gap-1 px-1 py-1 bg-gray-200 text-gray-600 hover:bg-gray-300 rounded-md opacity-80"
@@ -281,7 +280,7 @@ function ProjectForm({
                     className="h-4 text-xs w-4 p-0.5 text-gray-500 hover:text-red-500"
                     onClick={() => {
                       const updatedSkills = skills.filter(
-                        (s: any) => s._id !== skill._id
+                        (s) => s._id !== skill._id
                       );
                       setSkills(updatedSkills);
                     }}
@@ -316,7 +315,7 @@ function ProjectForm({
                     </div>
                   ) : (
                     <div className="max-h-60">
-                      {searchSkills.map((skill2: any) => (
+                      {searchSkills.map((skill2) => (
                         <div
                           key={skill2._id}
                           onClick={() => {
@@ -389,7 +388,7 @@ function ProjectForm({
                 </Button>
               </div>
             ))}
-            {media.map((m: any, index) => (
+            {media.map((m, index) => (
               <div key={index} className="relative">
                 <img
                   loading="lazy"
@@ -402,7 +401,7 @@ function ProjectForm({
                   className="absolute top-0 right-0 h-5 w-5 bg-red-500 text-white rounded-full p-1 text-xs"
                   onClick={() => {
                     const updatedMedia = media.filter(
-                      (mediaItem: any) => mediaItem._id !== m._id
+                      (mediaItem) => mediaItem._id !== m._id
                     );
                     setMedia(updatedMedia);
                   }}

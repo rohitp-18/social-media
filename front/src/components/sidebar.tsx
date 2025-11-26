@@ -217,10 +217,10 @@ function Sidebar() {
             <div className="opacity-80 text-sm">
               {languageOptions
                 .filter(
-                  (lang: any) =>
+                  (lang) =>
                     profile?.user && lang.value === profile.user.language
                 )
-                .map((lang: any) => lang.label)
+                .map((lang) => lang.label)
                 .join(", ")}
             </div>
             {isUser && (

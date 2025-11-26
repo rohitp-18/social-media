@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { deleteProject, getProfileProjects } from "@/store/user/projectSlice";
 import Link from "next/link";
+import { project } from "@/store/user/typeUser";
 
 function ProjectCard({
   project,
@@ -29,7 +30,7 @@ function ProjectCard({
   username,
   showUser,
 }: {
-  project: any;
+  project: project;
   isUser: boolean;
   setSelect?: (val: any) => void;
   setEdit?: (val: boolean) => void;
@@ -78,7 +79,7 @@ function ProjectCard({
                   year: "numeric",
                 })}
                 -{" "}
-                {project.current
+                {project.current || !project.endDate
                   ? "Current"
                   : new Date(project.endDate).toLocaleString("en-US", {
                       month: "short",
@@ -189,8 +190,11 @@ function ProjectCard({
         <div className="flex justify-start px-3 py-2 -mt-2 items-center gap-2">
           <Diamond className="w-5 stroke-2 h-5" />
           <div className="flex gap-2 text-base flex-wrap">
-            {project.skills.map((skill: any, i: number) => (
-              <span key={i} className="text-sm font-semibold opacity-80">
+            {project.skills.map((skill) => (
+              <span
+                key={skill._id}
+                className="text-sm font-semibold opacity-80"
+              >
                 {skill.name}
               </span>
             ))}
@@ -246,7 +250,7 @@ function ProjectCard({
           style={{ scrollbarWidth: "thin" }}
           className="flex gap-1 py-2 overflow-x-auto"
         >
-          {project.media.map((image: any) => (
+          {project.media.map((image) => (
             <img
               loading="lazy"
               className="h-16 md:w-32 md:h-20 rounded-lg"

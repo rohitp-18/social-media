@@ -40,7 +40,7 @@ function GroupPeopleTab() {
         </Button>
         {group &&
           user &&
-          group.admin.some((admin: any) => admin._id === user._id) && (
+          group.admin.some((admin) => admin._id === user._id) && (
             <Button
               variant={pathname.includes("connections") ? "default" : "outline"}
               className="rounded-lg"

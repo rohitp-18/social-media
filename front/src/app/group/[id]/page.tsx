@@ -38,11 +38,11 @@ function Page() {
 
   useEffect(() => {
     if (group && user) {
-      if (group.admin.some((admin: any) => admin._id === user._id)) {
+      if (group.admin.some((admin) => admin._id === user._id)) {
         setIsAdmin(true);
         setIsMember(true);
         return;
-      } else if (group.members.some((member: any) => member._id === user._id)) {
+      } else if (group.members.some((member) => member._id === user._id)) {
         setIsMember(true);
       }
     }
@@ -77,7 +77,7 @@ function Page() {
                 </Card>
               )}
               <section className="mt-5">
-                {posts.map((post: any) => (
+                {posts.map((post) => (
                   <Fragment key={post._id}>
                     <Post post={post} />
                   </Fragment>

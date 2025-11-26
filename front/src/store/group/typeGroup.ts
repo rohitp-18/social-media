@@ -17,7 +17,7 @@ interface Group {
   location?: string[];
   admin: user[];
   members: user[];
-  requests: { user: user; message: string }[];
+  requests: { user: user; message: string; _id: string }[];
   website?: string;
   memberCount?: number;
   adminCount?: number;
@@ -31,4 +31,26 @@ interface Group {
   updatedAt: Date;
 }
 
-export type { Group };
+interface sGroup {
+  _id: string;
+  name: string;
+  headline: string;
+  about: string;
+  email: string;
+  chat: chat;
+  location?: string[];
+  members: string[];
+  admin: string[];
+  website?: string;
+  memberCount?: number;
+  adminCount?: number;
+  postCount?: number;
+  requestCount?: number;
+  avatar?: { public_id: string; url: string } | null;
+  bannerImage?: { public_id: string; url: string } | null;
+  isDeleted?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type { Group, sGroup };

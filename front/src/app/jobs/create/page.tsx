@@ -32,7 +32,7 @@ function Page() {
       return;
     }
     if (company && company?._id === searchParams.get("company")) {
-      setIsAdmin(company.admin.some((admin) => admin === user?._id));
+      setIsAdmin(company.admin.some((admin) => admin._id === user?._id));
     }
     if (
       searchParams.get("company") &&
@@ -65,7 +65,7 @@ function Page() {
   if (
     company &&
     company._id === searchParams.get("company") &&
-    company.admin.some((admin) => admin !== user?._id)
+    company.admin.some((admin) => admin._id !== user?._id)
   ) {
     return (
       <div className="flex items-center justify-center h-screen">

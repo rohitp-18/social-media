@@ -9,9 +9,10 @@ import { RootState, AppDispatch } from "@/store/store";
 import { toast } from "sonner";
 import { resetUser, toggleFollow } from "@/store/user/userSlice";
 import Link from "next/link";
+import { sUser } from "@/store/user/typeUser";
 
 function RecommendUser() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<sUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   const dispatch = useDispatch<AppDispatch>();

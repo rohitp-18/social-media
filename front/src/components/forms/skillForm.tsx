@@ -26,6 +26,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { getUser, userProfile } from "@/store/user/userSlice";
 import e from "express";
+import { skill } from "@/store/skill/typeSkill";
 
 function SkillForm({
   onClose,
@@ -36,12 +37,12 @@ function SkillForm({
   onClose: () => void;
   username: string;
   edit?: boolean;
-  skill?: any;
+  skill?: skill;
 }) {
   const [skillName, setSkillName] = useState("");
-  const [skills, setSkills] = useState([]);
+  const [skills, setSkills] = useState<skill[]>([]);
   const [loading, setLoading] = useState(false);
-  const [skill, setSkill] = useState<any>();
+  const [skill, setSkill] = useState<skill>();
   const [open, setOpen] = useState(false);
   const [proficiency, setProficiency] = useState("");
   const [description, setDescription] = useState("");
@@ -56,10 +57,11 @@ function SkillForm({
 
       setSkills(data.skills);
       setLoading(false);
-    } catch (error: any) {}
+    } catch (error: unknown) {}
   }
 
   async function updateSkill() {
+    if (!skill) return;
     try {
       setLoading(true);
 
@@ -75,7 +77,7 @@ function SkillForm({
           position: "top-center",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (isAxiosError(error)) {
         toast.error(error.response?.data.message, {
           description: "There was an error updating the skill.",
@@ -97,6 +99,10 @@ function SkillForm({
 
     if (edit) {
       await updateSkill();
+      return;
+    }
+
+    if (!skill) {
       return;
     }
 
@@ -123,7 +129,7 @@ function SkillForm({
       dispatch(userProfile(username));
       dispatch(getUser());
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       setLoading(false);
       if (isAxiosError(error)) {
         toast.error(error.response?.data.message, {
@@ -148,9 +154,9 @@ function SkillForm({
   }, [skill]);
 
   useEffect(() => {
-    if (edit) {
-      setSkillName(editSkill._id.name);
-      setSkill(editSkill._id);
+    if (edit && editSkill) {
+      setSkillName(editSkill.name);
+      setSkill(editSkill);
       setProficiency(editSkill.proficiency);
       setDescription(editSkill.description);
     }
@@ -199,7 +205,7 @@ function SkillForm({
                     </div>
                   ) : (
                     <div className="max-h-60 overflow-y-auto">
-                      {skills.map((skill2: any) => (
+                      {skills.map((skill2) => (
                         <div
                           key={skill2._id}
                           onClick={() => {

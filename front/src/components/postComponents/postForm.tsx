@@ -24,29 +24,43 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
 import Step3 from "./step3";
+import { Post, sUser } from "@/store/user/typeUser";
 
-function PostForm({
-  target,
-  type,
-  post,
-  edit,
-}: {
+interface imageI {
+  public_id: string;
+  url: string;
+  _id: string;
+  order: number;
+}
+
+interface link {
+  url: string;
+  text: string;
+  _id?: string;
+}
+
+interface postProps {
   type: string;
   target: string;
-  post?: any;
+  post?: Post;
   edit?: boolean;
-}) {
+}
+
+function PostForm({ target, type, post, edit }: postProps) {
   const [content, setContent] = useState<string>("");
-  const [video, setVideo] = useState<any>();
+  const [video, setVideo] = useState<{
+    url: string;
+    public_id: string;
+  } | null>();
   const [newVideo, setNewVideo] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<any>();
-  const [tags, setTags] = useState<any[]>([]);
-  const [images, setImages] = useState<any[]>([]);
+  const [tags, setTags] = useState<sUser[]>([]);
+  const [images, setImages] = useState<imageI[]>([]);
   const [imagePreview, setImagePreview] = useState<any[]>([]);
-  const [newImages, setNewImages] = useState<any[]>([]);
+  const [newImages, setNewImages] = useState<File[]>([]);
   const [location, setLocation] = useState<string>("");
   const [step, setStep] = useState<number>(0);
-  const [externalLink, setExternalLink] = useState<any[]>([]);
+  const [externalLink, setExternalLink] = useState<link[]>([]);
   const [postControl, setPostControl] = useState<string>("public");
 
   const imageRef = useRef<HTMLInputElement>(null);
@@ -102,6 +116,10 @@ function PostForm({
         formData.append("newImages", newVideo);
       }
 
+      if (!post) {
+        return;
+      }
+
       dispatch(updatePost({ userPostId: post._id, data: formData }));
       return;
     }
@@ -148,7 +166,6 @@ function PostForm({
   const clearForm = () => {
     setStep(0);
     setContent("");
-    setVideo("");
     setNewVideo(null);
     setImagePreview([]);
     setNewImages([]);
@@ -164,9 +181,9 @@ function PostForm({
       clearForm();
       setContent(post.content);
       setTags(post.tags);
-      setLocation(post.location);
+      setLocation(post.location || "");
       setImages(post.images);
-      setVideo(post.video);
+      post.video && setVideo(post.video);
       setExternalLink(post.externalLinks);
       setPostControl(post.privacyControl);
       setStep(0);
@@ -328,14 +345,14 @@ function PostForm({
                             size={"icon"}
                             variant="destructive"
                             onClick={() => {
-                              setVideo("");
+                              setVideo(null);
                             }}
                             className="absolute top-2 right-2 z-10"
                           >
                             <X className="h-3 w-3 text-white" />
                           </Button>
                           <video
-                            src={video}
+                            src={video.url}
                             controls
                             className="max-h-[80vh] w-full h-auto mt-2 object-contain rounded-md"
                           ></video>
@@ -393,14 +410,14 @@ function PostForm({
                             </div>
                           ))}
                           {images.map((preview, index) => (
-                            <div className="relative" key={index}>
+                            <div className="relative" key={preview._id}>
                               <div className="absolute inset-0 bg-black opacity-30 rounded-md" />
                               <Button
                                 size="icon"
                                 variant="destructive"
                                 onClick={() => {
                                   setImages((prev) =>
-                                    prev.filter((_, i) => i !== index)
+                                    prev.filter((p) => p._id !== preview._id)
                                   );
                                 }}
                                 className="absolute top-1 right-1 p-0.5 h-5 w-5"
@@ -409,7 +426,7 @@ function PostForm({
                               </Button>
                               <img
                                 loading="lazy"
-                                src={preview}
+                                src={preview.url}
                                 alt={`Preview ${index}`}
                                 className="w-full h-auto rounded-md"
                               />

@@ -394,7 +394,7 @@ function PostForm({
                           className="h-4 text-xs w-4 p-0.5 text-gray-500 hover:text-red-500"
                           onClick={() => {
                             const updatedTags = tags.filter(
-                              (s: any) => s._id !== tag._id
+                              (s) => s._id !== tag._id
                             );
                             setTags(updatedTags);
                           }}
@@ -430,7 +430,7 @@ function PostForm({
                         </div>
                       ) : (
                         <div className="max-h-60">
-                          {connections.map((connection: any) => (
+                          {connections.map((connection) => (
                             <div
                               key={connection._id}
                               onClick={() => {
@@ -481,7 +481,7 @@ function PostForm({
                           onClick={(e) => {
                             e.preventDefault();
                             const updatedLinks = externalLink.filter(
-                              (s: any) => s !== link
+                              (s) => s !== link
                             );
                             setExternalLink(updatedLinks);
                           }}

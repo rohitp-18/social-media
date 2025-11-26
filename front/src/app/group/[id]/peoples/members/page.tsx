@@ -31,7 +31,7 @@ function Page() {
 
   useEffect(() => {
     if (user && users.members) {
-      setIsAdmin(users.admin.some((member: any) => member._id === user._id));
+      setIsAdmin(users.admin.some((member) => member._id === user._id));
     }
   }, [user, users.members]);
 
@@ -66,7 +66,7 @@ function Page() {
           <Separator className="mb-2" />
           <CardContent className="flex flex-col gap-4">
             {users.members.length > 0 ? (
-              users.members.map((member: any) => (
+              users.members.map((member) => (
                 <div key={member._id} className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
                     <Link
@@ -90,7 +90,7 @@ function Page() {
                       </div>
                     </Link>
                     <div className="flex flex-col gap-2">
-                      {isAdmin && member.role !== "admin" && (
+                      {isAdmin && (
                         <Button
                           onClick={() =>
                             dispatch(
@@ -108,7 +108,6 @@ function Page() {
                       )}
                     </div>
                   </div>
-                  <p className="text-gray-600 font-sm">{member.message}</p>
                 </div>
               ))
             ) : (

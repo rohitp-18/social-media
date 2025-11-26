@@ -14,6 +14,7 @@ import { Diamond, Plus, Pencil, ArrowRight } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Separator } from "../ui/separator";
 import Link from "next/link";
+import { RootState } from "@/store/store";
 
 function Experience({
   isUser,
@@ -22,7 +23,10 @@ function Experience({
   isUser: boolean;
   username: string;
 }) {
-  const { user, profile } = useSelector((state: any) => state.user);
+  const { user, profile } = useSelector((state: RootState) => state.user);
+
+  if (!profile) return;
+
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between items-start gap-2">
@@ -40,7 +44,7 @@ function Experience({
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {profile.experiences.length > 0 ? (
-          profile.experiences.map((exp: any, i: number) => (
+          profile.experiences.map((exp, i: number) => (
             <Fragment key={exp._id}>
               <div
                 key={exp._id}

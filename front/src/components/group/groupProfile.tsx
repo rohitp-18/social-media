@@ -73,11 +73,11 @@ function GroupProfile() {
 
   useEffect(() => {
     if (group && group.admin && user) {
-      setIsAdmin(group.admin.some((admin: any) => admin._id === user._id));
-      setIsMember(group.members.some((member: any) => member._id === user._id));
+      setIsAdmin(group.admin.some((admin) => admin._id === user._id));
+      setIsMember(group.members.some((member) => member._id === user._id));
       setIsRequested(
         group.requests.some(
-          (request: any) => request.user._id.toString() === user._id.toString()
+          (request) => request.user._id.toString() === user._id.toString()
         )
       );
     }

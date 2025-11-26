@@ -30,7 +30,7 @@ function Page() {
 
   useEffect(() => {
     if (group && user) {
-      if (!group.admin.some((admin: any) => admin._id === user._id)) {
+      if (!group.admin.some((admin) => admin._id === user._id)) {
         router.push(`/group/${id}`);
       } else {
         setIsAdmin(true);

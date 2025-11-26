@@ -1,4 +1,5 @@
 import { sCompany } from "../company/typeCompany";
+import { skill } from "../skill/typeSkill";
 import { sUser } from "../user/typeUser";
 
 interface Job {
@@ -11,9 +12,9 @@ interface Job {
   type: "full-time" | "part-time" | "internship";
   experience: string;
   category: string;
-  preferredSkills: { _id: string; name: string }[];
-  essentialSkills: { _id: string; name: string }[];
-  noOfOpenings: number;
+  preferredSkills: skill[];
+  essentialSkills: skill[];
+  noOfOpening: number;
   applications: string[];
   questions: { _id: string; ques: string; type: string; options: string[] }[];
   savedBy: string[];
@@ -38,7 +39,7 @@ interface application {
   coverLetter?: string;
   company: sCompany;
   reschedule?: { newInterviewDate: Date[]; explanation: string };
-  questions: { _id: string; ques: string; answer: string; type: string }[];
+  questions: { _id: string; question: string; answer: string; type: string }[];
   createdAt: Date;
   updatedAt: Date;
 }

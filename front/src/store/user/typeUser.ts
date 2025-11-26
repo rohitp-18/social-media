@@ -1,5 +1,22 @@
+import { company } from "../company/typeCompany";
 import { skill } from "../skill/typeSkill";
 import { education } from "./educationSlice";
+
+interface experience {
+  _id: string;
+  title: string;
+  company: string;
+  years: number;
+  startDate: Date;
+  endDate?: Date;
+  description: string;
+  skills: skill[];
+  working: boolean;
+  jobType: string;
+  location: string;
+  workType: string;
+  companyName: string;
+}
 
 interface user {
   _id: string;
@@ -19,7 +36,7 @@ interface user {
   pronouns: string;
   headline: string;
   location: { city: string; country: string; state: string } | null;
-  experience: { jobTitle: string; company: string; years: number }[];
+  experience: experience[];
   projects: project[];
   topVoice: sUser[];
   companies: string[];
@@ -56,17 +73,18 @@ interface UserState {
   error: string | null;
   login: boolean;
   profile?: {
-    user:
-      | (user & {
-          following: sUser[];
-          followers: sUser[];
-          connections: sUser[];
-        })
-      | null;
+    user: user & {
+      following: sUser[];
+      followers: sUser[];
+      connections: sUser[];
+      companies: company[];
+    };
     posts: Post[];
     media: media[];
     comments: Comment[];
     educations: education[];
+    projects: project[];
+    experiences: experience[];
   } | null;
   logout?: boolean;
   updated?: boolean;
@@ -80,8 +98,8 @@ interface Post {
   privacyConfig: "public" | "private" | "restricted";
   content: string;
   video: { public_id: string; url: string } | null;
-  images: { public_id: string; url: string }[] | null;
-  externalLinks: { text: string; url: string }[] | null;
+  images: { public_id: string; url: string; _id: string; order: number }[];
+  externalLinks: { _id: string; text: string; url: string }[];
   reactions:
     | {
         user: user;
@@ -89,9 +107,9 @@ interface Post {
         createdAt: Date;
       }[]
     | null;
-  location: string | null;
-  tags: string[] | null;
-  hashtags: string[] | null;
+  location?: string;
+  tags: sUser[] | [];
+  hashtags: string[];
   viewCount: number;
   shareCount: number;
   savedCount: number;
@@ -105,6 +123,7 @@ interface Post {
   edited: boolean;
   createdAt: Date;
   updatedAt: Date;
+  privacyControl: string;
 }
 
 interface InheritUser {
@@ -153,7 +172,13 @@ interface project {
   liveLink?: string;
   likes: { _id: string }[];
   comments: { _id: string }[];
-  media: { url: string; public_id: string; type: string; order: number }[];
+  media: {
+    url: string;
+    public_id: string;
+    type: string;
+    order: number;
+    _id: string;
+  }[];
   likedCount: number;
   commentCount: number;
   shareCount: number;
@@ -184,6 +209,7 @@ interface Comment {
 }
 
 export type {
+  experience,
   user,
   UserState,
   Post,

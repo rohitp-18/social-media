@@ -94,9 +94,7 @@ function Page() {
           <ExperienceForm
             onClose={() => handleClose(false)}
             experience={select}
-            isUser={isUser}
             edit={edit}
-            username={username}
           />
         </Dialog>
       )}

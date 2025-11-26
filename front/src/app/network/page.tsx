@@ -31,7 +31,7 @@ import { toast } from "sonner";
 
 function Page() {
   const [value, setValue] = useState("updates");
-  const [meet, setMeet] = useState<any[]>([]);
+  // const [meet, setMeet] = useState<>([]);
 
   const { user, loading, login } = useSelector(
     (state: RootState) => state.user
@@ -71,7 +71,7 @@ function Page() {
   async function getMeet() {
     try {
       const { data } = await axios.get("/notifications/meet");
-      setMeet(data.notifications);
+      // setMeet(data.notifications);
     } catch (error) {
       toast.error(
         isAxiosError(error)
@@ -156,14 +156,14 @@ function Page() {
                       <CalendarDays className="w-5 h-5" />
                       <span className="font-semibold text-base">Event</span>
                     </div>
-                    <div className="font-semibold text-base">{(user as any)?.events?.length ?? 0}</div>
+                    <div className="font-semibold text-base">{(user )?.events?.length ?? 0}</div>
                   </div> */}
                   {/* <div className="flex justify-between items-center gap-3 opacity-75">
                     <div className="flex justify-start items-center gap-3">
                       <Newspaper className="w-5 h-5" />
                       <span className="font-semibold text-base">Pages</span>
                     </div>
-                    <div className="font-semibold text-base">{(user as any)?.pages?.length ?? 0}</div>
+                    <div className="font-semibold text-base">{(user )?.pages?.length ?? 0}</div>
                   </div> */}
                   {/* <div className="flex justify-between items-center gap-3 opacity-75">
                     <div className="flex justify-start items-center gap-3">
@@ -211,27 +211,28 @@ function Page() {
                       <p className="text-gray-500">No updates available</p>
                     </div>
                   ) : (
-                    invitations.map((update: any, i) => (
+                    invitations.map((update, i) => (
                       <div
                         key={update._id}
                         className="flex justify-between gap-3 items-center p-3 rounded-md hover:bg-gray-100 bg-white dark:bg-gray-800 transition-all duration-200"
                       >
                         <Link
-                          href={update.link}
+                          href={update.link || "#"}
                           className="flex items-center gap-3"
                         >
                           <Avatar className="w-12 h-12 transition-colors duration-200 group-hover:bg-white hover:bg-white">
                             <AvatarImage
-                              src={update.targetId.avatar?.url}
+                              src={update.targetId?.avatar?.url || ""}
                               className="w-12 h-12"
                             />
                             <AvatarFallback className="w-12 h-12">
-                              <User2 className="w-12 h-12 p-1" />
+                              {update.targetId?.name?.charAt(0).toUpperCase() ||
+                                "E"}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
                             <h4 className="font-semibold text-base">
-                              {update.targetId.name}
+                              {update.targetId?.name}
                             </h4>
                             <p className="opacity-70 text-sm">
                               {update.message}

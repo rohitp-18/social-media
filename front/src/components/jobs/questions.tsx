@@ -16,19 +16,27 @@ import { Badge } from "../ui/badge";
 import { toast } from "sonner";
 import { Checkbox } from "../ui/checkbox";
 
+interface questionI {
+  ques: string;
+  type: string;
+  options?: string[];
+}
+
+interface questionProps {
+  questions: questionI[];
+  setQuestions: React.Dispatch<React.SetStateAction<questionI[]>>;
+  isActive: boolean;
+  setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
+  edit: boolean;
+}
+
 function Questions({
   questions,
   setQuestions,
   isActive,
   setIsActive,
   edit,
-}: {
-  questions: any[];
-  setQuestions: React.Dispatch<React.SetStateAction<any[]>>;
-  isActive: boolean;
-  setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
-  edit: boolean;
-}) {
+}: questionProps) {
   const [question, setQuestion] = useState("");
   const [questionType, setQuestionType] = useState("text");
   const [options, setOptions] = useState<string[]>([]);
@@ -37,7 +45,7 @@ function Questions({
   const addQuestion = useCallback(() => {
     {
       if (question) {
-        if (questions.some((q) => q.question === question)) {
+        if (questions.some((q) => q.ques === question)) {
           toast.error("Already entered question", {
             position: "top-center",
           });

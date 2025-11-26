@@ -8,6 +8,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import axios from "@/store/axios";
 import { toast } from "sonner";
 import Link from "next/link";
+import { sGroup } from "@/store/group/typeGroup";
 
 function RecommendGroups({
   id,
@@ -16,7 +17,7 @@ function RecommendGroups({
   id?: string;
   horizontal?: boolean;
 }) {
-  const [groups, setGroups] = useState<any[]>([]);
+  const [groups, setGroups] = useState<sGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
   const dispatch = useDispatch<AppDispatch>();

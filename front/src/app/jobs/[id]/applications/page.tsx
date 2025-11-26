@@ -50,11 +50,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import axios from "@/store/axios";
 import { isAxiosError } from "axios";
-import { SecondaryLoader } from "@/components/loader";
+import { PrimaryLoader, SecondaryLoader } from "@/components/loader";
+import { application } from "@/store/jobs/typeJob";
 
 function Page() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [selectApplication, setSelectApplication] = useState<any>(null);
+  const [selectApplication, setSelectApplication] =
+    useState<application | null>(null);
   const [status, setStatus] = useState("");
   const [interviewDate, setInterviewDate] = useState("");
   const [rescheduleDate, setRescheduleDate] = useState<string>();
@@ -69,6 +71,7 @@ function Page() {
   const { user } = useSelector((state: RootState) => state.user);
 
   const handleReschedule = useCallback(async () => {
+    if (!selectApplication) return;
     if (!rescheduleDate) {
       toast.error("Please select a new interview date", {
         position: "top-center",
@@ -121,7 +124,7 @@ function Page() {
 
   useEffect(() => {
     if (user && applications && job && job._id === id) {
-      if (job.company.admin.some((admin: string) => admin === user._id)) {
+      if (job.company.admin.some((admin) => admin === user._id)) {
         setIsAdmin(true);
       } else {
         router.push(`/jobs/${id}`);
@@ -178,7 +181,13 @@ function Page() {
     }
   }, [searchParams, applications]);
 
-  if (!job) return null;
+  if (!job || !applications) {
+    return (
+      <AuthProvider>
+        <PrimaryLoader />
+      </AuthProvider>
+    );
+  }
 
   return (
     <AuthProvider>
@@ -197,7 +206,7 @@ function Page() {
                   <div className="flex flex-col gap-2">
                     {applications.length > 0 ? (
                       <Card className="flex flex-col p-4 mb-5 shadow hover:shadow-lg transition-shadow cursor-pointer ">
-                        {applications.map((application: any, i: number) => (
+                        {applications.map((application, i: number) => (
                           <Fragment key={application._id}>
                             <div className="flex items-center justify-between">
                               <div className="flex flex-col gap-1">
@@ -222,7 +231,9 @@ function Page() {
                                       <span className="text-xs font-normal text-gray-500">
                                         {" "}
                                         | Applied{" "}
-                                        {timeAgo(application.createdAt)}
+                                        {timeAgo(
+                                          application.createdAt.toString()
+                                        )}
                                       </span>
                                     </h3>
                                     <p className="text-sm text-gray-600">
@@ -251,7 +262,7 @@ function Page() {
                                 <Badge variant="outline" className="capitalize">
                                   {application.status}
                                 </Badge>
-                                {application.reschedule.explanation && (
+                                {application.reschedule?.explanation && (
                                   <Badge variant="secondary" className="mt-1">
                                     Rescheduled
                                   </Badge>
@@ -374,7 +385,7 @@ function Page() {
                               Update Status
                             </Button>
                           </div>
-                          {selectApplication.reschedule.explanation && (
+                          {selectApplication.reschedule?.explanation && (
                             <div className="border-t pt-4">
                               <h3 className="text-lg font-semibold mb-2">
                                 Reschedule Reason
@@ -395,10 +406,10 @@ function Page() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {selectApplication.reschedule.newInterviewDate.map(
-                                    (date: string, index: number) => (
+                                    (date, index: number) => (
                                       <SelectItem
                                         key={index}
-                                        value={date}
+                                        value={date.toString()}
                                       >{`${new Date(
                                         date
                                       ).toLocaleDateString()} ${new Date(
@@ -431,10 +442,10 @@ function Page() {
                             </h5>
                             <Link
                               target="_blank"
-                              href={selectApplication.resume.link || ""}
+                              href={selectApplication.resume?.url || ""}
                               className="text-blue-600 underline"
                             >
-                              {selectApplication.resume.name || "View Resume"}
+                              {selectApplication.resume?.name || "View Resume"}
                             </Link>
                           </div>
                           <div className="border-t pt-4">
@@ -442,17 +453,15 @@ function Page() {
                               Questions
                             </h5>
                             {selectApplication.questions.length > 0 ? (
-                              selectApplication.questions.map(
-                                (q: any, index: number) => (
-                                  <div
-                                    key={index}
-                                    className="p-3 border rounded-md mb-2"
-                                  >
-                                    <p className="font-medium">{q.question}</p>
-                                    <p className="text-gray-700">{q.answer}</p>
-                                  </div>
-                                )
-                              )
+                              selectApplication.questions.map((q) => (
+                                <div
+                                  key={q._id}
+                                  className="p-3 border rounded-md mb-2"
+                                >
+                                  <p className="font-medium">{q.question}</p>
+                                  <p className="text-gray-700">{q.answer}</p>
+                                </div>
+                              ))
                             ) : (
                               <p className="text-gray-600">
                                 No questions answered.

@@ -2,12 +2,12 @@
 
 import { RootState } from "@/store/store";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Navbar from "./introNavbar";
 import { useRouter } from "next/navigation";
 
-function AuthProvider(props: any) {
+function AuthProvider(props: { url?: string; children: ReactNode }) {
   const router = useRouter();
   const { loading, user, login } = useSelector(
     (state: RootState) => state.user

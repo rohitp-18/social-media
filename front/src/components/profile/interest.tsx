@@ -21,10 +21,11 @@ import {
   toggleFollowCompany,
 } from "@/store/company/companySlice";
 import { toast } from "sonner";
+import { company } from "@/store/company/typeCompany";
 
 function Interest({ isUser }: { isUser: boolean }) {
   const [interest, setInterest] = useState("companies");
-  const [companies, setCompanies] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<company[]>([]);
   const dispatch = useDispatch<AppDispatch>();
 
   const { profile, user } = useSelector((state: RootState) => state.user);
@@ -34,7 +35,7 @@ function Interest({ isUser }: { isUser: boolean }) {
     try {
       await dispatch(toggleFollowCompany({ companyId, follow })).unwrap();
       setCompanies((prev) =>
-        prev.map((company: any) => {
+        prev.map((company) => {
           if (company._id === companyId) {
             if (follow) {
               return {
@@ -60,8 +61,8 @@ function Interest({ isUser }: { isUser: boolean }) {
         { position: "top-center" }
       );
       dispatch(resetcompany());
-    } catch (error: any) {
-      toast.error(error.message, {
+    } catch (error: unknown) {
+      toast.error((error as Error).message, {
         position: "top-center",
       });
     }
@@ -163,23 +164,23 @@ function Interest({ isUser }: { isUser: boolean }) {
 
             <TabsContent value="top">
               <div className="flex md:gap-20 py-2 justify-between">
-                {profile.user.topVoice.map((top: any) => (
-                  <div key={top} className="flex items-start gap-2">
+                {profile.user.topVoice.map((top) => (
+                  <div key={top._id} className="flex items-start gap-2">
                     <Avatar className="w-12 h-12">
-                      <AvatarImage src="" />
-                      <AvatarFallback></AvatarFallback>
+                      <AvatarImage src={top.avatar?.url} />
+                      <AvatarFallback>
+                        {top.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col justify-start">
                       <h3 className="font-semibold text-[15px] leading-tight">
-                        User Name
+                        {top.name}
                       </h3>
                       <p className="text-[13px] opacity-90 flex items-center gap-1">
-                        Mern Stack Developer | frontend Developer | React |
-                        Node.js | MongoDB | Express.js | Next.js | Artificial
-                        Inteligence | Python | C++ | Machine Learning
+                        {top.headline}
                       </p>
                       <span className="text-sm py-2 opacity-70 leading-none flex items-center gap-1">
-                        500 followers
+                        {top.followers.length} followers
                       </span>
                       <Button
                         variant={"outline"}
@@ -195,7 +196,7 @@ function Interest({ isUser }: { isUser: boolean }) {
             </TabsContent>
             <TabsContent value="companies">
               <div className="flex px-4 flex-wrap md:gap-12 py-2 gap-4 justify-stretch">
-                {companies.map((company: any, i: number) => (
+                {companies.map((company, i: number) => (
                   <div
                     key={company._id}
                     className="flex min-w-[250px] items-start gap-2"

@@ -12,6 +12,7 @@ import axios from "@/store/axios";
 import { getSingleCompany } from "@/store/company/companySlice";
 import { searchPeoples } from "@/store/search/allSearchSlice";
 import { AppDispatch, RootState } from "@/store/store";
+import { InheritUser } from "@/store/user/typeUser";
 import { isAxiosError } from "axios";
 import { X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -96,16 +97,16 @@ function Page() {
     }
 
     if (peoples) {
-      let tempPeoples: any[] = [];
-      peoples.forEach((person: any) => {
+      let tempPeoples: (InheritUser & { isFollowing?: boolean })[] = [];
+      peoples.forEach((person) => {
         if (!inviteuserId.includes(person._id)) {
           tempPeoples.push(person);
         }
       });
 
       setFoundPeoples(
-        tempPeoples.filter((us: any) => {
-          if (company.admin.some((u) => u === us._id)) {
+        tempPeoples.filter((us) => {
+          if (company.admin.some((u) => u._id === us._id)) {
             return false;
           }
           if (company.members.some((u) => u === us._id)) {
@@ -119,7 +120,7 @@ function Page() {
 
   useEffect(() => {
     if (company && user) {
-      if (company.admin.some((u) => u === user._id)) {
+      if (company.admin.some((u) => u._id === user._id)) {
         setIsAdmin(true);
       } else {
         router.push(`/company/${company._id}`);
@@ -210,7 +211,7 @@ function Page() {
                 </div>
                 {foundPeoples.length > 0 ? (
                   <div className="border border-gray-300 rounded p-2 mt-2 max-h-40 overflow-auto flex flex-col gap-2">
-                    {foundPeoples.map((person: any) => (
+                    {foundPeoples.map((person) => (
                       <div
                         className="flex items-center justify-between p-1 hover:bg-gray-100 cursor-pointer transition-all rounded-sm max-w-full overflow-hidden"
                         key={person._id}

@@ -16,9 +16,10 @@ import { toast } from "sonner";
 import { resetUser, toggleFollow } from "@/store/user/userSlice";
 import Link from "next/link";
 import { SecondaryLoader } from "../loader";
+import { sUser } from "@/store/user/typeUser";
 
 function RecommendUserHorizon({ force }: { force?: boolean }) {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<sUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -86,7 +87,7 @@ function RecommendUserHorizon({ force }: { force?: boolean }) {
                   className="flex justify-center items-center flex-col"
                 >
                   <Avatar className="w-16 h-16">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={user?.avatar?.url} alt={user.name} />
                     <AvatarFallback>
                       {user.name.charAt(0).toUpperCase()}
                     </AvatarFallback>

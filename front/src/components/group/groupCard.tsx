@@ -23,11 +23,9 @@ function GroupCard() {
 
   useEffect(() => {
     if (group) {
-      setIsMember(
-        users.members.some((member: any) => member._id === user?._id)
-      );
+      setIsMember(users.members.some((member) => member._id === user?._id));
       setIsRequested(
-        users.requests.some((request: any) => request._id === user?._id)
+        users.requests.some((request) => request.user._id === user?._id)
       );
     }
   }, [group, user]);

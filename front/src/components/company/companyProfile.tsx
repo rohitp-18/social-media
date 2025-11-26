@@ -42,7 +42,7 @@ function CompanyProfile({ tab, setTab }: { tab: string; setTab: any }) {
 
   useEffect(() => {
     if (company && company.admin && user) {
-      setIsAdmin(company.admin.some((admin) => admin === user._id));
+      setIsAdmin(company.admin.some((admin) => admin._id === user._id));
       setFollowing(company.followers.some((follower) => follower === user._id));
     }
   }, [company, user]);

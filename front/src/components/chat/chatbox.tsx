@@ -10,9 +10,10 @@ import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { InheritUser } from "@/store/user/typeUser";
-import { chat } from "@/store/chat/typeChat";
+import { chat, message } from "@/store/chat/typeChat";
 import { useSocket } from "@/store/utils/socketContext";
 import Link from "next/link";
+import { isAxiosError } from "axios";
 
 function Chatbox({
   isGroup,
@@ -21,7 +22,7 @@ function Chatbox({
   setUpdatedChats,
 }: {
   isGroup?: boolean;
-  allMessages: any[];
+  allMessages: message[];
   setAllMessages: any;
   setUpdatedChats?: any;
 }) {
@@ -69,10 +70,13 @@ function Chatbox({
           });
         }
       }
-    } catch (error: any) {
-      toast.error(error.response?.data.message || "Internal error", {
-        position: "top-center",
-      });
+    } catch (error: unknown) {
+      toast.error(
+        isAxiosError(error) ? error.response?.data.message : "Internal error",
+        {
+          position: "top-center",
+        }
+      );
     } finally {
       setLoading(false);
     }
@@ -102,10 +106,13 @@ function Chatbox({
         setMessage("");
         socket.emit("send_message", data.message);
         setUpdatedChats(data.message);
-      } catch (error: any) {
-        toast.error(error.response?.data.message || "Internal Error", {
-          position: "top-center",
-        });
+      } catch (error: unknown) {
+        toast.error(
+          isAxiosError(error) ? error.response?.data.message : "Internal Error",
+          {
+            position: "top-center",
+          }
+        );
       } finally {
         setLoading(false);
       }
@@ -147,13 +154,15 @@ function Chatbox({
             const nextMsg = allMessages[index + 1];
 
             const otherMembers = msg.chat.members.filter(
-              (member: any) => member !== user._id
+              (member) => member._id !== user._id
             );
-            const msgReaded = otherMembers.every((member: any) =>
-              msg.readBy.includes(member)
+            const msgReaded = otherMembers.every((member) =>
+              msg.readBy.includes(member._id)
             );
 
-            const nextDate = nextMsg ? new Date(nextMsg.createdAt) : null;
+            const nextDate = nextMsg
+              ? new Date(nextMsg.createdAt.toString())
+              : null;
             const isNewDayNext =
               nextDate &&
               (currDate.getDate() !== nextDate.getDate() ||
